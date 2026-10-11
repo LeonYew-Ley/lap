@@ -486,7 +486,15 @@ pub fn is_cloud_only(metadata: &std::fs::Metadata) -> bool {
     (metadata.file_attributes() & FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS) != 0
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(target_os = "macos")]
+pub fn is_cloud_only(metadata: &std::fs::Metadata) -> bool {
+    use std::os::macos::fs::MetadataExt;
+    const SF_DATALESS: u32 = 0x4000_0000;
+    (metadata.st_flags() & SF_DATALESS) != 0
+}
+
+// Other platforms have no supported placeholder detection yet.
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
 pub fn is_cloud_only(_metadata: &std::fs::Metadata) -> bool {
     false
 }
@@ -4534,7 +4542,7 @@ mod cloud_only_tests {
         fs::remove_file(path).unwrap();
     }
 
-    /// Set LAP_CLOUD_ONLY_FILE to a OneDrive "online-only" file to run this check.
+    /// Set LAP_CLOUD_ONLY_FILE to a Windows/macOS cloud-only file to run this check.
     #[test]
     fn cloud_only_sample_is_detected() {
         let Ok(path) = std::env::var("LAP_CLOUD_ONLY_FILE") else { return };
