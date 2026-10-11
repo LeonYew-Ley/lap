@@ -767,7 +767,7 @@ import { getAlbum, getAllAlbums, recountAlbum, getQueryCountAndSum, getQueryTime
          copyImages, renameFile, moveFile, moveFileOutsideLibrary, copyFile, deleteFile, deleteFilePermanently, batchDeleteFiles, editFileComment, getFileThumb, getFileThumbs, getFileInfo,
          setFileRotate, setFileFavorite, setFileRating, setFileCullingFlag, batchUpdateFileMetadata, getTagsForFile, getTagGroupName, searchSimilarImages, generateEmbedding,
          revealPath, getTagName, indexAlbum, listenIndexProgress, listenIndexFinished, setAlbumCover, setDesktopWallpaper,
-         updateFileInfo, getSupportedFormatExtensions, importFile, importUrl, importFileBytes, getDragPayload, importClipboard, addFileToDb, checkFileExists, checkFileAccessibility, cancelIndexing as cancelIndexingApi, selectFolder, getFacesForFile, listenFaceIndexProgress,
+         updateFileInfo, refreshFileInfo, getSupportedFormatExtensions, importFile, importUrl, importFileBytes, getDragPayload, importClipboard, addFileToDb, checkFileExists, checkFileAccessibility, cancelIndexing as cancelIndexingApi, selectFolder, getFacesForFile, listenFaceIndexProgress,
          openFilesWithApp, getAppConfig, getIndexRecoveryInfo, clearIndexRecoveryInfo, setLastSelectedItemIndex,
          dedupDelete, getQueryFilePosition, getFolderSearchExcluded,
          listCollections, createCollection, addFilesToCollection, removeFilesFromCollection, getFileCollections, getCollectionCountAndSum, getCollectionFiles, getCollectionGroupedQueryRows, getCollectionGroupFileIds, getCollectionQueryFileIds, fetchFolder, isDirectoryAccessible, checkAlbumAccessibility, addTagToFile } from '@/common/api';
@@ -1146,8 +1146,10 @@ function startSelectedFileRefresh() {
     groupSizes: new Map(Array.from(groupMetaMap, ([id, meta]) => [id, meta.size])),
   };
 }
-async function finishSelectedFileRefresh(results: Array<{ file: any; size_delta: number }>) {
+async function finishSelectedFileRefresh(results: Array<{ file: any; size_delta: number; skipped: boolean }>) {
   const selection = fileRefreshSelection.value;
+  // Skipped cloud-only files are unchanged; regenerating their thumbnails would download them.
+  results = results.filter(result => !result.skipped);
   if (!selection || selection.libraryId !== libConfig._libraryId || results.length === 0) return;
   for (const { file } of results) clearCachedThumbnailDataUrl(file.id, config.settings.thumbnailSize);
   fileInfoRevision.value++;
@@ -9244,11 +9246,18 @@ async function refreshGroupedRowsAfterDelete(fileIds: number[]) {
   await initializeGroupedFileList(currentContentRequestId);
 }
 
-// update the file info from the file
-const updateFile = async (file: any, showToast = false) => {
+// update the file info from the file; isRefresh = "Refresh file info" menu action
+const updateFile = async (file: any, isRefresh = false) => {
   if (!await requireOriginalFiles([file])) return;
   try {
-    const updatedFile = await updateFileInfo(file.id, file.file_path);
+    // The refresh command leaves an unchanged cloud-only file unread, so skip
+    // the forced thumbnail and image reload that would download it.
+    const refreshed = isRefresh ? await refreshFileInfo(libConfig._libraryId, file.id) : null;
+    if (refreshed?.skipped) {
+      toast.success(localeMsg.value.tooltip.update_image.success);
+      return;
+    }
+    const updatedFile = isRefresh ? refreshed?.file : await updateFileInfo(file.id, file.file_path);
     if (updatedFile) {
       Object.assign(file, updatedFile);
       await updateThumbForFile(file);
@@ -9264,15 +9273,15 @@ const updateFile = async (file: any, showToast = false) => {
       // Clear CSS filter adjustments after image reload is triggered
       uiStore.clearActiveAdjustments();
 
-      if (showToast) {
+      if (isRefresh) {
         toast.success(localeMsg.value.tooltip.update_image.success);
       }
-    } else if (showToast) {
+    } else if (isRefresh) {
       toast.error(localeMsg.value.tooltip.update_image.failed);
     }
   } catch (err) {
     console.error('Failed to update file info:', err);
-    if (showToast) {
+    if (isRefresh) {
       toast.error(localeMsg.value.tooltip.update_image.failed);
     }
   }
