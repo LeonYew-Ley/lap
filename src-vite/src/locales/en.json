@@ -434,7 +434,7 @@
       "placeholder": "Search file name"
     },
     "filter": {
-      "select_mode": "Multi-select mode",
+      "select_mode": "Multi-select",
       "select_files": "Select files",
       "show_selection_panel": "Open multi-select panel",
       "hide_selection_panel": "Hide multi-select panel",

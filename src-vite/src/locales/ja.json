@@ -434,7 +434,7 @@
       "placeholder": "ファイル名を検索"
     },
     "filter": {
-      "select_mode": "選択項目",
+      "select_mode": "複数選択",
       "select_files": "ファイルを選択",
       "show_selection_panel": "複数選択パネルを開く",
       "hide_selection_panel": "複数選択パネルを折りたたむ",

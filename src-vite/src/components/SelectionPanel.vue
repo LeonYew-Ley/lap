@@ -1,12 +1,15 @@
 <template>
   <div class="w-full h-full rounded-box bg-base-200 flex flex-col overflow-hidden">
     <div class="my-2 px-2 flex items-center w-full shrink-0">
-      <div class="flex-1 pl-1">
+      <div class="min-w-0 pl-1">
         <span class="text-sm font-semibold text-primary/70">
           {{ $t('toolbar.filter.select_mode') }}
         </span>
       </div>
-      <div class="flex items-center gap-1">
+      <span class="ml-auto min-w-0 truncate pl-2 text-xs text-base-content/60" :title="selectionSummaryText" aria-live="polite">
+        {{ selectionSummaryText }}
+      </span>
+      <div class="ml-1 flex shrink-0 items-center gap-1">
         <TButton
           :icon="IconClose"
           :tooltip="$t('msgbox.close')"
@@ -21,11 +24,6 @@
         <div class="flex items-center gap-2">
           <span class="text-[10px] uppercase tracking-widest font-bold text-base-content/30">
             {{ $t('info_panel.select_title') }}
-          </span>
-          <span
-            class="ml-auto min-w-0 truncate text-right text-[10px] font-semibold text-base-content/30"
-          >
-            {{ selectionSummaryText }}
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-1">
@@ -207,6 +205,7 @@
 </template>
 
 <script setup lang="ts">
+import { SELECTED_THUMBNAIL_LIMIT } from '@/common/constants';
 import { computed, type CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatFileSize, formatTimestamp, isMac } from '@/common/utils';
@@ -279,14 +278,13 @@ const emit = defineEmits([
 
 const { locale, messages, t } = useI18n();
 const localeMsg = computed(() => messages.value[locale.value] as any);
-const SELECTED_THUMBNAIL_LIMIT = 19;
 
 const visibleSelectedFiles = computed(() => props.selectedFiles.slice(0, SELECTED_THUMBNAIL_LIMIT));
 const hiddenSelectedCount = computed(() => Math.max(0, props.selectedCount - visibleSelectedFiles.value.length));
 const selectionSummaryText = computed(() => {
   if (props.selectedCount <= 0) return '';
   const countText = t('toolbar.filter.select_count', { count: props.selectedCount.toLocaleString() });
-  return `${countText} (${formatFileSize(props.selectedSize)})`;
+  return `${countText} · ${formatFileSize(props.selectedSize)}`;
 });
 
 function getSelectedThumbnailStyle(file: any): CSSProperties {

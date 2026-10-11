@@ -209,7 +209,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { config, libConfig } from '@/common/config';
 import { getPersonsPage, renamePerson, deletePerson, indexFaces, cancelFaceIndex, isFaceIndexing, listenFaceIndexProgress, listenFaceIndexFinished, listenClusterProgress, resetFaces, getFaceStats } from '@/common/api';
-import { SIDEBAR } from '@/common/constants';
+import { SIDEBAR, PERSON_PAGE_SIZE } from '@/common/constants';
 import { 
   IconPerson, 
   IconMore, 
@@ -268,7 +268,7 @@ const isPersonSearchFocused = ref(false);
 const personSearchDisabled = computed(
   () => !isLoadingPersons.value && allPersonCount.value === 0 && !personSearch.value,
 );
-const PERSON_PAGE_SIZE = 100;
+
 let personLoadRequest = 0;
 let personSearchTimer: ReturnType<typeof setTimeout> | null = null;
 let isPersonMounted = true;

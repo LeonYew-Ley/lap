@@ -280,6 +280,7 @@
 </template>
 
 <script setup lang="ts">
+import { MONTAGE_MAX_PHOTOS, MONTAGE_BACKGROUND_PRESETS, MONTAGE_PAGE_SIZES } from '@/common/constants';
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -300,17 +301,8 @@ import ModalDialog from '@/components/ModalDialog.vue';
 
 import { IconCard, IconTile, IconJustified, IconCollage, IconSortingShuffle, IconFolder, IconClose, IconRotate, IconCropLandscape, IconCropPortrait, IconPrint } from '@/common/icons';
 
-// export size in pixels, landscape (300 dpi for print formats)
-const PAGE_SIZES = {
-  a4: [3508, 2480],
-  photo: [1772, 1181],
-  screen: [3840, 2160],
-  square: [3000, 3000],
-} as const;
-type PageKey = keyof typeof PAGE_SIZES;
+type PageKey = keyof typeof MONTAGE_PAGE_SIZES;
 const PRINT_PAGES: PageKey[] = ['a4', 'photo'];
-const BACKGROUND_PRESETS = ['#ffffff', '#f5f0e6', '#202020'];
-const MAX_PHOTOS = 100;
 
 const router = useRouter();
 const { t, locale, messages } = useI18n();
@@ -326,13 +318,13 @@ const landscape = ref(true);
 const background = ref('#ffffff');
 const backgroundSwatches = computed(() => {
   const saved = String(config.montage.lastCustomBackground).toLowerCase();
-  const recent = /^#[0-9a-f]{6}$/.test(saved) && !BACKGROUND_PRESETS.includes(saved) ? saved : '#7c2d12';
-  return [...BACKGROUND_PRESETS, BACKGROUND_PRESETS.includes(background.value) ? recent : background.value];
+  const recent = /^#[0-9a-f]{6}$/.test(saved) && !MONTAGE_BACKGROUND_PRESETS.includes(saved) ? saved : '#7c2d12';
+  return [...MONTAGE_BACKGROUND_PRESETS, MONTAGE_BACKGROUND_PRESETS.includes(background.value) ? recent : background.value];
 });
 function rememberCustomBackground(event: Event) {
   const color = (event.target as HTMLInputElement).value.toLowerCase();
   background.value = color;
-  if (!BACKGROUND_PRESETS.includes(color)) {
+  if (!MONTAGE_BACKGROUND_PRESETS.includes(color)) {
     config.montage.lastCustomBackground = color;
     void tauriEmit('montage-background-changed', color);
   }
@@ -365,7 +357,7 @@ const pageOptions = computed(() => [
 ]);
 
 const pageSize = computed(() => {
-  const [long, short] = PAGE_SIZES[pageKey.value];
+  const [long, short] = MONTAGE_PAGE_SIZES[pageKey.value];
   return landscape.value ? [long, short] : [short, long];
 });
 
@@ -822,7 +814,7 @@ onMounted(async () => {
   if (containerRef.value) resizeObserver.observe(containerRef.value);
 
   const ids = String(router.currentRoute.value.query.fileIds || '').split(',').map(Number).filter(id => id > 0);
-  files.value = await loadFiles(ids.slice(0, MAX_PHOTOS));
+  files.value = await loadFiles(ids.slice(0, MONTAGE_MAX_PHOTOS));
 });
 
 onUnmounted(() => {

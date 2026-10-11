@@ -434,7 +434,7 @@
       "placeholder": "파일 이름"
     },
     "filter": {
-      "select_mode": "선택 항목",
+      "select_mode": "다중 선택",
       "select_files": "파일 선택",
       "show_selection_panel": "다중 선택 패널 열기",
       "hide_selection_panel": "다중 선택 패널 접기",

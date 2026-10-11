@@ -515,12 +515,12 @@ import {
 } from '@/common/api';
 import { config, libConfig } from '@/common/config';
 import { isOriginalUnavailable, setFileAccessibility } from '@/common/availability';
-import { SIMILAR_SCAN } from '@/common/constants';
+import { SIMILAR_SCAN, DEDUP_THUMBNAIL_PAGE_SIZE } from '@/common/constants';
 
 const dedupPaneGlobalState = ((globalThis as any).__lapDedupPaneState ||= {
   lastScanKey: '',
 });
-const DEDUP_THUMBNAIL_PAGE_SIZE = 100;
+
 const thumbnailPlaceholder = new URL('@/assets/images/image-file.png', import.meta.url).href;
 const { t } = useI18n();
 

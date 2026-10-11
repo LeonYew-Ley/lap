@@ -434,7 +434,7 @@
       "placeholder": "Dateiname"
     },
     "filter": {
-      "select_mode": "Auswahl",
+      "select_mode": "Mehrfachauswahl",
       "select_files": "Dateien auswählen",
       "show_selection_panel": "Mehrfachauswahl-Bereich öffnen",
       "hide_selection_panel": "Mehrfachauswahl-Bereich einklappen",

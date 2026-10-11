@@ -4,6 +4,7 @@
     :class="['w-full flex flex-col items-center justify-center', previewFullScreen ? 'fixed inset-0 z-[200]' : 'relative', isFullScreen ? 'bg-base-200' : '', toolbarOnly ? '' : 'h-full group']"
     :style="toolbarOnly ? undefined : viewBackgroundStyle"
     @mousemove="handleMouseMove"
+    @mouseover="handleRawControlsHover"
     @mouseleave="handleMouseLeave"
     @contextmenu.prevent
     ref="containerRef"
@@ -440,7 +441,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, watch, onMounted, onBeforeUnmount, type Component, type CSSProperties } from 'vue';
+import { OVERLAY_CLICK_MOVE_TOLERANCE } from '@/common/constants';
+import { defineAsyncComponent, ref, computed, watch, onMounted, onUpdated, onBeforeUnmount, type Component, type CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { runPreviewWindowOperation, recoverPreviewWindowFocus } from '@/common/previewWindow';
@@ -693,6 +695,29 @@ const hasOpenMenu = ref(false);
 const containerWidth = ref(0);
 const buttonsRef = ref<HTMLElement | null>(null);
 const buttonsWidth = ref(0);
+const rawControlsWidth = ref(0);
+const rawControlsHovered = ref(false);
+let observedRawControls: HTMLElement | null = null;
+const rawToolbarNeedsTop = computed(() => rawControlsWidth.value > 0
+  && containerWidth.value < buttonsWidth.value + 2 * rawControlsWidth.value + 48);
+
+function measureRawControls() {
+  const controls = containerRef.value?.querySelector<HTMLElement>('[data-raw-preview-controls]') || null;
+  if (controls !== observedRawControls) {
+    if (observedRawControls) resizeObserver?.unobserve(observedRawControls);
+    observedRawControls = controls;
+    if (controls) resizeObserver?.observe(controls);
+  }
+  rawControlsWidth.value = controls?.offsetWidth || 0;
+  if (!rawControlsWidth.value) rawControlsHovered.value = false;
+}
+
+onUpdated(measureRawControls);
+
+function handleRawControlsHover(e: MouseEvent) {
+  rawControlsHovered.value = !!(e.target as Element)?.closest('[data-raw-preview-controls]');
+  if (rawControlsHovered.value) handleMouseLeave();
+}
 const filenameMaxWidth = computed(() => {
   if (containerWidth.value > 0 && buttonsWidth.value > 0) {
     const val = (containerWidth.value / 2) - (buttonsWidth.value / 2) - 100;
@@ -1037,6 +1062,7 @@ let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
   resizeObserver = new ResizeObserver((entries) => {
+    measureRawControls();
     for (const entry of entries) {
       if (entry.target === containerRef.value) {
         containerWidth.value = entry.contentRect.width;
@@ -1078,6 +1104,8 @@ function toggleToolbarPin() {
 }
 
 function handleMouseMove(e: MouseEvent) {
+  handleRawControlsHover(e);
+  if (rawControlsHovered.value) return;
   if (!containerRef.value) return;
 
   const containerRect = containerRef.value.getBoundingClientRect();
@@ -1158,7 +1186,10 @@ const computedToolbarClass = computed(() => {
     // Floating Hover Bar
     const floatingClasses = 'left-1/2 -translate-x-1/2 px-2 rounded-box bg-base-100/30 hover:bg-base-100/70 transition-[opacity,transform] duration-300 ease-in-out';
     
-    if (toolbarPosition.value === 'bottom') {
+    if (toolbarPosition.value === 'bottom' && !rawToolbarNeedsTop.value) {
+       if (rawControlsHovered.value && !hasOpenMenu.value) {
+         return `${commonClasses} ${floatingClasses} bottom-4 invisible opacity-0 pointer-events-none`;
+       }
        if (isHoverBottom.value || hasOpenMenu.value) {
           if (props.file.file_type === 2) {
             return `${commonClasses} ${floatingClasses} bottom-8 opacity-100`;
@@ -1173,7 +1204,7 @@ const computedToolbarClass = computed(() => {
           }
        }
     } else {
-       if (isHoverTop.value || hasOpenMenu.value) {
+       if (isHoverTop.value || (rawToolbarNeedsTop.value && isHoverBottom.value) || hasOpenMenu.value) {
           return `${commonClasses} ${floatingClasses} top-4 opacity-100`;
        } else {
           return `${commonClasses} ${floatingClasses} top-4 opacity-0`;
@@ -1249,7 +1280,6 @@ const handleOverlayClick = () =>{
   }
 }
 
-const OVERLAY_CLICK_MOVE_TOLERANCE = 4;
 let overlayPointer: { id: number; x: number; y: number } | null = null;
 
 const resetOverlayPointer = () => {

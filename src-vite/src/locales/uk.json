@@ -434,7 +434,7 @@
       "placeholder": "Шукати за назвою файлу"
     },
     "filter": {
-      "select_mode": "Режим множинного вибору",
+      "select_mode": "Множинний вибір",
       "select_files": "Вибрати файли",
       "show_selection_panel": "Відкрити панель множинного вибору",
       "hide_selection_panel": "Згорнути панель множинного вибору",

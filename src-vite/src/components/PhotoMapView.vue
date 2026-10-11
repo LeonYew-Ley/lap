@@ -26,6 +26,7 @@
 </template>
 
 <script setup>
+import { MAP_DETAIL_ZOOM, MAP_DETAIL_LIMIT, MAP_MARKER_FADE_MS, MAP_SINGLE_POINT_FIT_ZOOM } from '@/common/constants';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import L from 'leaflet'
@@ -70,12 +71,6 @@ const totalCount = computed(() => points.value.reduce((sum, point) => sum + poin
 const isQueryMap = computed(() => props.queryParams !== null)
 const showAppleMapsButton = computed(() => !isQueryMap.value && isMac && validLatLon(props.lat, props.lon))
 
-const DETAIL_ZOOM = 13
-const DETAIL_LIMIT = 500
-const MARKER_FADE_MS = 200
-// Leaflet resolves a one-point bounds to its maximum zoom. Keep surrounding
-// map context and avoid requesting an unsupported raster detail level instead.
-const SINGLE_POINT_FIT_ZOOM = 13
 const activeMaxZoom = ref(19)
 
 let map = null
@@ -241,7 +236,7 @@ function onMapChanged() {
 function scheduleDetailFetch() {
   detailRequestToken++
   if (detailTimer) clearTimeout(detailTimer)
-  if (zoom.value < DETAIL_ZOOM || !props.active) return
+  if (zoom.value < MAP_DETAIL_ZOOM || !props.active) return
   detailTimer = setTimeout(fetchVisibleFiles, 200)
 }
 
@@ -254,7 +249,7 @@ function bufferedMapBounds(padding) {
 }
 
 async function fetchVisibleFiles() {
-  if (!map || !props.active || zoom.value < DETAIL_ZOOM) return
+  if (!map || !props.active || zoom.value < MAP_DETAIL_ZOOM) return
   // Reuse complete data until even the rendered buffer leaves the loaded area.
   if (detailBounds?.contains(bufferedMapBounds(176))) return
   const bounds = bufferedMapBounds(352)
@@ -268,12 +263,12 @@ async function fetchVisibleFiles() {
       ...props.queryParams,
       gpsMinLat: bounds.getSouth(), gpsMaxLat: bounds.getNorth(),
       gpsMinLon: bounds.getWest(), gpsMaxLon: bounds.getEast(),
-    }, 0, DETAIL_LIMIT + 1)
+    }, 0, MAP_DETAIL_LIMIT + 1)
   }
   if (token !== detailRequestToken || !map || !props.active || !files) return
   // Never render a truncated detail set as though it were the complete region.
-  detailBounds = files.length <= DETAIL_LIMIT ? bounds : null
-  visibleFiles = files.length <= DETAIL_LIMIT ? files : []
+  detailBounds = files.length <= MAP_DETAIL_LIMIT ? bounds : null
+  visibleFiles = files.length <= MAP_DETAIL_LIMIT ? files : []
   renderMarkers()
 }
 
@@ -327,7 +322,7 @@ function renderMarkers() {
 function requestPhotoClusters() {
   if (!map || !clusterWorker || !props.active || !isQueryMap.value) return
   const spacing = Math.round(Number(config.settings.mapMarkerSize || 64) * 0.75)
-  const useDetails = zoom.value >= DETAIL_ZOOM && visibleFiles.length > 0
+  const useDetails = zoom.value >= MAP_DETAIL_ZOOM && visibleFiles.length > 0
     && detailBounds?.contains(bufferedMapBounds(176))
   const source = useDetails ? 'details' : 'overview'
   const input = useDetails ? visibleFiles : points.value
@@ -376,7 +371,7 @@ function applyPhotoClusters(clusters) {
     retiringMarkers.set(marker, setTimeout(() => {
       markerLayer?.removeLayer(marker)
       retiringMarkers.delete(marker)
-    }, MARKER_FADE_MS))
+    }, MAP_MARKER_FADE_MS))
   }
   photoMarkers = nextMarkers
 }
@@ -426,7 +421,7 @@ function addPhotoMarker(lat, lon, fileId, count, cluster = null) {
   })
   const marker = L.marker([lat, lon], { icon, keyboard: false }).addTo(markerLayer)
   const element = marker.getElement()
-  element?.style.setProperty('--map-photo-fade-duration', `${MARKER_FADE_MS}ms`)
+  element?.style.setProperty('--map-photo-fade-duration', `${MAP_MARKER_FADE_MS}ms`)
   element?.style.setProperty('--map-photo-marker-size', `${size}px`)
   // Wait for the photo itself: otherwise its opacity animation can finish
   // while the thumbnail request is still pending.
@@ -501,7 +496,7 @@ function fitBounds() {
 function fitMapToPoints() {
   map.fitBounds(L.latLngBounds(points.value.map(point => [point.lat, point.lon])), {
     padding: [20, 20],
-    maxZoom: points.value.length === 1 ? Math.min(SINGLE_POINT_FIT_ZOOM, activeMaxZoom.value) : activeMaxZoom.value,
+    maxZoom: points.value.length === 1 ? Math.min(MAP_SINGLE_POINT_FIT_ZOOM, activeMaxZoom.value) : activeMaxZoom.value,
   })
 }
 function zoomCenter() {

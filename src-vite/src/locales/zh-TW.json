@@ -434,7 +434,7 @@
       "placeholder": "搜尋檔案名稱"
     },
     "filter": {
-      "select_mode": "多選模式",
+      "select_mode": "多選",
       "select_files": "選擇檔案",
       "show_selection_panel": "開啟多選面板",
       "hide_selection_panel": "收起多選面板",

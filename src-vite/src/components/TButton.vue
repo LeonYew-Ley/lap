@@ -70,6 +70,7 @@
 </template>
 
 <script setup lang="ts">
+import { TOOLTIP_GAP, TOOLTIP_PADDING, TOOLTIP_AUTO_HIDE_MS } from '@/common/constants';
 import { computed, ref, onBeforeUnmount, nextTick, type CSSProperties } from 'vue';
 import { config } from '@/common/config';
 import type { Component } from 'vue';
@@ -126,9 +127,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['click']);
-const TOOLTIP_GAP = 4;
-const TOOLTIP_PADDING = 8;
-const TOOLTIP_AUTO_HIDE_MS = 3000;
 
 const tooltipText = computed(() => {
   if (!props.shortcut) return props.tooltip;

@@ -25,19 +25,19 @@
       </div>
     </transition>
 
-    <div v-if="Number(fileType) === 3 && !offlinePreview" class="absolute left-4 bottom-4 z-60 flex items-center gap-2" @dblclick.stop @mousedown.stop>
+    <div v-if="Number(fileType) === 3 && !offlinePreview" data-raw-preview-controls class="absolute left-4 bottom-4 z-60 flex items-center gap-2" @dblclick.stop @mousedown.stop>
       <button 
         class="inline-flex h-10 items-center gap-1 rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
-        :class="effectiveRawSource !== 'pair' ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource !== 'pair'" :title="rawSwitchTitle" @click.stop="switchRaw">
+        :class="effectiveRawSource !== 'pair' && rawSourceIsOverride ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource !== 'pair'" :title="rawSwitchTitle" @click.stop="switchRaw">
         <span>RAW<span v-if="rawSourceLabel"> · {{ rawSourceLabel }}</span></span>
         <span class="inline-flex size-4 shrink-0 items-center justify-center" aria-hidden="true">
-          <span v-if="rawLoadingVisible" class="loading loading-spinner loading-xs text-primary/70"></span>
+          <span v-if="rawLoadingVisible" class="loading loading-spinner loading-xs"></span>
           <IconBrightness v-else class="w-5 h-5" />
         </span>
       </button>
       <button v-if="rawPairLabel && config.settings.groupRawJpegPairs" 
         class="inline-flex h-10 items-center rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
-        :class="effectiveRawSource === 'pair' ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource === 'pair'" :title="t('settings.raw.show_pair', { format: rawPairLabel })" @click.stop="selectRawPair">{{ rawPairLabel }}</button>
+        :class="effectiveRawSource === 'pair' && rawSourceIsOverride ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource === 'pair'" :title="t('settings.raw.show_pair', { format: rawPairLabel })" @click.stop="selectRawPair">{{ rawPairLabel }}</button>
     </div>
 
     <!-- Error overlay -->
@@ -183,7 +183,7 @@
 import { ref, shallowRef, triggerRef, watch, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { useUIStore } from '@/stores/uiStore';
 import { config, libConfig } from '@/common/config';
-import { SIDEBAR } from '@/common/constants';
+import { SIDEBAR, GESTURE_LOCK_THRESHOLD, HORIZONTAL_NAV_THRESHOLD, MOUSE_DRAG_NAV_THRESHOLD } from '@/common/constants';
 import {
   getAssetSrc,
   getPreviewUrl,
@@ -336,9 +336,6 @@ let gestureResetTimeout: NodeJS.Timeout | null = null;
 let hasNavigatedThisGesture = false;
 let lastDeltaX = 0;
 
-const GESTURE_LOCK_THRESHOLD = 10;
-const HORIZONTAL_NAV_THRESHOLD = 100; // 100px threshold
-const MOUSE_DRAG_NAV_THRESHOLD = 120;
 const isWheelZooming = ref(false);
 let wheelZoomTimeout: NodeJS.Timeout | null = null;
 
@@ -459,6 +456,12 @@ const effectiveRawSource = computed<RawPreviewSource>(() => {
   return rawModeSource.value;
 });
 const rawSourceLabel = computed(() => t(`settings.raw.source_${rawModeSource.value}`));
+const rawSourceIsOverride = computed(() => {
+  const defaults = getRawDisplayOptions();
+  const defaultSource = defaults.preferPair && rawPairLabel.value ? 'pair'
+    : defaults.mode === 'embedded' ? 'embedded' : defaults.autoBright ? 'brightened' : 'rendered';
+  return effectiveRawSource.value !== defaultSource;
+});
 const nextRawMode = computed(() => {
   const requested = requestedRawOptions.value;
   const current = rawRequestPending.value && rawOverride.value
@@ -594,7 +597,6 @@ watch(() => [scale.value[activeImage.value], rawSource.value, rawRequestPending.
   }, 150);
 });
 
-
 let resizeObserver: ResizeObserver | null = null;
 const suppressViewportEmit = ref(false);
 let warmImageTimeout: NodeJS.Timeout | null = null;
@@ -669,8 +671,6 @@ const navContainerSize = computed(() => {
     };
   }
 });
-
-
 
 const adjustmentStyle = computed(() => (src: string) => {
   if (!uiStore.activeAdjustments.filePath) return '';

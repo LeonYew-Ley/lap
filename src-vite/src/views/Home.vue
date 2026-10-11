@@ -193,7 +193,7 @@ import { useAppUpdater } from '@/common/updater';
 import { useUIStore } from '@/stores/uiStore';
 import { isWin, isMac, isLinux, SCALE_VALUES } from '@/common/utils';
 import { matchesShortcut, ShortcutPlatform } from '@/common/shortcuts';
-import { SIDEBAR, SETTINGS_TAB } from '@/common/constants';
+import { SIDEBAR, SETTINGS_TAB, SETTINGS_BASE_WIDTH, SETTINGS_BASE_HEIGHT, PANEL_ANIMATION_MS } from '@/common/constants';
 import { getAppConfig, switchLibrary, cancelIndexing, cancelFaceIndex } from '@/common/api';
 
 // vue components
@@ -263,8 +263,6 @@ const checkLibraryEmpty = async () => {
     libraryEmpty.value = false;
   }
 };
-const SETTINGS_BASE_WIDTH = 600;
-const SETTINGS_BASE_HEIGHT = 620;
 
 /// i18n
 const { locale, messages } = useI18n();
@@ -280,7 +278,7 @@ const showPanel = computed({
   get: () => config.leftPanel.show,
   set: (value: boolean) => { config.leftPanel.show = value; },
 });
-const LEFT_PANEL_ANIMATION_MS = 200;
+
 const leftPanelMounted = ref(showPanel.value);
 const leftPanelVisualExpanded = ref(showPanel.value);
 const leftPanelLayoutExpanded = ref(showPanel.value);
@@ -313,7 +311,7 @@ watch(showPanel, async (expanded) => {
       if (animationVersion !== leftPanelAnimationVersion) return;
       leftPanelAnimationTimer = null;
       void commitLeftPanelLayout(true);
-    }, LEFT_PANEL_ANIMATION_MS);
+    }, PANEL_ANIMATION_MS);
     return;
   }
 
@@ -325,7 +323,7 @@ watch(showPanel, async (expanded) => {
       if (animationVersion !== leftPanelAnimationVersion) return;
       leftPanelMounted.value = false;
     });
-  }, LEFT_PANEL_ANIMATION_MS);
+  }, PANEL_ANIMATION_MS);
 });
 
 // Library state
@@ -445,7 +443,6 @@ const libraryMenuItems = computed(() => {
   });
   return items;
 });
-
 
 let startupFinished = false;
 async function finishStartup() {

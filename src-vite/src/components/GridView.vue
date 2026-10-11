@@ -125,7 +125,7 @@ import { config } from '@/common/config';
 import { thumbnailProfile } from '@/common/thumbnailProfiles';
 import Thumbnail from '@/components/Thumbnail.vue';
 import VirtualScroll from '@/components/VirtualScroll.vue';
-import { GROUP } from '@/common/constants';
+import { GROUP, GROUP_HEADER_HEIGHT } from '@/common/constants';
 import { calculateJustifiedLayout, calculateLinearRowLayout, calculateLinearColumnLayout, calculateMasonryLayout, type Geometry } from '@/common/layout';
 import { buildFolderBreadcrumbs, formatFolderBreadcrumb, isWithinRootPath } from '@/common/utils';
 import Breadcrumb from '@/components/Breadcrumb.vue';
@@ -209,7 +209,7 @@ const containerRef = ref<HTMLElement | null>(null);
 const scroller = ref<any>(null);
 const columnCount = ref(4);
 const containerWidth = ref(0);
-const GROUP_HEADER_HEIGHT = 40;
+
 const groupHeaderHeight = computed(() => GROUP_HEADER_HEIGHT * Number(config.settings.scale || 1));
 let pendingPointerDrag: {
   pointerId: number;

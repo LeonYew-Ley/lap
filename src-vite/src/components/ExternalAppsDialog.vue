@@ -47,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import { MAX_EXTERNAL_APPS } from '@/common/constants';
 import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { useI18n } from 'vue-i18n';
@@ -60,7 +61,6 @@ import { useUIStore } from '@/stores/uiStore';
 
 type ExternalAppKind = 'image' | 'video';
 
-const MAX_EXTERNAL_APPS = 5;
 const emit = defineEmits(['cancel']);
 const { locale, messages } = useI18n();
 const localeMsg = computed(() => messages.value[locale.value] as any);

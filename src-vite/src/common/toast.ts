@@ -1,3 +1,4 @@
+import { MAX_TOASTS_PER_PLACEMENT } from '@/common/constants';
 import { reactive } from 'vue';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
@@ -25,7 +26,6 @@ const DEFAULT_DURATION: Record<ToastType, number> = {
   error: 3000,
 };
 
-const MAX_TOASTS_PER_PLACEMENT = 3;
 const items = reactive<ToastItem[]>([]);
 let nextToastId = 1;
 

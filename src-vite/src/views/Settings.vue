@@ -676,7 +676,7 @@ import { ask, open as openDialog } from '@tauri-apps/plugin-dialog';
 import { useI18n } from 'vue-i18n';
 import { config, libConfig } from '@/common/config';
 import { normalizeThumbnailSize } from '@/common/thumbnailProfiles';
-import { THUMBNAIL_BADGE, MAP_MARKER_SIZES, SETTINGS_TAB } from '@/common/constants';
+import { THUMBNAIL_BADGE, MAP_MARKER_SIZES, SETTINGS_TAB, SETTINGS_BASE_WIDTH, SETTINGS_BASE_HEIGHT } from '@/common/constants';
 import {
   getDbStorageDir,
   changeDbStorageDir,
@@ -723,8 +723,7 @@ const rawPreviewFields = [
 
 const appWindow = getCurrentWebviewWindow()
 let unlistenCloseRequested: (() => void) | null = null;
-const SETTINGS_BASE_WIDTH = 600;
-const SETTINGS_BASE_HEIGHT = 620;
+
 const dbStorageDir = ref('');
 const isChangingDbStorage = ref(false);
 const hasCustomDbStorage = ref(false);

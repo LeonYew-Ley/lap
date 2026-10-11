@@ -212,13 +212,15 @@
             :class="{ 'pointer-events-none': uiStore.inputStack.length > 0 }"
             @pointerdown.stop @click.stop
           >
-            <span class="px-1 text-sm tabular-nums text-primary" aria-live="polite">
-              {{ selectedCount > 0 ? $t('toolbar.filter.select_count', { count: selectedCount.toLocaleString() }) : $t('toolbar.filter.select_files') }}
-            </span>
-            <button class="btn btn-ghost btn-xs btn-square text-primary"
+            <button class="flex items-center gap-2 rounded-box px-1 py-1 text-primary/70 hover:text-primary cursor-pointer"
               :aria-label="$t('toolbar.filter.show_selection_panel')"
               :title="$t('toolbar.filter.show_selection_panel')" @click="openSelectionPanel"
-            ><IconPanelMax class="size-4" /></button>
+            >
+              <span class="text-sm tabular-nums" aria-live="polite">
+                {{ selectedCount > 0 ? $t('toolbar.filter.select_count', { count: selectedCount.toLocaleString() }) : $t('toolbar.filter.select_files') }}
+              </span>
+              <IconPanelMax class="size-4" />
+            </button>
             <button class="btn btn-ghost btn-xs btn-square" :aria-label="$t('toolbar.filter.exit_select_mode')"
               :title="`${$t('toolbar.filter.exit_select_mode')} (Esc)`" @click="handleSelectMode(false)"
             ><IconClose class="size-4" /></button>
@@ -549,7 +551,6 @@
     />
   </div>
 
-
   <!-- rename -->
   <MessageBox
     v-if="showRenameMsgbox"
@@ -782,7 +783,7 @@ import { getSmartTagById } from '@/common/smartTags';
 import { clearFolderFileCounts, setFolderFileCount } from '@/composables/useAlbumSelection';
 import { createEmptyLibraryCounts } from '@/stores/libraryStore';
 import { getAlbumScanState, getAlbumScanIcon, shouldAnimateAlbumScanIcon } from '@/common/scanStatus';
-import { CULLING, DATE_SORT, GROUP, LIB_ITEM, RATE, SIDEBAR } from '@/common/constants';
+import { CULLING, DATE_SORT, GROUP, LIB_ITEM, RATE, SIDEBAR, SELECTED_THUMBNAIL_LIMIT, RIGHT_PANEL_MIN_WIDTH, PANEL_ANIMATION_MS, MONTAGE_MAX_PHOTOS, LARGE_BATCH_CONFIRM_THRESHOLD, EXTERNAL_OPEN_WARNING_THRESHOLD } from '@/common/constants';
 import { isWin, isMac, isLinux, setTheme, separator,
          formatFileSize, formatDate, getCalendarDateRange, formatFolderBreadcrumb, getThumbnailDataUrl, getAssetSrc, getPreviewUrl,
          getCachedThumbnailDataUrl,
@@ -1034,7 +1035,7 @@ const selectedFileIds = markRaw(new Set<number>());
 const selectionVersion = ref(0);
 const selectedFilesVersion = ref(0);
 const selectionPreviewFiles = ref<any[]>([]);
-const SELECTION_PREVIEW_LIMIT = 19;
+
 let selectionPreviewRequestId = 0;
 type SelectionRestoreState = {
   selectedIds: Set<number>;
@@ -1079,7 +1080,7 @@ async function refreshSelectionPanelPreviews() {
     return;
   }
 
-  const previewIds = Array.from(selectedFileIds).slice(0, SELECTION_PREVIEW_LIMIT);
+  const previewIds = Array.from(selectedFileIds).slice(0, SELECTED_THUMBNAIL_LIMIT);
   const filesById = new Map(getActionableSelectedItems().map(file => [Number(file.id), file]));
   const missingIds = previewIds.filter(id => !filesById.has(id));
   if (missingIds.length > 0) {
@@ -1279,7 +1280,7 @@ const groupSelectedCounts = computed(() => groupSelectedCountMap.value);
 const groupSelectionLoading = ref<Record<string, boolean>>({});
 const fileIdToGroupId = new Map<number, string>();
 const groupMetaMap = new Map<string, { count: number; size: number }>();
-const LARGE_BATCH_CONFIRM_THRESHOLD = 1000;
+
 const FILE_OPERATION_CONCURRENCY = 8;
 
 function clearSelectionForFileListUpdate() {
@@ -2151,8 +2152,7 @@ const renderedRightPanelContent = ref(rightPanelContent.value);
 watch(rightPanelContent, (content) => {
   if (content) renderedRightPanelContent.value = content;
 });
-const RIGHT_PANEL_MIN_WIDTH = 160; // Keep aligned with left panel minimum width.
-const RIGHT_PANEL_ANIMATION_MS = 200;
+
 const activeRightPanelWidth = computed(() => Number(config.rightPanel.width || 360));
 const shouldShowRightPanel = computed(() => config.rightPanel.show || (selectMode.value && selectionPanelOpen.value));
 const rightPanelMounted = ref(shouldShowRightPanel.value);
@@ -2209,7 +2209,7 @@ watch(shouldShowRightPanel, async (visible) => {
       if (animationVersion !== rightPanelAnimationVersion) return;
       rightPanelMounted.value = false;
     });
-  }, RIGHT_PANEL_ANIMATION_MS);
+  }, PANEL_ANIMATION_MS);
 });
 
 function getRightPanelMaxWidth() {
@@ -6129,7 +6129,6 @@ watch(() => libConfig._libraryId, () => {
   uiStore.clearCountUpdateRequest();
 });
 
-
 /// watch for file list changes
 watch(
   () => JSON.stringify({
@@ -8407,8 +8406,6 @@ const clickCopyImages = async (fallbackFile?: any) => {
 
 const appPathForMediaKind = (kind: 'image' | 'video') =>
   String(config.defaultExternalApp(kind)?.path || '');
-
-const EXTERNAL_OPEN_WARNING_THRESHOLD = 100;
 
 const launchInExternalApp = async (paths: string[], appPath: string) => {
   try {
@@ -10719,7 +10716,6 @@ async function syncSelectionToImageViewer(index: number) {
   });
 }
 
-const MONTAGE_MAX_PHOTOS = 100;
 let montageSaveAsContext: SaveAsContext | null = null;
 let montageSourceFolder = '';
 
@@ -10935,7 +10931,6 @@ defineExpose({
   .selection-bar-enter-active,
   .selection-bar-leave-active { transition: none; }
 }
-
 
 .drop-overlay {
   position: absolute;

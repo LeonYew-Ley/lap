@@ -434,7 +434,7 @@
       "placeholder": "Имя файла"
     },
     "filter": {
-      "select_mode": "Выделение",
+      "select_mode": "Множественный выбор",
       "select_files": "Выбрать файлы",
       "show_selection_panel": "Открыть панель множественного выбора",
       "hide_selection_panel": "Свернуть панель множественного выбора",
