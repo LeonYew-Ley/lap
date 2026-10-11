@@ -29,11 +29,12 @@
       <button 
         class="inline-flex h-10 items-center gap-1 rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
         :class="effectiveRawSource !== 'pair' && rawSourceIsOverride ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource !== 'pair'" :title="rawSwitchTitle" @click.stop="switchRaw">
-        <span>RAW<span v-if="rawSourceLabel"> · {{ rawSourceLabel }}</span></span>
-        <span class="inline-flex size-4 shrink-0 items-center justify-center" aria-hidden="true">
-          <span v-if="rawLoadingVisible" class="loading loading-spinner loading-xs"></span>
-          <IconBrightness v-else class="w-5 h-5" />
+        <span>RAW</span>
+        <span v-if="rawSourceLabel && !rawLoadingVisible" class="inline-flex items-center gap-1">
+          <span>· {{ rawSourceLabel }}</span>
+          <component :is="rawModeSource === 'embedded' ? IconEmbedded : rawModeSource === 'brightened' ? IconBrightnessUp : IconBrightness" class="w-5 h-5" aria-hidden="true" />
         </span>
+        <span v-if="rawLoadingVisible" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
       </button>
       <button v-if="rawPairLabel && config.settings.groupRawJpegPairs" 
         class="inline-flex h-10 items-center rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
@@ -204,7 +205,7 @@ import { createDragPreview, isWindowDragEdge, startNativeFileDrag } from '@/comm
 
 import { checkFileAccessibility } from '@/common/api';
 import { setFileAccessibility } from '@/common/availability';
-import { IconError, IconBrightness } from '@/common/icons';
+import { IconError, IconBrightness, IconBrightnessUp, IconEmbedded } from '@/common/icons';
 import ImageNavigator from '@/components/ImageNavigator.vue';
 
 const { t } = useI18n();
@@ -405,18 +406,17 @@ let loadingTimeout: NodeJS.Timeout | null = null;
 // Show the RAW spinner only after loading has persisted for a moment, so fast
 // loads don't flash it. Resets immediately when loading finishes.
 const rawLoadingVisible = ref(false);
+const currentLoadingId = ref(0);
 let rawLoadingTimer: ReturnType<typeof setTimeout> | null = null;
-watch(isLoading, (loading) => {
+watch([isLoading, currentLoadingId], ([loading]) => {
   if (rawLoadingTimer) { clearTimeout(rawLoadingTimer); rawLoadingTimer = null; }
+  rawLoadingVisible.value = false;
   if (loading) {
-    rawLoadingTimer = setTimeout(() => { rawLoadingVisible.value = true; rawLoadingTimer = null; }, 500);
-  } else {
-    rawLoadingVisible.value = false;
+    rawLoadingTimer = setTimeout(() => { rawLoadingVisible.value = true; rawLoadingTimer = null; }, 200);
   }
 });
 
 const activeImageEl = ref<HTMLImageElement | null>(null);
-const currentLoadingId = ref(0);
 type LoadedImage = { src: string; naturalWidth: number; naturalHeight: number; raw?: { source: RawPreviewSource; unavailable: boolean; pair: string | null } };
 const preloadCache = new Map<string, Promise<LoadedImage>>();
 const rawOverride = ref<RawDisplayOptions | null>(null);
@@ -455,7 +455,7 @@ const effectiveRawSource = computed<RawPreviewSource>(() => {
   if (actual === 'pair' || (o.preferPair && !!rawPairLabel.value)) return 'pair';
   return rawModeSource.value;
 });
-const rawSourceLabel = computed(() => t(`settings.raw.source_${rawModeSource.value}`));
+const rawSourceLabel = computed(() => rawSource.value || rawOverride.value ? t(`settings.raw.source_${rawModeSource.value}`) : '');
 const rawSourceIsOverride = computed(() => {
   const defaults = getRawDisplayOptions();
   const defaultSource = defaults.preferPair && rawPairLabel.value ? 'pair'

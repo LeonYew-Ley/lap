@@ -18,56 +18,35 @@
     @dblclick="onDoubleClick"
     @keydown="onKeyDown"
   >
-    <!-- baseline the ticks stand on -->
-    <div
-      class="absolute left-0 right-0 h-px bg-base-content/10"
-      :style="{ bottom: BASELINE + 'px' }"
-    ></div>
-
-    <!-- tick marks -->
-    <div
-      v-for="t in ticks"
-      :key="t.value"
-      class="absolute w-px rounded-sm"
-      :class="t.isZero ? 'bg-primary' : t.isMajor ? 'bg-base-content/45' : 'bg-base-content/20'"
-      :style="{
-        left: t.pct + '%',
-        bottom: BASELINE + 'px',
-        height: (t.isZero ? 13 : t.isMajor ? 9 : 5) + 'px',
-      }"
-    ></div>
-
-    <!-- degree labels on major ticks -->
-    <div
-      v-for="t in majorTicks"
-      :key="'lbl-' + t.value"
-      class="absolute -translate-x-1/2 text-[9px] leading-none font-medium tabular-nums"
-      :class="t.isZero ? 'text-primary' : 'text-base-content/40'"
-      :style="{ left: t.pct + '%', bottom: '1px' }"
-    >{{ t.value }}</div>
-
-    <!-- thumb needle -->
-    <div
-      class="absolute z-10 w-[2px] -translate-x-1/2 rounded-full bg-primary"
-      :class="dragging ? '' : 'transition-[left] duration-150 ease-out'"
-      :style="{ left: thumbPct + '%', bottom: BASELINE + 'px', height: NEEDLE + 'px' }"
-    ></div>
-
-    <!-- live value badge (replaces the removed number input) -->
-    <div
-      class="absolute z-20 -translate-x-1/2 px-1.5 h-[15px] flex items-center rounded-md text-[10px] font-semibold tabular-nums leading-none border shadow-sm whitespace-nowrap"
-      :class="
-        dragging
-          ? 'bg-primary text-primary-content border-primary'
-          : 'bg-base-100 text-base-content/80 border-base-content/10'
-      "
-      :style="{ left: badgeLeftPx + 'px', bottom: BASELINE + NEEDLE - 2 + 'px' }"
-    >{{ modelValue }}°</div>
+    <span
+      class="absolute left-1/2 top-0 -translate-x-1/2 text-xs font-medium tabular-nums cursor-pointer"
+      :class="dragging ? 'text-primary' : 'text-base-content/70 hover:text-primary'"
+      :title="ariaLabel"
+      @pointerdown.stop
+      @click.stop="onDoubleClick"
+    >{{ modelValue }}°</span>
+    <div class="angle-ruler absolute inset-x-0 bottom-0 h-5 overflow-hidden" aria-hidden="true">
+      <div
+        class="absolute bottom-1 h-px bg-base-content/20"
+        :style="{ left: (50 + (min - modelValue) / (max - min) * 100) + '%', width: '100%' }"
+      ></div>
+      <div
+        v-for="t in ticks"
+        :key="t.value"
+        class="absolute bottom-1 w-px rounded-sm"
+        :class="t.isZero ? 'bg-primary' : t.isMajor ? 'bg-base-content/45' : 'bg-base-content/20'"
+        :style="{
+          left: (50 + (t.value - modelValue) / (max - min) * 100) + '%',
+          height: (t.isZero ? 13 : t.isMajor ? 9 : 5) + 'px',
+        }"
+      ></div>
+    </div>
+    <div class="absolute bottom-0 left-1/2 h-5 w-0.5 -translate-x-1/2 rounded-full bg-primary" aria-hidden="true"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -100,66 +79,36 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void;
 }>();
 
-// Layout constants (px).
 const HEIGHT = 40;
-const BASELINE = 13; // ticks/needle stand here; labels live below
-const NEEDLE = 15;
-const BADGE_HALF = 17; // half badge width, for clamping inside the track
 
 const rootRef = ref<HTMLElement | null>(null);
 const dragging = ref(false);
-const width = ref(0);
-
-let ro: ResizeObserver | null = null;
-onMounted(() => {
-  if (rootRef.value) {
-    width.value = rootRef.value.getBoundingClientRect().width;
-    ro = new ResizeObserver((entries) => {
-      width.value = entries[0]?.contentRect.width ?? 0;
-    });
-    ro.observe(rootRef.value);
-  }
-});
+let dragStartX = 0;
+let dragStartValue = 0;
+let dragWidth = 0;
 onBeforeUnmount(() => {
-  ro?.disconnect();
-  ro = null;
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
 });
 
 interface Tick {
   value: number;
-  pct: number;
   isMajor: boolean;
   isZero: boolean;
 }
 
 const ticks = computed<Tick[]>(() => {
-  const span = props.max - props.min;
   const out: Tick[] = [];
   for (let v = props.min; v <= props.max + 1e-9; v += props.minorStep) {
     const value = Math.round(v);
     out.push({
       value,
-      pct: ((v - props.min) / span) * 100,
       isMajor: Math.abs(v % props.majorStep) < 1e-6,
       isZero: Math.abs(v) < 1e-6,
     });
   }
   return out;
-});
-
-const majorTicks = computed(() => ticks.value.filter((t) => t.isMajor));
-
-const thumbPct = computed(() => {
-  const span = props.max - props.min;
-  return ((props.modelValue - props.min) / span) * 100;
-});
-
-const badgeLeftPx = computed(() => {
-  const px = (thumbPct.value / 100) * width.value;
-  if (width.value <= 0) return px;
-  return Math.min(width.value - BADGE_HALF, Math.max(BADGE_HALF, px));
 });
 
 const quantize = (raw: number): number => {
@@ -171,33 +120,31 @@ const setValue = (v: number) => {
   if (v !== props.modelValue) emit('update:modelValue', v);
 };
 
-const setValueFromClientX = (clientX: number) => {
-  const el = rootRef.value;
-  if (!el) return;
-  const rect = el.getBoundingClientRect();
-  if (rect.width <= 0) return;
-  const pct = (clientX - rect.left) / rect.width;
-  setValue(quantize(props.min + pct * (props.max - props.min)));
-};
-
 const onPointerMove = (e: PointerEvent) => {
-  if (dragging.value) setValueFromClientX(e.clientX);
+  if (dragging.value && dragWidth > 0) {
+    setValue(quantize(dragStartValue - (e.clientX - dragStartX) / dragWidth * (props.max - props.min)));
+  }
 };
 
 const onPointerUp = () => {
   dragging.value = false;
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
 };
 
 const onPointerDown = (e: PointerEvent) => {
-  if (props.disabled) return;
+  if (props.disabled || e.button !== 0) return;
   e.preventDefault();
+  rootRef.value?.focus();
+  dragStartX = e.clientX;
+  dragStartValue = props.modelValue;
+  dragWidth = rootRef.value?.getBoundingClientRect().width ?? 0;
   dragging.value = true;
   rootRef.value?.setPointerCapture?.(e.pointerId);
-  setValueFromClientX(e.clientX); // click-to-position, then drag
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
 };
 
 const onDoubleClick = () => {
@@ -238,8 +185,8 @@ const onKeyDown = (e: KeyboardEvent) => {
 </script>
 
 <style scoped>
-.angle-slider:focus-visible {
-  border-radius: 0.375rem;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-primary) 55%, transparent);
+.angle-ruler {
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
 }
+
 </style>
