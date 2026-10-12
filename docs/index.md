@@ -13,8 +13,8 @@ hero:
       text: Download
       link: https://github.com/julyx10/lap/releases/latest
     - theme: alt
-      text: What's New in v0.3.2
-      link: /guide/release-notes/v0.3.2
+      text: What's New in v0.3.3
+      link: /guide/release-notes/v0.3.3
     - theme: alt
       text: View on GitHub
       link: https://github.com/julyx10/lap
@@ -35,6 +35,15 @@ features:
   - title: Built for Large Libraries
     details: Smooth browsing and organization across thousands of photos and videos in real-world collections.
     icon: ⚡
+  - title: Photo Collage
+    details: Arrange photos in grid, mosaic, or picture-pile layouts, then export or print your collage.
+    icon: 🧩
+  - title: Offline Album Browsing
+    details: Browse cached thumbnails and metadata even when removable or network storage is disconnected.
+    icon: 💾
+  - title: RAW Preview Controls
+    details: Choose embedded or rendered previews, adjust render brightness, and switch between RAW and paired JPEG/HEIC images.
+    icon: 📷
   - title: Free to Use
     details: No subscription plan or recurring fee. Install and manage your memories freely.
     icon: 💸
@@ -45,7 +54,7 @@ features:
     details: Play Apple Live Photos and supported Google Motion Photos alongside your photos and videos.
     icon: ▶️
   - title: Review and Organize
-    details: Compare photos, organize collections and tags, and clean up duplicate sets in bulk.
+    details: Compare photos, organize collections and tag groups, and clean up duplicate sets in bulk.
     icon: 🖼️
 ---
 
