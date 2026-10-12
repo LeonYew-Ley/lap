@@ -743,6 +743,11 @@ pub fn get_raw_preview_image(
 }
 
 fn get_raw_preview_fallback_image(file_path: &str) -> Result<Option<Vec<u8>>, String> {
+    // Match embedded browsing before falling back to generic TIFF/JPEG extraction,
+    // which can expose only the small EXIF thumbnail for some unsupported RAWs.
+    if let Some(data) = get_embedded_preview(file_path) {
+        return Ok(Some(data));
+    }
     // Final fallback for unsupported RAW renderers or files without a usable
     // processed output. The selected source still controls the normal path.
     if let Ok(Some(preview)) = select_embedded_jpeg_for_preview(file_path) {
@@ -1980,6 +1985,22 @@ pub async fn get_raw_preview_cached(path: &str, options: RawDisplayOptions, full
 #[cfg(test)]
 mod offline_preview_tests {
     use super::*;
+
+    #[test]
+    #[ignore = "requires LAP_RAW_PREVIEW_FIXTURE pointing to an unsupported RAW file"]
+    fn editable_raw_preview_falls_back_to_embedded_pixels() {
+        let path = std::env::var("LAP_RAW_PREVIEW_FIXTURE").unwrap();
+        assert!(t_libraw::get_raw_preview_image(&path, RawDisplayOptions::rendered_bright()).is_err());
+        let embedded = get_embedded_preview(&path).expect("embedded preview must be available");
+        let editing = tauri::async_runtime::block_on(get_generated_preview_bytes(&path))
+            .unwrap().unwrap();
+        let image = image::load_from_memory(&editing).unwrap();
+        println!("Editable embedded preview: {} × {}", image.width(), image.height());
+        assert_eq!(editing, embedded);
+        // Export/crop must decode the same oriented pixels as the editing preview.
+        let export = tauri::async_runtime::block_on(load_oriented_image(&path, 1)).unwrap();
+        assert_eq!(export.to_rgb8(), image.to_rgb8());
+    }
 
     #[test]
     fn raw_disk_cache_preserves_source_and_rejects_incomplete_data() {
