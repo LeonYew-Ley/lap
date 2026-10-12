@@ -47,18 +47,20 @@ test('direct cycle skips unavailable embedded preview and returns from paired JP
 });
 
 const imageSource = fs.readFileSync(new URL('../src/components/Image.vue', import.meta.url), 'utf8');
-const selectionSource = ts.transpile(imageSource.slice(imageSource.indexOf('const nextRawMode ='), imageSource.indexOf('let rawAbortController')), { target: ts.ScriptTarget.ES2022 });
+const selectionSource = ts.transpile(imageSource.slice(imageSource.indexOf('const rawModeSource ='), imageSource.indexOf('let rawAbortController')), { target: ts.ScriptTarget.ES2022 });
 
 test('JPEG round trips restore the selected RAW mode before cycling again', () => {
   const defaults = { mode: 'embedded', autoBright: false, preferPair: true };
   const rawOverride = ref(null);
-  const rawSource = ref('pair');
+  const rawSource = ref('embedded');
   const rawRequestPending = ref(false);
   const requestedRawOptions = computed(() => rawOverride.value || defaults);
-  const { switchRaw, selectRawPair } = new Function('computed', 'rawOverride', 'rawSource', 'rawRequestPending', 'rawSelectionVersion', 'rawEmbeddedUnavailable', 'requestedRawOptions', 'nextRawPreviewMode', 'getRawDisplayOptions', 't', selectionSource + '; return { switchRaw, selectRawPair };')(
-    computed, rawOverride, rawSource, rawRequestPending, ref(0), ref(false), requestedRawOptions, nextRawPreviewMode, () => defaults, () => '',
+  const { switchRaw, selectRawPair, rawSourceLabel } = new Function('computed', 'rawOverride', 'rawSource', 'rawRequestPending', 'rawSelectionVersion', 'rawEmbeddedUnavailable', 'requestedRawOptions', 'rawPairLabel', 'nextRawPreviewMode', 'getRawDisplayOptions', 't', selectionSource + '; return { switchRaw, selectRawPair, rawSourceLabel };')(
+    computed, rawOverride, rawSource, rawRequestPending, ref(0), ref(false), requestedRawOptions, ref('JPEG'), nextRawPreviewMode, () => defaults, key => key,
   );
   const finish = source => { rawSource.value = source; rawRequestPending.value = false; };
+  // JPEG is highlighted by preferPair even if the last confirmed source
+  // is embedded. The first click must select that badge mode, not cycle it.
   switchRaw();
   assert.equal(rawOverride.value.mode, 'embedded');
   finish('embedded');
@@ -79,6 +81,11 @@ test('JPEG round trips restore the selected RAW mode before cycling again', () =
     assert.equal(rawOverride.value.preferPair, false);
     finish(mode);
   }
+  // A generic image fallback must not claim to be an embedded RAW preview.
+  finish('image');
+  assert.equal(rawSourceLabel.value, '');
+  switchRaw();
+  assert.equal(rawOverride.value.mode, 'rendered');
 });
 
 const loaderSource = ts.transpile(imageSource.slice(imageSource.indexOf('async function loadRawImage'), imageSource.indexOf('watch(() => [scale.value')), { target: ts.ScriptTarget.ES2022 });

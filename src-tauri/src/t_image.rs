@@ -1882,9 +1882,26 @@ fn get_raw_preview_with_source(path: &str, options: RawDisplayOptions, full_size
     let rendered = RawDisplayOptions { mode: crate::t_raw_display::RawPreviewMode::Rendered, ..options };
     match t_libraw::get_raw_preview_with_size(path, rendered, full_size) {
         Ok((data, source, _)) => Ok((data, source, options.embedded())),
-        Err(error) if !options.embedded() => get_embedded_preview(path)
-            .map(|data| (data, "embedded", false)).ok_or(error),
-        Err(error) => Err(error),
+        Err(error) => {
+            if !options.embedded() {
+                if let Some(data) = get_embedded_preview(path) {
+                    return Ok((data, "embedded", false));
+                }
+            }
+            // Thumbnail and editing paths also accept files whose contents do
+            // not match their RAW extension. Keep browsing's final fallback.
+            let image = ImageReader::open(path).ok()
+                .and_then(|reader| reader.with_guessed_format().ok())
+                .and_then(|reader| reader.decode().ok());
+            if let Some(image) = image {
+                let data = resize_dynamic_image_to_jpeg(image, get_image_orientation(path), 4096)?;
+                return Ok((data, "image", false));
+            }
+            match get_raw_preview_fallback_image(path)? {
+                Some(data) => Ok((data, "image", false)),
+                None => Err(error),
+            }
+        },
     }
 }
 
@@ -1913,7 +1930,7 @@ fn raw_preview_disk_path(path: &str, signature: (u64, u128), options: RawDisplay
 
 fn read_raw_preview_disk(path: &std::path::Path) -> Option<RawPreviewResult> {
     let bytes = fs::read(path).ok()?;
-    let source = match *bytes.first()? { 1 => "embedded", 2 => "rendered", 3 => "brightened", _ => return None };
+    let source = match *bytes.first()? { 1 => "embedded", 2 => "rendered", 3 => "brightened", 4 => "image", _ => return None };
     let unavailable = *bytes.get(1)? != 0;
     let data = bytes.get(2..)?;
     if !data.starts_with(&[0xff, 0xd8]) || !data.ends_with(&[0xff, 0xd9]) { return None; }
@@ -1923,7 +1940,7 @@ fn read_raw_preview_disk(path: &std::path::Path) -> Option<RawPreviewResult> {
 fn write_raw_preview_disk(path: &std::path::Path, result: &RawPreviewResult) {
     let Some(dir) = path.parent() else { return; };
     if fs::create_dir_all(dir).is_err() { return; }
-    let mut bytes = vec![match result.1 { "embedded" => 1, "brightened" => 3, _ => 2 }, result.2 as u8];
+    let mut bytes = vec![match result.1 { "embedded" => 1, "brightened" => 3, "image" => 4, _ => 2 }, result.2 as u8];
     bytes.extend_from_slice(&result.0);
     let temp = path.with_extension(format!("{}.tmp", uuid::Uuid::new_v4()));
     if fs::write(&temp, bytes).is_ok() { let _ = fs::rename(&temp, path); }
@@ -2003,6 +2020,32 @@ mod offline_preview_tests {
     }
 
     #[test]
+    fn raw_extension_with_jpeg_contents_uses_generic_preview_fallback() {
+        let dir = std::env::temp_dir().join(format!("lap-raw-fallback-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&dir).unwrap();
+        let pixels = image::RgbImage::from_pixel(32, 24, image::Rgb([60, 120, 180]));
+        let jpeg = crate::t_jpeg::encode_rgb8(&pixels, 85).unwrap();
+        for extension in ["nef", "cr2"] {
+            let path = dir.join(format!("sample.{extension}"));
+            fs::write(&path, &jpeg).unwrap();
+            let path = path.to_str().unwrap();
+            for mode in [crate::t_raw_display::RawPreviewMode::Embedded, crate::t_raw_display::RawPreviewMode::Rendered] {
+                let options = RawDisplayOptions { mode, auto_bright: true, prefer_pair: false };
+                for full_size in [false, true] {
+                    let (data, source, unavailable) = get_raw_preview_with_source(path, options, full_size).unwrap();
+                    let decoded = image::load_from_memory(&data).unwrap();
+                    assert_eq!((decoded.width(), decoded.height()), (32, 24));
+                    assert_eq!(source, "image");
+                    assert!(!unavailable);
+                }
+            }
+            fs::write(path, b"not an image").unwrap();
+            assert!(get_raw_preview_with_source(path, RawDisplayOptions::rendered_bright(), false).is_err());
+        }
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn raw_disk_cache_preserves_source_and_rejects_incomplete_data() {
         let viewer = uuid::Uuid::new_v4().to_string();
         let previous = register_raw_preview_request(&viewer);
@@ -2013,7 +2056,7 @@ mod offline_preview_tests {
         let path = dir.join("preview");
         let pixels = image::RgbImage::new(2, 2);
         let jpeg = crate::t_jpeg::encode_rgb8(&pixels, 85).unwrap();
-        for source in ["embedded", "rendered", "brightened"] {
+        for source in ["embedded", "rendered", "brightened", "image"] {
             let result = (jpeg.clone(), source, source != "embedded");
             write_raw_preview_disk(&path, &result);
             assert_eq!(read_raw_preview_disk(&path), Some(result));

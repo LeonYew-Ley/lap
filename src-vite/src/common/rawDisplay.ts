@@ -21,10 +21,10 @@ export function appendRawDisplayParams(params: URLSearchParams, options = getRaw
   params.set('rawPairDisplay', options.preferPair ? 'jpeg' : 'raw');
 }
 
-export type RawPreviewSource = 'embedded' | 'rendered' | 'brightened' | 'pair' | '';
-export function nextRawPreviewMode(current: RawPreviewSource, unavailable: boolean, defaults: RawDisplayOptions): Exclude<RawPreviewSource, 'pair' | ''> {
-  const modes: Exclude<RawPreviewSource, 'pair' | ''>[] = unavailable ? ['rendered', 'brightened'] : ['embedded', 'rendered', 'brightened'];
-  if (current === 'pair' || !current) {
+export type RawPreviewSource = 'embedded' | 'rendered' | 'brightened' | 'pair' | 'image' | '';
+export function nextRawPreviewMode(current: RawPreviewSource, unavailable: boolean, defaults: RawDisplayOptions): Exclude<RawPreviewSource, 'pair' | 'image' | ''> {
+  const modes: Exclude<RawPreviewSource, 'pair' | 'image' | ''>[] = unavailable ? ['rendered', 'brightened'] : ['embedded', 'rendered', 'brightened'];
+  if (current === 'pair' || current === 'image' || !current) {
     return defaults.mode === 'embedded' && !unavailable ? 'embedded' : defaults.autoBright ? 'brightened' : 'rendered';
   }
   return modes[(modes.indexOf(current) + 1) % modes.length];

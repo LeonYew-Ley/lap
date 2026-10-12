@@ -27,8 +27,8 @@
 
     <div v-if="Number(fileType) === 3 && !offlinePreview" data-raw-preview-controls class="absolute left-4 bottom-4 z-60 flex items-center gap-2" @dblclick.stop @mousedown.stop>
       <button 
-        class="inline-flex h-10 items-center gap-1 rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
-        :class="effectiveRawSource !== 'pair' && rawSourceIsOverride ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource !== 'pair'" :title="rawSwitchTitle" @click.stop="switchRaw">
+        class="inline-flex h-10 items-center gap-1 rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer focus:outline-none"
+        :class="effectiveRawSource !== 'pair' && (rawSourceIsOverride || (rawPairLabel && config.settings.groupRawJpegPairs)) ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource !== 'pair'" :title="rawSwitchTitle" @click.stop="switchRaw">
         <span>RAW</span>
         <span v-if="rawSourceLabel && !rawLoadingVisible" class="inline-flex items-center gap-1">
           <span>· {{ rawSourceLabel }}</span>
@@ -37,8 +37,8 @@
         <span v-if="rawLoadingVisible" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
       </button>
       <button v-if="rawPairLabel && config.settings.groupRawJpegPairs" 
-        class="inline-flex h-10 items-center rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer"
-        :class="effectiveRawSource === 'pair' && rawSourceIsOverride ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource === 'pair'" :title="t('settings.raw.show_pair', { format: rawPairLabel })" @click.stop="selectRawPair">{{ rawPairLabel }}</button>
+        class="inline-flex h-10 items-center rounded-box px-3 bg-base-100/70 hover:bg-base-100 text-sm font-medium shadow transition-colors cursor-pointer focus:outline-none"
+        :class="effectiveRawSource === 'pair' ? 'text-primary hover:text-primary' : 'text-base-content/70 hover:text-base-content'" :aria-pressed="effectiveRawSource === 'pair'" :title="t('settings.raw.show_pair', { format: rawPairLabel })" @click.stop="selectRawPair">{{ rawPairLabel }}</button>
     </div>
 
     <!-- Error overlay -->
@@ -455,7 +455,7 @@ const effectiveRawSource = computed<RawPreviewSource>(() => {
   if (actual === 'pair' || (o.preferPair && !!rawPairLabel.value)) return 'pair';
   return rawModeSource.value;
 });
-const rawSourceLabel = computed(() => rawSource.value || rawOverride.value ? t(`settings.raw.source_${rawModeSource.value}`) : '');
+const rawSourceLabel = computed(() => rawSource.value === 'image' ? '' : rawSource.value || rawOverride.value ? t(`settings.raw.source_${rawModeSource.value}`) : '');
 const rawSourceIsOverride = computed(() => {
   const defaults = getRawDisplayOptions();
   const defaultSource = defaults.preferPair && rawPairLabel.value ? 'pair'
@@ -467,7 +467,8 @@ const nextRawMode = computed(() => {
   const current = rawRequestPending.value && rawOverride.value
     ? requested.preferPair ? 'pair' : requested.mode === 'embedded' && !rawEmbeddedUnavailable.value ? 'embedded' : requested.autoBright ? 'brightened' : 'rendered'
     : rawSource.value;
-  return nextRawPreviewMode(current, rawEmbeddedUnavailable.value, requested);
+  if (effectiveRawSource.value === 'pair') return rawModeSource.value;
+  return nextRawPreviewMode(current === 'image' ? rawModeSource.value : current, rawEmbeddedUnavailable.value, requested);
 });
 const rawSwitchTitle = computed(() => t('settings.raw.switch_to', { source: t(`settings.raw.source_${nextRawMode.value}`) }));
 function switchRaw() {
