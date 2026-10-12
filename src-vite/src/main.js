@@ -27,9 +27,17 @@ const isMainWindow = currentWindowLabel === 'main'
 const isSettingsWindow = currentWindowLabel === 'settings'
 let settingsSyncRequest = 0
 
-listen('montage-background-changed', (event) => {
-  if (typeof event.payload === 'string' && /^#[0-9a-f]{6}$/i.test(event.payload)) {
-    config.montage.lastCustomBackground = event.payload.toLowerCase()
+listen('montage-config-changed', (event) => {
+  // Keep other windows current so their later writes preserve collage preferences.
+  if (currentWindowLabel !== 'montage') {
+    Object.assign(config.montage, event.payload)
+  }
+})
+
+listen('image-editor-config-changed', (event) => {
+  // Keep other windows current so their later writes preserve editor preferences.
+  if (currentWindowLabel !== 'imageeditor') {
+    Object.assign(config.imageEditor, event.payload)
   }
 })
 
@@ -131,7 +139,6 @@ if (isMainWindow) {
   listen('settings-rawRenderBrightness-changed', (event) => {
     config.setRawRenderBrightness(event.payload)
   })
-
   listen('settings-mapProvider-changed', (event) => {
     config.setMapProvider(event.payload)
   })

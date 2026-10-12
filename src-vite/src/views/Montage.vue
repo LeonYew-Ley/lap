@@ -28,12 +28,12 @@
           class="relative w-full flex-1 min-h-0 rounded-box overflow-hidden border border-base-content/5 bg-base-300/30 shadow-sm flex items-center justify-center"
         >
           <transition name="fade">
-            <div v-if="isProcessing" class="absolute inset-0 z-50 flex items-center justify-center bg-base-100/55 backdrop-blur-sm">
+            <div v-if="isProcessing" class="absolute inset-0 bg-base-100/50 flex items-center justify-center z-50 rounded-box">
               <span class="loading loading-dots text-primary"></span>
             </div>
           </transition>
 
-          <div v-if="pageBox.width > 0" class="relative" :style="{ width: `${pageBox.width}px`, height: `${pageBox.height}px` }">
+          <div v-if="pageBox.width > 0" class="relative isolate" :style="{ width: `${pageBox.width}px`, height: `${pageBox.height}px` }">
             <div
               ref="pageRef"
               class="absolute inset-0 overflow-hidden shadow-lg"
@@ -281,13 +281,13 @@
 
 <script setup lang="ts">
 import { MONTAGE_MAX_PHOTOS, MONTAGE_BACKGROUND_PRESETS, MONTAGE_PAGE_SIZES } from '@/common/constants';
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, toRefs, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { config } from '@/common/config';
 import { isWin, isLinux, setTheme, getFolderPath, getFullPath, combineFileName, getSelectOptions, getThumbUrl, isValidFileName, formatFileSize, formatDimensionText, formatTimestamp, formatCameraInfo, formatCaptureSettings } from '@/common/utils';
 import { getFileInfo, checkFileExists, renderMontage } from '@/common/api';
-import { computeMontageLayout, shuffled, type MontageItem, type MontageMode } from '@/common/montageLayout';
+import { computeMontageLayout, shuffled, type MontageItem } from '@/common/montageLayout';
 import { getAspectRatio } from '@/common/layout';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emit as tauriEmit } from '@tauri-apps/api/event';
@@ -311,11 +311,11 @@ const appWindow = getCurrentWebviewWindow();
 const showDesktopTitleBar = isWin || isLinux;
 
 const files = ref<any[]>([]); // montage order
-const mode = ref<MontageMode>('grid');
-const captionField = ref(config.settings.grid.labelPrimary);
-const pageKey = ref<PageKey>('a4');
-const landscape = ref(true);
-const background = ref('#ffffff');
+const { mode, captionField, pageKey, landscape, background, spacing,
+  borderOn, border, scaling, maxRotation, shadow } = toRefs(config.montage);
+watch(() => config.montage, (preferences) => {
+  void tauriEmit('montage-config-changed', JSON.parse(JSON.stringify(preferences)));
+}, { deep: true });
 const backgroundSwatches = computed(() => {
   const saved = String(config.montage.lastCustomBackground).toLowerCase();
   const recent = /^#[0-9a-f]{6}$/.test(saved) && !MONTAGE_BACKGROUND_PRESETS.includes(saved) ? saved : '#7c2d12';
@@ -326,16 +326,9 @@ function rememberCustomBackground(event: Event) {
   background.value = color;
   if (!MONTAGE_BACKGROUND_PRESETS.includes(color)) {
     config.montage.lastCustomBackground = color;
-    void tauriEmit('montage-background-changed', color);
   }
 }
-const spacing = ref(1);     // % of the page width
-const borderOn = ref(true);
-const border = ref(1.5);    // % of the page width
-const scaling = ref(config.settings.grid.scaling);
 const photoScaling = computed(() => mode.value === 'card' || mode.value === 'grid' ? scaling.value : 1);
-const maxRotation = ref(12); // pile, degrees
-const shadow = ref(true);
 const seed = ref(1);        // pile placement
 const isProcessing = ref(false);
 
@@ -644,14 +637,14 @@ function photoStyle(item: MontageItem) {
   };
 }
 
-// output format and quality follow the image editor settings
+// Collage export preferences are independent of the image editor.
 const outputFormatValues = ['jpg', 'png', 'webp'] as const;
 const combinedFormatKey = computed({
-  get: () => config.imageEditor.format !== 0 ? String(config.imageEditor.format) : `0-${config.imageEditor.quality}`,
+  get: () => config.montage.format !== 0 ? String(config.montage.format) : `0-${config.montage.quality}`,
   set: (key: string) => {
     const [format, quality] = key.split('-').map(Number);
-    config.imageEditor.format = format;
-    config.imageEditor.quality = quality || 0;
+    config.montage.format = format;
+    config.montage.quality = quality || 0;
   },
 });
 const combinedFormatOptions = computed(() => {
@@ -663,7 +656,7 @@ const combinedFormatOptions = computed(() => {
   ];
 });
 
-const outputFormat = computed(() => outputFormatValues[config.imageEditor.format] || outputFormatValues[0]);
+const outputFormat = computed(() => outputFormatValues[config.montage.format] || outputFormatValues[0]);
 
 // save dialog, prefilled with the first photo's folder and a free montage_N name
 const showSaveDialog = ref(false);
@@ -751,7 +744,7 @@ async function confirmSave() {
     await renderMontage({ ...renderParams(),
       destFilePath,
       outputFormat: outputFormat.value,
-      quality: [90, 80, 60][config.imageEditor.quality] || 80,
+      quality: [90, 80, 60][config.montage.quality] || 80,
     });
     await tauriEmit('message-from-montage', { type: 'success', filePath: destFilePath });
   } catch (error) {

@@ -557,6 +557,10 @@ import { getMaxInscribedRect, clampCenterInRotatedRect, maxResizeT } from '@/com
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emit as tauriEmit, listen } from '@tauri-apps/api/event';
 
+watch(() => config.imageEditor, (preferences) => {
+  void tauriEmit('image-editor-config-changed', JSON.parse(JSON.stringify(preferences)));
+}, { deep: true });
+
 import TitleBar from '@/components/TitleBar.vue';
 import MessageBox from '@/components/MessageBox.vue';
 import TButton from '@/components/TButton.vue';
