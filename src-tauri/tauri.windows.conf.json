@@ -14,6 +14,12 @@
     ]
   },
   "bundle": {
+    "windows": {
+      "wix": {
+        "fragmentPaths": ["windows/vc-runtime.wxs"],
+        "componentGroupRefs": ["LapVcRuntimeCheck"]
+      }
+    },
     "resources": {
       "resources/models/*": "models",
       "resources/ffmpeg/*": "ffmpeg"
