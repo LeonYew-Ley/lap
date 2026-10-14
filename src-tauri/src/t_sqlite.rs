@@ -3969,6 +3969,44 @@ impl AFile {
             .map_err(|e| e.to_string())
     }
 
+    pub fn batch_rename_names(updates: &[(i64, String, String, String)]) -> Result<(), String> {
+        let mut conn = open_conn()?;
+        Self::batch_rename_names_with_conn(&mut conn, updates)
+    }
+
+    pub(crate) fn batch_rename_names_with_conn(
+        conn: &mut Connection,
+        updates: &[(i64, String, String, String)],
+    ) -> Result<(), String> {
+        let tx = conn.transaction().map_err(|error| error.to_string())?;
+        let mut staged = Vec::with_capacity(updates.len());
+        for (id, old_name, _, _) in updates {
+            let temporary = format!(".lap-rename-{}.tmp", uuid::Uuid::new_v4());
+            let changed = tx
+                .execute(
+                    "UPDATE afiles SET name = ?1 WHERE id = ?2 AND name = ?3",
+                    params![temporary, id, old_name],
+                )
+                .map_err(|error| error.to_string())?;
+            if changed != 1 {
+                return Err("A file changed during batch rename.".into());
+            }
+            staged.push(temporary);
+        }
+        for ((id, _, new_name, sort_key), temporary) in updates.iter().zip(&staged) {
+            let changed = tx
+                .execute(
+                    "UPDATE afiles SET name = ?1, name_pinyin = ?2 WHERE id = ?3 AND name = ?4",
+                    params![new_name, sort_key, id, temporary],
+                )
+                .map_err(|error| error.to_string())?;
+            if changed != 1 {
+                return Err("A file changed during batch rename.".into());
+            }
+        }
+        tx.commit().map_err(|error| error.to_string())
+    }
+
     pub fn batch_update_names(updates: &[(i64, String, Option<String>)]) -> Result<usize, String> {
         if updates.is_empty() {
             return Ok(0);
@@ -10424,5 +10462,47 @@ mod raw_display_cache_tests {
         assert_ne!(key(RawPreviewMode::Embedded, 1), key(RawPreviewMode::Rendered, 1));
         assert_eq!(key(RawPreviewMode::Embedded, 0), key(RawPreviewMode::Embedded, 1));
         assert_ne!(key(RawPreviewMode::Embedded, 6), key(RawPreviewMode::Embedded, 1));
+    }
+}
+
+#[cfg(test)]
+mod batch_rename_tests {
+    use super::*;
+
+    fn fixture() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE afiles(id INTEGER PRIMARY KEY, folder_id INTEGER, name TEXT, name_pinyin TEXT, rating INTEGER);
+            CREATE UNIQUE INDEX uidx_afiles_folder_id_name ON afiles(folder_id, name);
+            INSERT INTO afiles VALUES(1,1,'Trip_1.jpg','old1',5),(2,1,'Trip_2.jpg','old2',4),(3,1,'taken.jpg','old3',3);").unwrap();
+        conn
+    }
+
+    fn names(conn: &Connection) -> Vec<(String, String, i64)> {
+        conn.prepare("SELECT name, name_pinyin, rating FROM afiles ORDER BY id").unwrap()
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).unwrap()
+            .collect::<Result<_, _>>().unwrap()
+    }
+
+    #[test]
+    fn shifts_and_swaps_names_with_the_real_unique_index() {
+        for targets in [["Trip_2.jpg", "Trip_3.jpg"], ["Trip_2.jpg", "Trip_1.jpg"]] {
+            let mut conn = fixture();
+            let updates = vec![(1, "Trip_1.jpg".into(), targets[0].into(), "new1".into()),
+                (2, "Trip_2.jpg".into(), targets[1].into(), "new2".into())];
+            AFile::batch_rename_names_with_conn(&mut conn, &updates).unwrap();
+            assert_eq!(names(&conn), vec![(targets[0].into(), "new1".into(), 5), (targets[1].into(), "new2".into(), 4), ("taken.jpg".into(), "old3".into(), 3)]);
+        }
+    }
+
+    #[test]
+    fn stale_names_and_final_collisions_roll_back_every_column() {
+        for (old, target) in [("stale.jpg", "Trip_3.jpg"), ("Trip_2.jpg", "taken.jpg")] {
+            let mut conn = fixture();
+            let before = names(&conn);
+            let updates = vec![(1, "Trip_1.jpg".into(), "Trip_2.jpg".into(), "new1".into()),
+                (2, old.into(), target.into(), "new2".into())];
+            assert!(AFile::batch_rename_names_with_conn(&mut conn, &updates).is_err());
+            assert_eq!(names(&conn), before);
+        }
     }
 }

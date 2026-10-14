@@ -914,6 +914,21 @@
       "ok": "Renombrar",
       "error": "No se pudo renombrar el archivo."
     },
+    "batch_rename": {
+      "title": "Renombrar en lote",
+      "name": "Nombre",
+      "placeholder": "Nuevo nombre",
+      "start": "Inicio",
+      "digits": "Dígitos",
+      "no_padding": "Sin ceros",
+      "preview": "Vista previa",
+      "count": "{count} elementos",
+      "before": "Nombre actual",
+      "after": "Nuevo nombre",
+      "preview_limit": "Se muestran los primeros 100 elementos. Se renombrarán todos los seleccionados.",
+      "invalid": "Introduce un nombre y un número inicial entero positivo.",
+      "success": "Se renombraron {count} elementos."
+    },
     "move_to_trash": {
       "title": "Mover a la papelera",
       "file_content": "El archivo '{file}' se moverá a la papelera.",

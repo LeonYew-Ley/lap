@@ -494,6 +494,7 @@
             @copy-to-folder="onCopyToFolder"
             @remove-from-collection="removeSelectedFromCollection"
             @trash="openTrashMsgbox()"
+            @rename="clickRename"
             @favorite-all="selectModeSetFavorites(true)"
             @unfavorite-all="selectModeSetFavorites(false)"
             @set-rating-all="selectModeSetRatings"
@@ -552,6 +553,13 @@
   </div>
 
   <!-- rename -->
+  <BatchRenameDialog
+    v-if="batchRenameSelection"
+    :files="batchRenameSelection.files"
+    :library-id="batchRenameSelection.libraryId"
+    @cancel="batchRenameSelection = null"
+    @done="onBatchRenameDone"
+  />
   <MessageBox
     v-if="showRenameMsgbox"
     :title="$t('msgbox.rename_file.title')"
@@ -794,6 +802,7 @@ import { isWin, isMac, isLinux, setTheme, separator,
 import DropDownSelect from '@/components/DropDownSelect.vue';
 import ProgressBar from '@/components/ProgressBar.vue';
 import GridView  from '@/components/GridView.vue';
+import BatchRenameDialog from '@/components/BatchRenameDialog.vue';
 const PhotoMapView = defineAsyncComponent(() => import('@/components/PhotoMapView.vue'));
 import ContextMenu from '@/components/ContextMenu.vue';
 import { MAX_NATIVE_DRAG_FILES, createDragPreview, isWindowDragEdge, isNativeFileDragActive, isReturningNativeFileDrag, startNativeFileDrag } from '@/common/nativeDrag';
@@ -4239,11 +4248,45 @@ async function requireCurrentOriginals() {
   return !!files?.length && await requireOriginalFiles(files);
 }
 
+const batchRenameSelection = ref<{ files: any[]; libraryId: string } | null>(null);
+let batchRenameOpening = false;
+async function openBatchRename() {
+  if (batchRenameSelection.value || batchRenameOpening || selectedCount.value === 0) return;
+  batchRenameOpening = true;
+  const libraryId = libConfig._libraryId;
+  const requestId = currentContentRequestId;
+  const selectedIds = new Set(selectedFileIds);
+  try {
+    const byId = new Map(getActionableSelectedItems()
+      .filter(file => selectedIds.has(Number(file.id)))
+      .map(file => [Number(file.id), file]));
+    const orderedIds = byId.size === selectedIds.size
+      ? Array.from(byId.keys())
+      : await getCurrentQueryFileIds();
+    if (!Array.isArray(orderedIds) || libraryId !== libConfig._libraryId || requestId !== currentContentRequestId || !selectMode.value) return;
+    if (selectedIds.size !== selectedFileIds.size || Array.from(selectedIds).some(id => !selectedFileIds.has(id))) return;
+    const files = orderedIds.filter(id => selectedIds.has(Number(id)))
+      .map(id => byId.get(Number(id)) || { id: Number(id) });
+    if (files.length !== selectedIds.size) { toast.error(t('info_panel.selection_load_failed')); return; }
+    batchRenameSelection.value = { files, libraryId };
+  } catch (error) {
+    toast.error(String(error));
+  } finally { batchRenameOpening = false; }
+}
+function onBatchRenameDone(result: any) {
+  const selection = batchRenameSelection.value;
+  batchRenameSelection.value = null;
+  if (!selection || selection.libraryId !== libConfig._libraryId) return;
+  fileInfoRevision.value++;
+  toast.success(t('msgbox.batch_rename.success', { count: result.items.length }));
+  refreshContentFromSelectionChange();
+}
+
 function clickRename() {
   if (currentOriginalsUnavailable()) return;
-  if (selectMode.value) return;
   // Skip while an inline input is active (e.g. FileInfo rename, where Enter confirms the edit).
   if (uiStore.inputStack.length > 0) return;
+  if (selectMode.value) { void openBatchRename(); return; }
   renamingFileName.value = extractFileName(fileList.value[selectedItemIndex.value].name);
   showRenameMsgbox.value = true;
 }

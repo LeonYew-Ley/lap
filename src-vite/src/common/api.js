@@ -1132,7 +1132,16 @@ export async function copyImages(filePaths) {
   }
 }
 
-// rename a file
+// Preview and apply a batch rename in the captured library.
+export function previewBatchRename(libraryId, fileIds, options) {
+  return invoke('preview_batch_rename', { libraryId, fileIds, options });
+}
+
+export function batchRenameFiles(libraryId, fileIds, options, expected) {
+  return invoke('batch_rename_files', { libraryId, fileIds, options, expected });
+}
+
+// Rename a single file.
 export async function renameFile(fileId, filePath, newName) {
   try {
     const result = await invoke('rename_file', { fileId, filePath, newName });

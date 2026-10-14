@@ -914,6 +914,21 @@
       "ok": "Zmień nazwę",
       "error": "Nie udało się zmienić nazwy pliku."
     },
+    "batch_rename": {
+      "title": "Zmiana nazw grupowo",
+      "name": "Nazwa",
+      "placeholder": "Nowa nazwa",
+      "start": "Numer początkowy",
+      "digits": "Cyfry",
+      "no_padding": "Bez zer",
+      "preview": "Podgląd",
+      "count": "{count} elementów",
+      "before": "Obecna nazwa",
+      "after": "Nowa nazwa",
+      "preview_limit": "Wyświetlono pierwsze 100 elementów. Nazwy wszystkich wybranych elementów zostaną zmienione.",
+      "invalid": "Podaj nazwę i dodatni całkowity numer początkowy.",
+      "success": "Zmieniono nazwy {count} elementów."
+    },
     "move_to_trash": {
       "title": "Przenieś do kosza",
       "file_content": "Plik „{file}” zostanie przeniesiony do kosza.",

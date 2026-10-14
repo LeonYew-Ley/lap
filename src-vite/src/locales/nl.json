@@ -914,6 +914,21 @@
       "ok": "Wijzig naam",
       "error": "Kan de bestandsnaam niet wijzigen."
     },
+    "batch_rename": {
+      "title": "Batch hernoemen",
+      "name": "Naam",
+      "placeholder": "Nieuwe naam",
+      "start": "Begin bij",
+      "digits": "Cijfers",
+      "no_padding": "Geen nullen",
+      "preview": "Voorbeeld",
+      "count": "{count} items",
+      "before": "Huidige naam",
+      "after": "Nieuwe naam",
+      "preview_limit": "De eerste 100 items worden getoond. Alle geselecteerde items worden hernoemd.",
+      "invalid": "Voer een naam en een positief geheel startnummer in.",
+      "success": "{count} items hernoemd."
+    },
     "move_to_trash": {
       "title": "Naar prullenbak",
       "file_content": "Het bestand '{file}' wordt naar de prullenbak verplaatst.",

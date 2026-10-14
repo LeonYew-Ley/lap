@@ -914,6 +914,21 @@
       "ok": "重新命名",
       "error": "無法重新命名檔案。"
     },
+    "batch_rename": {
+      "title": "批次重新命名",
+      "name": "名稱",
+      "placeholder": "新名稱",
+      "start": "起始編號",
+      "digits": "編號位數",
+      "no_padding": "不補零",
+      "preview": "預覽",
+      "count": "{count} 個項目",
+      "before": "目前名稱",
+      "after": "新名稱",
+      "preview_limit": "僅預覽前 100 個項目，所有選取項目都會重新命名。",
+      "invalid": "請輸入名稱及正整數起始編號。",
+      "success": "已重新命名 {count} 個項目。"
+    },
     "move_to_trash": {
       "title": "移到垃圾桶",
       "file_content": "檔案「{file}」將被移到垃圾桶。",

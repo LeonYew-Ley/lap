@@ -914,6 +914,21 @@
       "ok": "Renommer",
       "error": "Impossible de renommer le fichier."
     },
+    "batch_rename": {
+      "title": "Renommer par lot",
+      "name": "Nom",
+      "placeholder": "Nouveau nom",
+      "start": "Début",
+      "digits": "Chiffres",
+      "no_padding": "Sans zéros",
+      "preview": "Aperçu",
+      "count": "{count} éléments",
+      "before": "Nom actuel",
+      "after": "Nouveau nom",
+      "preview_limit": "Aperçu des 100 premiers éléments. Tous les éléments sélectionnés seront renommés.",
+      "invalid": "Saisissez un nom et un numéro de départ entier positif.",
+      "success": "{count} éléments renommés."
+    },
     "move_to_trash": {
       "title": "Mettre à la corbeille",
       "file_content": "Le fichier '{file}' sera mis à la corbeille.",

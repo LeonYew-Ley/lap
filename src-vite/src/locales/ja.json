@@ -914,6 +914,21 @@
       "ok": "変更",
       "error": "ファイル名を変更できませんでした。"
     },
+    "batch_rename": {
+      "title": "一括名前変更",
+      "name": "名前",
+      "placeholder": "新しい名前",
+      "start": "開始番号",
+      "digits": "桁数",
+      "no_padding": "ゼロ埋めなし",
+      "preview": "プレビュー",
+      "count": "{count} 項目",
+      "before": "現在の名前",
+      "after": "新しい名前",
+      "preview_limit": "最初の 100 項目を表示しています。選択した全項目の名前を変更します。",
+      "invalid": "名前と正の整数の開始番号を入力してください。",
+      "success": "{count} 項目の名前を変更しました。"
+    },
     "move_to_trash": {
       "title": "ゴミ箱に入れる",
       "file_content": "ファイル '{file}' をゴミ箱に入れます。",

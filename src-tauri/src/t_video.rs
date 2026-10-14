@@ -1045,24 +1045,6 @@ fn video_capture_date(
         }))
 }
 
-#[cfg(test)]
-mod capture_date_tests {
-    use super::*;
-
-    #[test]
-    fn quicktime_z_preserves_wallclock_but_creation_time_converts_utc() {
-        let date = "2019-05-27T11:10:03.000000Z";
-        let quicktime = HashMap::from([("com.apple.quicktime.creationdate".into(), date.into())]);
-        assert_eq!(video_capture_date(&quicktime, None).as_deref(), Some("2019:05:27 11:10:03"));
-        assert_eq!(video_capture_date(&HashMap::new(), Some(&quicktime)), video_capture_date(&quicktime, None));
-
-        let utc = HashMap::from([("creation_time".into(), date.into())]);
-        let expected = chrono::DateTime::parse_from_rfc3339(date).unwrap()
-            .with_timezone(&chrono::Local).format("%Y:%m:%d %H:%M:%S").to_string();
-        assert_eq!(video_capture_date(&utc, None), Some(expected));
-    }
-}
-
 fn first_parseable_date(meta: &HashMap<String, String>, keys: &[&str]) -> Option<String> {
     first_exist(meta, keys).filter(|value| t_utils::meta_date_to_timestamp(value).is_some())
 }
@@ -1533,4 +1515,22 @@ fn hash_id(value: &str) -> u64 {
         h = h.wrapping_mul(0x100000001b3);
     }
     h
+}
+
+#[cfg(test)]
+mod capture_date_tests {
+    use super::*;
+
+    #[test]
+    fn quicktime_z_preserves_wallclock_but_creation_time_converts_utc() {
+        let date = "2019-05-27T11:10:03.000000Z";
+        let quicktime = HashMap::from([("com.apple.quicktime.creationdate".into(), date.into())]);
+        assert_eq!(video_capture_date(&quicktime, None).as_deref(), Some("2019:05:27 11:10:03"));
+        assert_eq!(video_capture_date(&HashMap::new(), Some(&quicktime)), video_capture_date(&quicktime, None));
+
+        let utc = HashMap::from([("creation_time".into(), date.into())]);
+        let expected = chrono::DateTime::parse_from_rfc3339(date).unwrap()
+            .with_timezone(&chrono::Local).format("%Y:%m:%d %H:%M:%S").to_string();
+        assert_eq!(video_capture_date(&utc, None), Some(expected));
+    }
 }

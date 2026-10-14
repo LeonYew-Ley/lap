@@ -914,6 +914,21 @@
       "ok": "Rinomina",
       "error": "Impossibile rinominare il file."
     },
+    "batch_rename": {
+      "title": "Rinomina in gruppo",
+      "name": "Nome",
+      "placeholder": "Nuovo nome",
+      "start": "Inizio",
+      "digits": "Cifre",
+      "no_padding": "Senza zeri",
+      "preview": "Anteprima",
+      "count": "{count} elementi",
+      "before": "Nome attuale",
+      "after": "Nuovo nome",
+      "preview_limit": "Sono mostrati i primi 100 elementi. Tutti gli elementi selezionati saranno rinominati.",
+      "invalid": "Inserisci un nome e un numero iniziale intero positivo.",
+      "success": "{count} elementi rinominati."
+    },
     "move_to_trash": {
       "title": "Sposta nel cestino",
       "file_content": "Il file '{file}' verrà spostato nel cestino.",

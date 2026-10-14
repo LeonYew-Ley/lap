@@ -914,6 +914,21 @@
       "ok": "重命名",
       "error": "重命名文件失败。"
     },
+    "batch_rename": {
+      "title": "批量重命名",
+      "name": "名称",
+      "placeholder": "新名称",
+      "start": "起始编号",
+      "digits": "编号位数",
+      "no_padding": "不补零",
+      "preview": "预览",
+      "count": "{count} 个项目",
+      "before": "当前名称",
+      "after": "新名称",
+      "preview_limit": "仅预览前 100 个项目，所有选中项目都会重命名。",
+      "invalid": "请输入名称和正整数起始编号。",
+      "success": "已重命名 {count} 个项目。"
+    },
     "move_to_trash": {
       "title": "移到废纸篓",
       "file_content": "文件 '{file}' 将被移到废纸篓。",

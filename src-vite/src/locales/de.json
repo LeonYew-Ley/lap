@@ -914,6 +914,21 @@
       "ok": "Umbenennen",
       "error": "Datei konnte nicht umbenannt werden."
     },
+    "batch_rename": {
+      "title": "Stapelumbenennung",
+      "name": "Name",
+      "placeholder": "Neuer Name",
+      "start": "Startnummer",
+      "digits": "Ziffern",
+      "no_padding": "Ohne Nullen",
+      "preview": "Vorschau",
+      "count": "{count} Elemente",
+      "before": "Aktueller Name",
+      "after": "Neuer Name",
+      "preview_limit": "Die ersten 100 Elemente werden angezeigt. Alle ausgewählten Elemente werden umbenannt.",
+      "invalid": "Geben Sie einen Namen und eine positive ganze Startnummer ein.",
+      "success": "{count} Elemente umbenannt."
+    },
     "move_to_trash": {
       "title": "In Papierkorb verschieben",
       "file_content": "Die Datei '{file}' wird in den Papierkorb verschoben.",

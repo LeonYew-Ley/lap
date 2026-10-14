@@ -16,6 +16,7 @@ use tauri_plugin_aptabase::EventTracker;
 mod t_ai;
 mod t_ai_png;
 mod t_apple_sidecar;
+mod t_batch_rename;
 mod t_cluster;
 mod t_cmds;
 mod t_common;
@@ -305,6 +306,8 @@ async fn main() {
             t_cmds::copy_edited_image,
             t_cmds::copy_images,
             t_cmds::rename_file,
+            t_cmds::preview_batch_rename,
+            t_cmds::batch_rename_files,
             t_cmds::move_file,
             t_cmds::move_file_outside_library,
             t_cmds::copy_file,

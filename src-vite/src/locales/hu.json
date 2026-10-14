@@ -914,6 +914,21 @@
       "ok": "Átnevezés",
       "error": "Nem sikerült átnevezni a fájlt."
     },
+    "batch_rename": {
+      "title": "Csoportos átnevezés",
+      "name": "Név",
+      "placeholder": "Új név",
+      "start": "Kezdőszám",
+      "digits": "Számjegyek",
+      "no_padding": "Nullák nélkül",
+      "preview": "Előnézet",
+      "count": "{count} elem",
+      "before": "Jelenlegi név",
+      "after": "Új név",
+      "preview_limit": "Az első 100 elem látható. Minden kijelölt elem át lesz nevezve.",
+      "invalid": "Adjon meg egy nevet és egy pozitív egész kezdőszámot.",
+      "success": "{count} elem átnevezve."
+    },
     "move_to_trash": {
       "title": "Kukába helyezés",
       "file_content": "A(z) \"{file}\" fájl a kukába kerül.",

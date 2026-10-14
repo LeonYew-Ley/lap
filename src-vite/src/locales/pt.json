@@ -914,6 +914,21 @@
       "ok": "Renomear",
       "error": "Falha ao renomear o arquivo."
     },
+    "batch_rename": {
+      "title": "Renomear em lote",
+      "name": "Nome",
+      "placeholder": "Novo nome",
+      "start": "Início",
+      "digits": "Dígitos",
+      "no_padding": "Sem zeros",
+      "preview": "Prévia",
+      "count": "{count} itens",
+      "before": "Nome atual",
+      "after": "Novo nome",
+      "preview_limit": "Exibindo os primeiros 100 itens. Todos os itens selecionados serão renomeados.",
+      "invalid": "Insira um nome e um número inicial inteiro positivo.",
+      "success": "{count} itens renomeados."
+    },
     "move_to_trash": {
       "title": "Mover para o lixo",
       "file_content": "O arquivo '{file}' será movido para o lixo.",

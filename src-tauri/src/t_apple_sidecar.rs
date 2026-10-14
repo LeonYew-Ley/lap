@@ -47,6 +47,26 @@ pub(crate) fn build_apple_sidecar_rename_plan(
     file_path: &str,
     new_name: &str,
 ) -> Result<Vec<SidecarRenamePlan>, String> {
+    let components = AFile::live_photo_component_files(file_id)?;
+    build_rename_plan(file_path, new_name, &components, apple_aae_sidecar_paths(file_path))
+}
+
+pub(crate) fn build_apple_sidecar_rename_plan_cached(
+    file_path: &str,
+    new_name: &str,
+    component: Option<&AFile>,
+    cache: &mut ImportAaeCache,
+) -> Result<Vec<SidecarRenamePlan>, String> {
+    let components = component.map(std::slice::from_ref).unwrap_or(&[]);
+    build_rename_plan(file_path, new_name, components, cache.paths(Path::new(file_path)))
+}
+
+fn build_rename_plan(
+    file_path: &str,
+    new_name: &str,
+    components: &[AFile],
+    aae_paths: Vec<PathBuf>,
+) -> Result<Vec<SidecarRenamePlan>, String> {
     let primary_path = Path::new(file_path);
     let new_stem = Path::new(new_name)
         .file_stem()
@@ -55,7 +75,7 @@ pub(crate) fn build_apple_sidecar_rename_plan(
     let mut plans = Vec::new();
     let mut seen_sidecar_paths = HashSet::new();
 
-    for component in AFile::live_photo_component_files(file_id)? {
+    for component in components {
         if let Some(old_path) = component.file_path.as_deref() {
             if let Some(plan) =
                 build_sidecar_rename_plan(Path::new(old_path), new_stem, component.id)
@@ -68,7 +88,7 @@ pub(crate) fn build_apple_sidecar_rename_plan(
     }
 
     if let Some(parent) = primary_path.parent() {
-        for old_path in apple_aae_sidecar_paths(file_path) {
+        for old_path in aae_paths {
             if let Some(plan) =
                 build_aae_rename_plan(primary_path, parent, &old_path, new_name, new_stem)
             {
@@ -174,24 +194,50 @@ pub(crate) fn rollback_rename_changes(
 // AAE sidecar helpers
 // ---------------------------------------------------------------------------
 
-/// Import-local cache; successful copies update an already scanned directory.
+/// Operation-local directory cache; imports update it after successful copies.
 #[derive(Default)]
-pub(crate) struct ImportAaeCache(HashMap<PathBuf, Vec<PathBuf>>);
+pub(crate) struct ImportAaeCache(HashMap<PathBuf, HashMap<String, Vec<PathBuf>>>);
 
 impl ImportAaeCache {
     pub(crate) fn paths(&mut self, path: &Path) -> Vec<PathBuf> {
-        let Some(parent) = path.parent() else { return Vec::new(); };
+        let Some(parent) = path.parent() else {
+            return Vec::new();
+        };
         let entries = self.0.entry(parent.to_path_buf()).or_insert_with(|| {
-            fs::read_dir(parent).into_iter().flatten().filter_map(Result::ok)
-                .map(|entry| entry.path()).filter(|p| p.is_file() && p.extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("aae"))).collect()
+            let mut index = HashMap::<String, Vec<PathBuf>>::new();
+            for entry in fs::read_dir(parent)
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+            {
+                let path = entry.path();
+                if path.is_file()
+                    && path
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("aae"))
+                {
+                    let key = entry.file_name().to_string_lossy().to_ascii_lowercase();
+                    index.entry(key).or_default().push(path);
+                }
+            }
+            index
         });
-        let stem = format!("{}.aae", path.file_stem().unwrap_or_default().to_string_lossy());
-        let full = format!("{}.aae", path.file_name().unwrap_or_default().to_string_lossy());
-        let mut matches: Vec<_> = entries.iter().filter(|p| p.file_name().is_some_and(|name| {
-            let name = name.to_string_lossy();
-            name.eq_ignore_ascii_case(&stem) || name.eq_ignore_ascii_case(&full)
-        })).cloned().collect();
+        let stem = format!(
+            "{}.aae",
+            path.file_stem().unwrap_or_default().to_string_lossy()
+        )
+        .to_ascii_lowercase();
+        let full = format!(
+            "{}.aae",
+            path.file_name().unwrap_or_default().to_string_lossy()
+        )
+        .to_ascii_lowercase();
+        let mut matches = entries.get(&stem).cloned().unwrap_or_default();
+        if full != stem {
+            if let Some(paths) = entries.get(&full) {
+                matches.extend(paths.iter().cloned());
+            }
+        }
         matches.sort();
         matches
     }
@@ -199,7 +245,14 @@ impl ImportAaeCache {
     pub(crate) fn record(&mut self, paths: &[PathBuf]) {
         for path in paths {
             if let Some(entries) = path.parent().and_then(|parent| self.0.get_mut(parent)) {
-                if !entries.contains(path) { entries.push(path.clone()); }
+                if let Some(name) = path.file_name() {
+                    let values = entries
+                        .entry(name.to_string_lossy().to_ascii_lowercase())
+                        .or_default();
+                    if !values.contains(path) {
+                        values.push(path.clone());
+                    }
+                }
             }
         }
     }
@@ -699,4 +752,40 @@ pub(crate) fn looks_like_content_identifier(value: &str) -> bool {
         && value
             .chars()
             .all(|ch| ch.is_ascii_hexdigit() || ch == '-' || ch == '_')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn indexed_aae_lookup_matches_both_conventions_and_records_new_imports() {
+        let directory =
+            std::env::temp_dir().join(format!("lap-aae-cache-test-{}", uuid::Uuid::new_v4()));
+        fs::create_dir(&directory).unwrap();
+        struct Cleanup(PathBuf);
+        impl Drop for Cleanup {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+        let _cleanup = Cleanup(directory.clone());
+        for name in ["IMG.AAE", "IMG.HEIC.AAE", "OTHER.AAE"] {
+            fs::write(directory.join(name), b"aae").unwrap();
+        }
+        let mut cache = ImportAaeCache::default();
+        let photo = directory.join("IMG.HEIC");
+        let mut expected = apple_aae_sidecar_paths(photo.to_str().unwrap());
+        expected.sort();
+        assert_eq!(cache.paths(&photo), expected);
+        assert_eq!(
+            cache.paths(&directory.join("UNKNOWN.JPG")),
+            Vec::<PathBuf>::new()
+        );
+        let imported = directory.join("NEW.AAE");
+        fs::write(&imported, b"aae").unwrap();
+        cache.record(&[imported.clone(), imported.clone()]);
+        assert_eq!(cache.paths(&directory.join("NEW.JPG")), vec![imported]);
+        assert_eq!(cache.0.len(), 1);
+    }
 }

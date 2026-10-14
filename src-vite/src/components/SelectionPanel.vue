@@ -164,6 +164,13 @@
             {{ $t('menu.file.copy_to_folder') }}
           </PanelActionButton>
           <PanelActionButton
+            :icon="IconRename"
+            :disabled="selectedCount === 0 || originalsUnavailable"
+            @click="$emit('rename')"
+          >
+            {{ $t('msgbox.batch_rename.title') }}
+          </PanelActionButton>
+          <PanelActionButton
             :icon="IconTrash"
             :disabled="selectedCount === 0 || originalsUnavailable"
             danger
@@ -218,6 +225,7 @@ import {
   IconRotate,
   IconTag,
   IconTrash,
+  IconRename,
   IconBookmarkOff,
   IconBookmark,
 } from '@/common/icons';
@@ -262,6 +270,7 @@ const emit = defineEmits([
   'moveToFolder',
   'copyToFolder',
   'trash',
+  'rename',
   'favoriteAll',
   'unfavoriteAll',
   'setRatingAll',

@@ -914,6 +914,21 @@
       "ok": "Rename",
       "error": "Failed to rename file."
     },
+    "batch_rename": {
+      "title": "Batch Rename",
+      "name": "Name",
+      "placeholder": "New name",
+      "start": "Start at",
+      "digits": "Digits",
+      "no_padding": "No padding",
+      "preview": "Preview",
+      "count": "{count} items",
+      "before": "Current name",
+      "after": "New name",
+      "preview_limit": "Showing the first 100 items. All selected items will be renamed.",
+      "invalid": "Enter a name and a positive integer start number.",
+      "success": "Renamed {count} items."
+    },
     "move_to_trash": {
       "title": "Move to trash",
       "file_content": "The file '{file}' will be trashed.",

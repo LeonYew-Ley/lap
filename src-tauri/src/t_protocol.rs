@@ -110,21 +110,6 @@ fn raw_preview_response(data: Vec<u8>, source: &'static str, unavailable: bool, 
     response
 }
 
-#[cfg(test)]
-mod raw_display_tests {
-    use super::*;
-
-    #[test]
-    fn raw_display_protocol_parses_modes_and_pair_policy() {
-        let options = raw_display_options(Some("v=42&rawPreviewMode=rendered&rawPairDisplay=jpeg"));
-        assert_eq!(options.mode, RawPreviewMode::Rendered);
-        assert!(options.prefer_pair);
-        assert_eq!(raw_display_options(Some("rawPreviewMode=embedded")).mode, RawPreviewMode::Embedded);
-        assert!(raw_display_options(Some("rawPreviewMode=embedded&rawAutoBright=true")).auto_bright);
-        assert!(!raw_display_options(None).prefer_pair);
-    }
-}
-
 pub fn register_protocols(builder: Builder<Wry>) -> Builder<Wry> {
     builder
         .register_asynchronous_uri_scheme_protocol("thumb", |_ctx, request, responder| {
@@ -318,4 +303,19 @@ pub fn register_protocols(builder: Builder<Wry>) -> Builder<Wry> {
                 responder.respond(response);
             });
         })
+}
+
+#[cfg(test)]
+mod raw_display_tests {
+    use super::*;
+
+    #[test]
+    fn raw_display_protocol_parses_modes_and_pair_policy() {
+        let options = raw_display_options(Some("v=42&rawPreviewMode=rendered&rawPairDisplay=jpeg"));
+        assert_eq!(options.mode, RawPreviewMode::Rendered);
+        assert!(options.prefer_pair);
+        assert_eq!(raw_display_options(Some("rawPreviewMode=embedded")).mode, RawPreviewMode::Embedded);
+        assert!(raw_display_options(Some("rawPreviewMode=embedded&rawAutoBright=true")).auto_bright);
+        assert!(!raw_display_options(None).prefer_pair);
+    }
 }

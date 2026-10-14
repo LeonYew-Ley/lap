@@ -175,10 +175,6 @@ fn time_locale_from_env(mut get: impl FnMut(&str) -> Option<String>) -> Option<S
         .and_then(|value| normalize_locale_identifier(&value))
 }
 
-#[cfg(test)]
-#[path = "t_cmds_tests/system_locale.rs"]
-mod system_locale_tests;
-
 // library
 
 /// get app config (libraries list and current library)
@@ -270,21 +266,6 @@ fn gstreamer_element_missing(exit_code: Option<i32>, stderr: &[u8]) -> bool {
     exit_code.is_some_and(|code| code != 0)
         && String::from_utf8_lossy(stderr).lines().any(|line|
             line.trim() == "No such element or plugin 'autoaudiosink'")
-}
-
-#[cfg(test)]
-mod gstreamer_probe_tests {
-    use super::gstreamer_element_missing;
-
-    #[test]
-    fn only_explicit_missing_element_disables_preview() {
-        let missing = b"No such element or plugin 'autoaudiosink'\n";
-        assert!(gstreamer_element_missing(Some(255), missing));
-        assert!(!gstreamer_element_missing(Some(0), missing));
-        assert!(!gstreamer_element_missing(None, missing));
-        assert!(!gstreamer_element_missing(Some(127), b"error while loading shared libraries"));
-        assert!(!gstreamer_element_missing(Some(1), b"unknown failure"));
-    }
 }
 
 /// set last selected item index
@@ -1536,6 +1517,34 @@ pub async fn copy_images(
     file_paths: Vec<String>,
 ) -> Result<usize, String> {
     t_image::copy_files_to_clipboard(&app_handle, file_paths).await
+}
+
+/// Preview names and conflicts without modifying files.
+#[tauri::command]
+pub async fn preview_batch_rename(
+    library_id: String,
+    file_ids: Vec<i64>,
+    options: crate::t_batch_rename::RenameOptions,
+) -> Result<crate::t_batch_rename::RenamePreview, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        with_current_library(&library_id, || crate::t_batch_rename::preview(&file_ids, &options))
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn batch_rename_files(
+    library_id: String,
+    file_ids: Vec<i64>,
+    options: crate::t_batch_rename::RenameOptions,
+    expected: Vec<crate::t_batch_rename::RenameItem>,
+) -> Result<crate::t_batch_rename::RenamePreview, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        with_current_library(&library_id, || crate::t_batch_rename::execute(&file_ids, &options, &expected))
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 /// rename a file
@@ -3567,6 +3576,86 @@ pub fn restore_databases(
     selections: Vec<t_storage::RestoreSelection>,
 ) -> Result<t_storage::RestoreResult, String> {
     t_storage::restore_databases(&backup_path, &selections)
+}
+
+#[cfg(test)]
+mod system_locale_tests {
+    use super::*;
+
+    #[test]
+    fn regional_identifiers_are_valid_for_intl() {
+        assert_eq!(normalize_locale_identifier("en_CH"), Some("en-CH".into()));
+        assert_eq!(
+            normalize_locale_identifier("fr_CH.UTF-8"),
+            Some("fr-CH".into())
+        );
+        assert_eq!(
+            normalize_locale_identifier("de_DE@euro"),
+            Some("de-DE".into())
+        );
+        assert_eq!(normalize_locale_identifier("C.UTF-8"), Some("en-US".into()));
+        assert_eq!(normalize_locale_identifier("POSIX"), Some("en-US".into()));
+        assert_eq!(normalize_locale_identifier(""), None);
+    }
+
+    #[test]
+    fn linux_uses_time_category_and_ignores_translation_preferences() {
+        let get = |key: &str| match key {
+            "LANGUAGE" | "LC_MESSAGES" | "LANG" => Some("en_US.UTF-8".into()),
+            "LC_TIME" => Some("fr_CH.UTF-8".into()),
+            _ => None,
+        };
+        assert_eq!(time_locale_from_env(get), Some("fr-CH".into()));
+        assert_eq!(
+            time_locale_from_env(|key| {
+                if key == "LC_ALL" {
+                    Some("de_DE.UTF-8".into())
+                } else {
+                    get(key)
+                }
+            }),
+            Some("de-DE".into())
+        );
+        assert_eq!(
+            time_locale_from_env(|key| {
+                if key == "LC_TIME" || key == "LC_ALL" {
+                    Some(String::new())
+                } else {
+                    get(key)
+                }
+            }),
+            Some("en-US".into())
+        );
+        assert_eq!(time_locale_from_env(|_| None), None);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_region_matches_current_locale() {
+        let identifier = objc2_foundation::NSLocale::currentLocale()
+            .localeIdentifier()
+            .to_string();
+        assert_eq!(
+            get_system_region_locale().unwrap(),
+            normalize_locale_identifier(&identifier)
+        );
+        assert!(get_system_region_locale().unwrap().is_some());
+    }
+}
+
+#[cfg(test)]
+mod gstreamer_probe_tests {
+    use super::gstreamer_element_missing;
+
+    #[test]
+    fn only_explicit_missing_element_disables_preview() {
+        let missing = b"No such element or plugin 'autoaudiosink'\n";
+        assert!(gstreamer_element_missing(Some(255), missing));
+        assert!(!gstreamer_element_missing(Some(0), missing));
+        assert!(!gstreamer_element_missing(None, missing));
+        assert!(!gstreamer_element_missing(Some(127), b"error while loading shared libraries"));
+        assert!(!gstreamer_element_missing(Some(1), b"unknown failure"));
+    }
 }
 
 #[cfg(test)]
