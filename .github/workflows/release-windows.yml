@@ -140,6 +140,15 @@ jobs:
           arch: ${{ matrix.msvc_arch }}
           vsversion: ${{ matrix.msvc_vsversion }}
 
+      - name: Set MSI runtime prerequisite version
+        shell: pwsh
+        run: |
+          if (-not $env:VCToolsVersion) { throw "MSVC toolset version is missing." }
+          $toolset = [version]$env:VCToolsVersion.Trim()
+          $minimum = [version]::new($toolset.Major, $toolset.Minor, [Math]::Max(0, $toolset.Build), [Math]::Max(0, $toolset.Revision))
+          "TAURI_LAP_VC_RUNTIME_MIN_VERSION=$minimum" >> $env:GITHUB_ENV
+          Write-Host "MSI runtime minimum: $minimum"
+
       - name: Remove ranlib from PATH
         shell: pwsh
         run: |

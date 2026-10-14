@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <!-- Official builds use the selected MSVC developer shell. For local builds
-       without that environment, require the runtime with the new mutex ABI. -->
-  <?ifdef env.VCToolsVersion ?>
-    <?define LapVcRuntimeMinVersion = "$(env.VCToolsVersion)" ?>
+  <!-- Tauri clears the WiX environment except for TAURI-prefixed variables.
+       CI exports the selected MSVC version through this preserved variable.
+       Local builds without it require the runtime with the new mutex ABI. -->
+  <?ifdef env.TAURI_LAP_VC_RUNTIME_MIN_VERSION ?>
+    <?define LapVcRuntimeMinVersion = "$(env.TAURI_LAP_VC_RUNTIME_MIN_VERSION)" ?>
   <?else ?>
     <?define LapVcRuntimeMinVersion = "14.40.33810.0" ?>
   <?endif ?>

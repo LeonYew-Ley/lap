@@ -28,7 +28,10 @@ if (-not $Directory -or $Directory.StringData(1) -ne '[System64Folder]') {
     throw 'MSI runtime search does not use the 64-bit system directory.'
 }
 $Expected = if ($env:VCToolsVersion) { [version]$env:VCToolsVersion.Trim() } else { [version]'14.40.33810.0' }
-if ([version]$Signature.StringData(2) -lt $Expected) { throw 'MSI requires an older runtime than its toolset.' }
+$Actual = [version]$Signature.StringData(2)
+if ($Actual -lt $Expected) {
+    throw "MSI requires an older runtime than its toolset: MSI minimum=$Actual, toolset=$Expected, exported minimum=$env:TAURI_LAP_VC_RUNTIME_MIN_VERSION."
+}
 
 # Evaluate the actual compiled condition with Windows Installer, without installing.
 $Session = $Installer.OpenPackage((Get-Item $MsiPath).FullName, 0)
