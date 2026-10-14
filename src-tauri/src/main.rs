@@ -201,6 +201,7 @@ async fn main() {
             t_drag::cancel_file_drag,
             // library
             t_cmds::get_app_config,
+            t_cmds::get_system_region_locale,
             t_cmds::get_supported_format_extensions,
             t_cmds::get_ffmpeg_backed_image_extensions,
             t_cmds::check_gstreamer_available,

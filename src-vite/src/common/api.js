@@ -1,9 +1,21 @@
 import { setAlbumAccessibility } from '@/common/availability';
 import { invoke } from '@tauri-apps/api/core';
+import { locale } from '@tauri-apps/plugin-os';
 import { listen } from '@tauri-apps/api/event';
 import { config, libConfig } from '@/common/config';
 import { separator, localeComp, formatTimestamp } from '@/common/utils';
 import { getRawDisplayOptions } from './rawDisplay';
+
+export async function getSystemRegionLocale() {
+  // plugin-os reports language preferences, which can differ from date/time region.
+  try {
+    const region = await invoke('get_system_region_locale');
+    if (region) return region;
+  } catch (error) {
+    console.warn('Could not read system regional locale', error);
+  }
+  return locale();
+}
 
 // library
 

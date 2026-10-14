@@ -120,7 +120,7 @@ export const useConfigStore = defineStore('configStore', {
 
     libraryChangedVersion: 0,
 
-    // System locale (BCP-47, e.g. "en-GB"), fetched once at startup via plugin-os.
+    // Regional locale (BCP-47, e.g. "en-GB"), fetched once at startup.
     // Used when dateTimeFormat follows the system region.
     systemLocale: '',
 

@@ -110,6 +110,75 @@ pub struct SupportedFormatExtensions {
 // build info
 include!(concat!(env!("OUT_DIR"), "/build_info.rs"));
 
+// system region
+
+/// Read the region used for dates and times, independently of UI language.
+#[tauri::command]
+pub fn get_system_region_locale() -> Result<Option<String>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Win32::Globalization::GetUserDefaultLocaleName;
+
+        // LOCALE_NAME_MAX_LENGTH includes the terminating null character.
+        let mut name = [0u16; 85];
+        // SAFETY: the API receives a writable slice and its exact capacity.
+        let length = unsafe { GetUserDefaultLocaleName(&mut name) };
+        if length == 0 {
+            return Err(std::io::Error::last_os_error().to_string());
+        }
+        String::from_utf16(&name[..length as usize - 1])
+            .map(Some)
+            .map_err(|error| error.to_string())
+    }
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_foundation::NSLocale;
+
+        // currentLocale includes the user's region; preferredLanguages does not.
+        let identifier = NSLocale::currentLocale().localeIdentifier().to_string();
+        Ok(normalize_locale_identifier(&identifier))
+    }
+    #[cfg(target_os = "linux")]
+    {
+        Ok(time_locale_from_env(|key| std::env::var(key).ok()))
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    {
+        Ok(None)
+    }
+}
+
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
+fn normalize_locale_identifier(identifier: &str) -> Option<String> {
+    let identifier = identifier.trim();
+    if identifier.is_empty() {
+        return None;
+    }
+    // POSIX encoding suffixes and legacy locale modifiers are not BCP-47 tags.
+    let base = identifier.split(['.', '@']).next()?;
+    if base == "C" || base == "POSIX" {
+        // Intl has no C locale; use English as its formatting approximation.
+        return Some("en-US".to_string());
+    }
+    if base.is_empty() {
+        return None;
+    }
+    Some(base.replace('_', "-"))
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn time_locale_from_env(mut get: impl FnMut(&str) -> Option<String>) -> Option<String> {
+    // LANGUAGE and LC_MESSAGES affect translations, not date/time formatting.
+    ["LC_ALL", "LC_TIME", "LANG"]
+        .into_iter()
+        .find_map(|key| get(key).filter(|value| !value.trim().is_empty()))
+        .and_then(|value| normalize_locale_identifier(&value))
+}
+
+#[cfg(test)]
+#[path = "t_cmds_tests/system_locale.rs"]
+mod system_locale_tests;
+
 // library
 
 /// get app config (libraries list and current library)
@@ -118,89 +187,13 @@ pub fn get_app_config() -> Result<AppConfig, String> {
     t_config::load_app_config()
 }
 
-fn extension_description(ext: &str) -> &'static str {
-    match ext {
-        "3fr" => "Hasselblad RAW",
-        "3gp" => "3GPP Multimedia",
-        "arw" => "Sony Alpha RAW",
-        "asf" => "Advanced Systems Format",
-        "avi" => "Audio Video Interleave",
-        "avif" => "AV1 Image File Format",
-        "bmp" => "Bitmap Image File",
-        "cr2" => "Canon RAW 2",
-        "cr3" => "Canon RAW 3",
-        "crw" => "Canon RAW",
-        "dcr" => "Kodak RAW",
-        "dds" => "DirectDraw Surface",
-        "dng" => "Digital Negative",
-        "dpx" => "Digital Picture Exchange",
-        "erf" => "Epson RAW",
-        "exr" => "OpenEXR High Dynamic Range Image",
-        "flv" => "Flash Video",
-        "gif" => "Graphics Interchange Format",
-        "hdr" => "Radiance High Dynamic Range Image",
-        "heic" => "High Efficiency Image Container",
-        "heif" => "High Efficiency Image File",
-        "hevc" => "High Efficiency Video Coding",
-        "hif" => "HEIF Image File",
-        "j2c" => "JPEG 2000 Codestream",
-        "j2k" => "JPEG 2000 Codestream",
-        "jp2" => "JPEG 2000 Image",
-        "jpc" => "JPEG 2000 Codestream",
-        "jpeg" => "Joint Photographic Experts Group",
-        "jfif" => "JPEG File Interchange Format",
-        "jpf" => "JPEG 2000 Image",
-        "jpg" => "Joint Photographic Experts Group",
-        "jpx" => "JPEG 2000 Extended Image",
-        "jxl" => "JPEG XL",
-        "kdc" => "Kodak Digital Camera RAW",
-        "m2ts" => "Blu-ray BDAV Video",
-        "m4v" => "MPEG-4 Video",
-        "mdc" => "Minolta RAW",
-        "mef" => "Mamiya RAW",
-        "mkv" => "Matroska Video",
-        "mod" => "Camcorder Video",
-        "mos" => "Leaf RAW",
-        "mov" => "QuickTime Movie",
-        "mp4" => "MPEG-4 Video",
-        "mpeg" => "Moving Picture Experts Group Video",
-        "mpg" => "MPEG Video",
-        "mrw" => "Minolta RAW",
-        "mts" => "AVCHD Video",
-        "nef" => "Nikon Electronic Format",
-        "nrw" => "Nikon RAW",
-        "orf" => "Olympus RAW Format",
-        "pef" => "Pentax Electronic File",
-        "png" => "Portable Network Graphics",
-        "psd" => "Photoshop Document",
-        "qoi" => "Quite OK Image",
-        "raf" => "Fujifilm RAW",
-        "raw" => "Generic Camera RAW",
-        "rgbe" => "Radiance RGBE Image",
-        "rw2" => "Panasonic RAW 2",
-        "rwl" => "Leica RAW",
-        "sr2" => "Sony RAW 2",
-        "srf" => "Sony RAW Format",
-        "srw" => "Samsung RAW",
-        "tga" => "Truevision Targa Image",
-        "tif" => "Tagged Image File",
-        "tiff" => "Tagged Image File Format",
-        "tod" => "JVC HD Camcorder Video",
-        "ts" => "MPEG Transport Stream",
-        "webm" => "WebM Video",
-        "webp" => "Web Picture Format",
-        "wmv" => "Windows Media Video",
-        _ => "File Format",
-    }
-}
-
 fn extension_option(ext: &str) -> ExtensionOption {
     ExtensionOption {
         value: ext.to_string(),
         label: format!(
             "{} ({})",
             ext.to_ascii_uppercase(),
-            extension_description(ext)
+            t_common::extension_description(ext)
         ),
     }
 }
