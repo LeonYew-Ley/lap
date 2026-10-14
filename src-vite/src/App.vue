@@ -1,15 +1,15 @@
 <template>
-  <div v-if="!isReady" class="w-screen h-screen flex items-center justify-center bg-base-300">
-    <span class="loading loading-spinner loading-lg text-primary app-loading-delayed"></span>
+  <div v-if="!isReady || (isMainWindow && !uiStore.startupReady)" class="fixed inset-0 z-[1000] flex items-center justify-center bg-base-300" role="status" aria-label="Loading" data-tauri-drag-region>
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
   </div>
-  <template v-else>
+  <template v-if="isReady">
     <router-view />
     <ToastContainer />
   </template>
 </template>
  
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { emit } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
@@ -24,6 +24,8 @@ import ToastContainer from '@/components/ToastContainer.vue';
 const libConfig = useLibraryStore();
 const isReady = ref(false);
 const config = useConfigStore();
+const uiStore = useUIStore();
+const isMainWindow = getCurrentWebviewWindow().label === 'main';
 let unlistenMainCloseRequested = null;
 let isHandlingMainClose = false;
 
@@ -103,6 +105,14 @@ onMounted(async () => {
   setTheme(config.settings.appearance, 
     config.settings.appearance === 0 ? config.settings.lightTheme : config.settings.darkTheme);
 
+  // Show the themed loading screen while library and first-content loading run.
+  if (isMainWindow) {
+    await nextTick();
+    await win.show();
+    performance.mark('startup-window-shown');
+    void invoke('record_startup_stage', { stage: 'window-shown' }).catch(console.error);
+  }
+
   // Initialize library state from backend
   try {
     await libConfig.init();
@@ -114,12 +124,6 @@ onMounted(async () => {
     if (win.label === 'main') {
       performance.mark('startup-library-state-ready');
       void invoke('record_startup_stage', { stage: 'library-state-ready' }).catch(console.error);
-    }
-    // Show window after everything is loaded (main window only)
-    if (win.label === 'main') {
-      await win.show();
-      performance.mark('startup-window-shown');
-      void invoke('record_startup_stage', { stage: 'window-shown' }).catch(console.error);
     }
   }
 });
@@ -220,16 +224,3 @@ const handleContextMenu = (e) => {
 };
 
 </script>
-
-<style scoped>
-.app-loading-delayed {
-  opacity: 0;
-  animation: appLoadingShow 0s linear 0.5s forwards;
-}
-
-@keyframes appLoadingShow {
-  to {
-    opacity: 1;
-  }
-}
-</style>
