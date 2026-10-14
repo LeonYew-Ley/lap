@@ -3986,6 +3986,7 @@ async function selectRangeFromSingleSelection(anchorIndex: number, targetIndex: 
 
   selectedItemIndex.value = targetIndex;
   lastSelectedIndex.value = targetIndex;
+  if (isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
 }
 
 async function handleItemSelectToggled(index: number, shiftKey: boolean = false) {
@@ -4020,6 +4021,7 @@ async function handleItemSelectToggled(index: number, shiftKey: boolean = false)
   
   // Update last selected index
   lastSelectedIndex.value = index;
+  if (shiftKey && isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
 }
 
 function toggleKeyboardSelection(direction: 'prev' | 'next') {
@@ -4614,6 +4616,7 @@ function handleLocalKeyDown(event: KeyboardEvent) {
       return;
     }
     if (selectMode.value) {
+      if (selectionPanelOpen.value) config.rightPanel.show = false;
       handleSelectMode(false);
       event.preventDefault();
       return;
@@ -10034,7 +10037,9 @@ const toggleInfoPanel = () => {
       // A pending transition or failed window restore must not open a hidden panel.
       if (preview.isFullScreen) return;
     }
-    if (isInfoPanelOpen.value && !wasPreviewFullScreen) {
+    const wasInfoPanelOpen = isInfoPanelOpen.value;
+    if (selectMode.value) handleSelectMode(false);
+    if (wasInfoPanelOpen && !wasPreviewFullScreen) {
       config.rightPanel.show = false;
       return;
     }
@@ -10047,7 +10052,9 @@ const toggleInfoPanel = () => {
 const toggleDedupPanel = () => {
   if (isScanStreamingMode.value) return;
   checkUnsavedChanges(() => {
-    if (isDedupPanelOpen.value) {
+    const wasDedupPanelOpen = isDedupPanelOpen.value;
+    if (selectMode.value) handleSelectMode(false);
+    if (wasDedupPanelOpen) {
       config.rightPanel.show = false;
       return;
     }
