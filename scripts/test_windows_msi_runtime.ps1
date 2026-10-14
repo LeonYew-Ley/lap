@@ -5,9 +5,10 @@ $Database = $Installer.OpenDatabase((Get-Item $MsiPath).FullName, 0)
 
 function Query-Row([string]$Sql) {
     $View = $Database.OpenView($Sql)
-    $View.Execute()
+    # COM calls can emit null values; keep only the fetched record in the output.
+    $null = $View.Execute()
     $Record = $View.Fetch()
-    $View.Close()
+    $null = $View.Close()
     return $Record
 }
 
