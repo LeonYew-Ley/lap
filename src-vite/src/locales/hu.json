@@ -150,6 +150,7 @@
       "validation_name": "Adja meg az intelligens album nevét.",
       "validation_rule": "Adjon hozzá legalább egy teljes szabályt.",
       "fields": {
+        "folder_name": "Mappanév",
         "name": "Fájlnév",
         "file_type": "Fájltípus",
         "media_subtype": "Média-altípus",

@@ -5384,20 +5384,22 @@ impl AFile {
     }
 
     fn build_smart_name_condition(
+        column: &str,
         operator: &str,
         value: &JsonValue,
         sql_params: &mut Vec<Box<dyn ToSql>>,
     ) -> Result<String, String> {
         let name =
             Self::smart_rule_string(value).ok_or_else(|| "Name value required".to_string())?;
+        let name = name.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
         match operator {
             "contains" | "has" => {
                 sql_params.push(Box::new(format!("%{}%", name)));
-                Ok("a.name LIKE ? COLLATE NOCASE".to_string())
+                Ok(format!("{} LIKE ? ESCAPE '\\' COLLATE NOCASE", column))
             }
             "not_contains" | "not_has" => {
                 sql_params.push(Box::new(format!("%{}%", name)));
-                Ok("a.name NOT LIKE ? COLLATE NOCASE".to_string())
+                Ok(format!("{} NOT LIKE ? ESCAPE '\\' COLLATE NOCASE", column))
             }
             _ => Err(format!("Unsupported name operator: {}", operator)),
         }
@@ -5570,7 +5572,8 @@ impl AFile {
         let value = &rule.value;
 
         match field {
-            "name" => Self::build_smart_name_condition(operator, value, sql_params),
+            "folder_name" => Self::build_smart_name_condition("b.name", operator, value, sql_params),
+            "name" => Self::build_smart_name_condition("a.name", operator, value, sql_params),
             "file_type" => {
                 let mask = Self::smart_rule_i64(value)
                     .ok_or_else(|| "File type value required".to_string())?;
@@ -10505,4 +10508,70 @@ mod batch_rename_tests {
             assert_eq!(names(&conn), before);
         }
     }
+}
+
+#[cfg(test)]
+mod smart_folder_name_tests {
+    use super::*;
+
+    #[test]
+    fn folder_name_matches_across_paths_independently_of_file_names() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE afolders(id INTEGER PRIMARY KEY, name TEXT, path TEXT);
+             CREATE TABLE afiles(id INTEGER PRIMARY KEY, folder_id INTEGER, name TEXT);
+             INSERT INTO afolders VALUES
+                (1,'Houses','/work/Houses'), (2,'houses','/personal/houses'),
+                (3,'Trips','/work/Houses/Trips'), (4,'Other','/other');
+             INSERT INTO afiles VALUES
+                (1,1,'photo.jpg'), (2,2,'image.jpg'), (3,3,'child.jpg'), (4,4,'Houses.jpg');"
+        ).unwrap();
+        for (field, operator, expected) in [
+            ("folder_name", "contains", vec![1, 2]),
+            ("folder_name", "not_contains", vec![3, 4]),
+            ("name", "contains", vec![4]),
+        ] {
+            let rule: SmartRule = serde_json::from_value(serde_json::json!({
+                "id": "test", "field": field, "operator": operator, "value": "Houses"
+            })).unwrap();
+            let mut params = Vec::new();
+            let condition = AFile::build_smart_rule_condition(
+                &rule, &mut Vec::new(), &mut false, &mut params,
+            ).unwrap();
+            let ids: Vec<i64> = conn.prepare(&format!(
+                "SELECT a.id FROM afiles a JOIN afolders b ON b.id = a.folder_id WHERE {} ORDER BY a.id",
+                condition,
+            )).unwrap().query_map(rusqlite::params_from_iter(params.iter()), |row| row.get(0))
+                .unwrap().collect::<Result<_, _>>().unwrap();
+            assert_eq!(ids, expected);
+        }
+    }
+    #[test]
+    fn name_filters_treat_like_metacharacters_literally() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE names(name TEXT);
+            INSERT INTO names VALUES ('Project_1'), ('ProjectA1'), ('100%'), ('1000'), ('Back\\slash'), ('Backslash');").unwrap();
+        for column in ["a.name", "b.name"] {
+            for name in ["Project_1", "100%", r"Back\slash"] {
+                for operator in ["contains", "not_contains"] {
+                    let mut params = Vec::new();
+                    let condition = AFile::build_smart_name_condition(
+                        column, operator, &serde_json::json!(name), &mut params,
+                    ).unwrap();
+                    let alias = column.split('.').next().unwrap();
+                    let matches: Vec<String> = conn.prepare(&format!(
+                        "SELECT name FROM names {} WHERE {}", alias, condition,
+                    )).unwrap().query_map(rusqlite::params_from_iter(params.iter()), |row| row.get(0))
+                        .unwrap().collect::<Result<_, _>>().unwrap();
+                    if operator == "contains" {
+                        assert_eq!(matches, vec![name]);
+                    } else {
+                        assert_eq!(matches.len(), 5);
+                        assert!(!matches.iter().any(|value| value == name));
+                    }
+                }
+            }
+        }
+    }
+
 }

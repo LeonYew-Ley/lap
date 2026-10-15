@@ -257,6 +257,7 @@ const fieldOptions = computed(() => [
   { value: 'date_modified', label: t('album.smart_edit.fields.date_modified') },
 
   // File
+  { value: 'folder_name', label: t('album.smart_edit.fields.folder_name') },
   { value: 'name', label: t('album.smart_edit.fields.name') },
   { value: 'file_type', label: t('album.smart_edit.fields.file_type') },
   { value: 'media_subtype', label: t('album.smart_edit.fields.media_subtype') },
@@ -314,7 +315,7 @@ function normalizeRuleForEdit(rule: any) {
 
 function getOperatorOptions(field: string) {
   const op = (key: string) => ({ value: key, label: t(`album.smart_edit.operators.${key}`) });
-  if (field === 'name') return [op('contains'), op('not_contains')];
+  if (['folder_name', 'name'].includes(field)) return [op('contains'), op('not_contains')];
   if (['file_type', 'media_subtype', 'extension', 'camera', 'lens', 'location', 'album', 'collection'].includes(field)) return [op('is'), op('is_not')];
   if (field === 'favorite' || field === 'has_gps') return [op('is')];
   if (field === 'culling') return [op('is'), op('is_not')];
@@ -336,7 +337,7 @@ function resetRuleValue(rule: any) {
 }
 
 function setDefaultRuleValue(rule: any) {
-  if (rule.field === 'name') rule.value = '';
+  if (['folder_name', 'name'].includes(rule.field)) rule.value = '';
   else if (rule.field === 'file_type') rule.value = 1;
   else if (rule.field === 'media_subtype') rule.value = 'motion_photo';
   else if (rule.field === 'extension') rule.value = extensionOptions.value[0]?.value || 'jpg';

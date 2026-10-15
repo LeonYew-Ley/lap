@@ -150,6 +150,7 @@
       "validation_name": "スマートアルバム名を入力してください。",
       "validation_rule": "完全なルールを少なくとも 1 つ追加してください。",
       "fields": {
+        "folder_name": "フォルダー名",
         "name": "ファイル名",
         "file_type": "ファイルタイプ",
         "media_subtype": "メディアサブタイプ",

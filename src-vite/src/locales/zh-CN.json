@@ -150,6 +150,7 @@
       "validation_name": "请输入智能相册名称。",
       "validation_rule": "请至少添加一条完整规则。",
       "fields": {
+        "folder_name": "文件夹名称",
         "name": "文件名",
         "file_type": "文件类型",
         "media_subtype": "媒体子类型",

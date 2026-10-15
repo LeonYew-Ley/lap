@@ -150,6 +150,7 @@
       "validation_name": "Saisissez un nom d’album intelligent.",
       "validation_rule": "Ajoutez au moins une règle complète.",
       "fields": {
+        "folder_name": "Nom du dossier",
         "name": "Nom du fichier",
         "file_type": "Type de fichier",
         "media_subtype": "Sous-type de média",

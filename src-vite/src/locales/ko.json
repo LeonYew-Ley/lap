@@ -150,6 +150,7 @@
       "validation_name": "스마트 앨범 이름을 입력하세요.",
       "validation_rule": "완성된 규칙을 하나 이상 추가하세요.",
       "fields": {
+        "folder_name": "폴더 이름",
         "name": "파일 이름",
         "file_type": "파일 유형",
         "media_subtype": "미디어 하위 유형",

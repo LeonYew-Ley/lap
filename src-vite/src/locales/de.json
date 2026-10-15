@@ -150,6 +150,7 @@
       "validation_name": "Gib einen Namen für das Smart-Album ein.",
       "validation_rule": "Füge mindestens eine vollständige Regel hinzu.",
       "fields": {
+        "folder_name": "Ordnername",
         "name": "Dateiname",
         "file_type": "Dateityp",
         "media_subtype": "Medienuntertyp",

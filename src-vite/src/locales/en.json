@@ -150,6 +150,7 @@
       "validation_name": "Enter a smart album name.",
       "validation_rule": "Add at least one complete rule.",
       "fields": {
+        "folder_name": "Folder name",
         "name": "File name",
         "file_type": "File type",
         "media_subtype": "Media subtype",

@@ -150,6 +150,7 @@
       "validation_name": "Voer een naam in voor het slimme album.",
       "validation_rule": "Voeg minstens één volledige regel toe.",
       "fields": {
+        "folder_name": "Mapnaam",
         "name": "Bestandsnaam",
         "file_type": "Bestandstype",
         "media_subtype": "Mediasubtype",
