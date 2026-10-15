@@ -276,23 +276,25 @@
               >
                 <button 
                   :class="[
-                    'p-2 rounded-full pointer-events-auto bg-base-100/30', 
+                    'preview-press-button p-2 rounded-full pointer-events-auto bg-base-100/30',
                     selectedItemIndex > 0 ? 'text-base-content/70 hover:text-base-content hover:bg-base-100/70 cursor-pointer' : 'text-base-content/30'
                   ]"
+                  :disabled="selectedItemIndex <= 0"
                   @click="requestNavigate('prev')"
                   @dblclick.stop
                 >
-                  <component :is="isFilmstripVertical ? IconArrowUp : IconLeft" class="w-8 h-8" />
+                  <span class="preview-press-icon flex pointer-events-none"><component :is="isFilmstripVertical ? IconArrowUp : IconLeft" class="w-8 h-8" /></span>
                 </button>
                 <button 
                   :class="[
-                    'p-2 rounded-full pointer-events-auto bg-base-100/30', 
+                    'preview-press-button p-2 rounded-full pointer-events-auto bg-base-100/30',
                     selectedItemIndex < fileList.length - 1 ? 'text-base-content/70 hover:text-base-content hover:bg-base-100/70 cursor-pointer' : 'text-base-content/30'
                   ]"
+                  :disabled="selectedItemIndex >= fileList.length - 1"
                   @click="requestNavigate('next')" 
                   @dblclick.stop
                 >
-                  <component :is="isFilmstripVertical ? IconArrowDown : IconRight" class="w-8 h-8" />
+                  <span class="preview-press-icon flex pointer-events-none"><component :is="isFilmstripVertical ? IconArrowDown : IconRight" class="w-8 h-8" /></span>
                 </button> 
               </div>
             </div>
@@ -397,7 +399,7 @@
             <div class="absolute inset-1 z-90 flex items-center justify-between pointer-events-none">
               <button
                 :class="[
-                  'p-2 rounded-full bg-base-100/30 transition-opacity duration-200',
+                  'preview-press-button p-2 rounded-full bg-base-100/30 transition-opacity duration-200',
                   quickViewHoverLeft
                     ? (selectedItemIndex > 0
                       ? 'opacity-100 pointer-events-auto text-base-content/70 hover:text-base-content hover:bg-base-100/70 cursor-pointer'
@@ -409,11 +411,11 @@
                 @click.stop="requestNavigate('prev')"
                 @dblclick.stop
               >
-                <IconLeft class="w-8 h-8" />
+                <span class="preview-press-icon flex pointer-events-none"><IconLeft class="w-8 h-8" /></span>
               </button>
               <button
                 :class="[
-                  'p-2 rounded-full bg-base-100/30 transition-opacity duration-200',
+                  'preview-press-button p-2 rounded-full bg-base-100/30 transition-opacity duration-200',
                   quickViewHoverRight
                     ? (selectedItemIndex < fileList.length - 1
                       ? 'opacity-100 pointer-events-auto text-base-content/70 hover:text-base-content hover:bg-base-100/70 cursor-pointer'
@@ -425,7 +427,7 @@
                 @click.stop="requestNavigate('next')"
                 @dblclick.stop
               >
-                <IconRight class="w-8 h-8" />
+                <span class="preview-press-icon flex pointer-events-none"><IconRight class="w-8 h-8" /></span>
               </button>
             </div>
           </div>

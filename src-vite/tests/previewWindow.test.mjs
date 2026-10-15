@@ -122,3 +122,19 @@ test('a disposed queued entry also preserves preceding focus recovery', async ()
   await t.resize();
   assert.equal(t.calls.filter(c => c[0] === 'focus').length, count + 1);
 });
+
+test('preview navigation reports boundaries without emitting a navigation event', () => {
+  const start = source.indexOf('const triggerPrev = () => {');
+  const code = ts.transpile(source.slice(start, source.indexOf('const handleToggleSlideShow', start)), { target: ts.ScriptTarget.ES2022 });
+  for (const direction of ['prev', 'next']) {
+    for (const available of [false, true]) {
+      const events = [], messages = [];
+      const props = { hasPrevious: available, hasNext: available };
+      const localeMsg = {value:{tooltip:{image_viewer:{first_image:'first',last_image:'last'}}}};
+      const controls = new Function('props', 'localeMsg', 'emit', 'showMessage', `${code}; return {prev:triggerPrev,next:triggerNext};`)(props, localeMsg, value=>events.push(value), value=>messages.push(value));
+      controls[direction]();
+      assert.deepEqual(events, available ? [direction] : []);
+      assert.deepEqual(messages, available ? [] : [direction === 'prev' ? 'first' : 'last']);
+    }
+  }
+});

@@ -44,6 +44,25 @@ html, body {
   @apply btn btn-sm rounded-box min-w-20 btn-error;
 }
 
+.preview-press-icon {
+  transition: transform 100ms ease-out;
+}
+
+.preview-press-button:enabled:active {
+  @apply bg-base-100/90;
+}
+
+.preview-press-button:enabled:active > .preview-press-icon {
+  transform: translateY(1px);
+  transition-duration: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-press-icon {
+    transition: none;
+  }
+}
+
 /* icon */
 .t-icon-size-xs {
   @apply w-4 h-4;
