@@ -3880,6 +3880,7 @@ function handleItemClicked(
       const anchorIndex = selectedItemIndex.value;
       handleSelectMode(true);
       setItemSelected(anchorIndex, true);
+      if (isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
 
       selectedItemIndex.value = index;
       if (index !== anchorIndex) {
@@ -4030,7 +4031,7 @@ async function handleItemSelectToggled(index: number, shiftKey: boolean = false)
   
   // Update last selected index
   lastSelectedIndex.value = index;
-  if (shiftKey && isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
+  if (isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
 }
 
 function toggleKeyboardSelection(direction: 'prev' | 'next') {
@@ -9811,6 +9812,7 @@ const selectAllInCurrentList = async () => {
       .reduce((total, size) => total + Number(size || 0), 0);
     syncSelectionVersions();
     selectMode.value = true;
+    if (isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
     return;
   }
 
@@ -9844,6 +9846,7 @@ const selectAllInCurrentList = async () => {
   selectedSize.value = selectedFileIds.size === totalFileCount.value ? totalFileSize.value : nextSize;
   syncSelectionVersions();
   selectMode.value = true;
+  if (isGridLayoutView.value && config.rightPanel.show) selectionPanelOpen.value = true;
 };
 
 const selectNoneInCurrentList = () => {

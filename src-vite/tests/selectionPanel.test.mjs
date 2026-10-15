@@ -108,3 +108,39 @@ test('info and dedup buttons always leave selection mode, including when their p
     }
   }
 });
+
+
+test('Ctrl/Cmd click replaces an open panel, including a click on the current item', async () => {
+  for (const modifier of ['ctrlKey', 'metaKey']) {
+    for (const index of [0, 1]) {
+      const f = fixture();
+      f.checkUnsavedChanges = action => action();
+      f.handleSelectMode = active => {f.selectMode.value = active;};
+      f.handleItemSelectToggled = loadFunction('handleItemSelectToggled', 'function toggleKeyboardSelection', f);
+      const start = source.indexOf('function handleItemClicked(');
+      const code = ts.transpile(source.slice(start, source.indexOf('function handleItemDblClicked', start)), {target:ts.ScriptTarget.ES2022});
+      const click = new Function(...Object.keys(f), `${code}; return handleItemClicked;`)(...Object.values(f));
+      click(index, {[modifier]:true});
+      assert.equal(f.selectMode.value, true);
+      assert.equal(f.selectionPanelOpen.value, true);
+    }
+  }
+});
+
+test('select all opens selection panel for both flat and grouped lists, respecting hidden panels and filmstrip', async () => {
+  const start = source.indexOf('const selectAllInCurrentList = async () => {');
+  const code = ts.transpile(source.slice(start, source.indexOf('const selectNoneInCurrentList', start)), {target:ts.ScriptTarget.ES2022});
+  for (const grouped of [false, true]) {
+    for (const options of [{}, {show:false}, {grid:false}]) {
+      const f = {...fixture(options), groupedModeActive:ref(grouped), selectedFileIds:new Set(),
+        getCurrentQueryFileIds:async()=>[1,2,3], groupMetaMap:new Map(), selectedCount:ref(0), selectedSize:ref(0),
+        totalFileCount:ref(3), totalFileSize:ref(0), syncSelectionVersions(){}, isPendingFileItem:()=>false,
+        recomputeLoadedGroupSelectedCounts(){}};
+      const select = new Function(...Object.keys(f), `${code}; return selectAllInCurrentList;`)(...Object.values(f));
+      await select();
+      assert.equal(f.selectMode.value, true);
+      assert.equal(f.selectionPanelOpen.value, options.show !== false && options.grid !== false);
+      assert.equal(f.selectedCount.value, 3);
+    }
+  }
+});

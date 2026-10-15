@@ -84,11 +84,11 @@
         <span class="font-bold uppercase text-[10px] tracking-widest">{{ $t('settings.about.section_updates') }}</span>
       </div>
       <div class="flex items-center justify-between gap-4 px-1 rounded-box hover:bg-base-100/10 transition-colors duration-200">
-        <div class="min-w-0 flex flex-col gap-0.5 text-sm leading-5">
+        <div class="min-w-0 flex-1 flex flex-col gap-0.5 text-sm leading-5">
           <div>{{ updateStatusText }}</div>
           <progress
             v-if="isDownloadingUpdate"
-            class="progress progress-primary mt-1 h-1.5 w-full max-w-xs"
+            class="progress progress-primary mt-1 h-1.5 w-full"
             :value="downloadPercent === null ? undefined : downloadPercent"
             max="100"
           ></progress>
