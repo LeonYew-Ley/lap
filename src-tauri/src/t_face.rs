@@ -749,19 +749,29 @@ pub fn run_face_indexing(
 
             current += 1;
 
-            let mut engine = face_state.0.lock().unwrap();
-
             // Optimization: Try to use thumbnail first
             // We need to know if we used a thumbnail to scale the bbox
-            let (process_result, used_thumb) = match t_sqlite::AThumb::fetch(file_id) {
+            let thumb = t_sqlite::AThumb::fetch(file_id);
+            // Reading the online-only original would download it; retry once it is local.
+            if !matches!(&thumb, Ok(Some(t)) if t.thumb_data.is_some()) && crate::t_utils::is_cloud_only_path(&file_path) {
+                continue;
+            }
+            let mut engine = face_state.0.lock().unwrap();
+            let load_original = |engine: &mut FaceEngine| {
+                if !crate::t_utils::content_readable(&file_path) {
+                    return Err("Skipped: the original is not local".to_string());
+                }
+                engine.process_image(&file_path)
+            };
+            let (process_result, used_thumb) = match thumb {
                 Ok(Some(thumb)) if thumb.thumb_data.is_some() => {
                     let thumb_bytes = thumb.thumb_data.as_ref().unwrap();
                     match engine.process_image_from_bytes(thumb_bytes) {
                         Ok(res) => (Ok(res), true),
-                        Err(_) => (engine.process_image(&file_path), false),
+                        Err(_) => (load_original(&mut engine), false),
                     }
                 }
-                _ => (engine.process_image(&file_path), false),
+                _ => (load_original(&mut engine), false),
             };
 
             match process_result {
@@ -812,6 +822,7 @@ pub fn run_face_indexing(
                     }
                 }
                 Err(e) => {
+                    if !crate::t_utils::content_readable(&file_path) { continue; }
                     eprintln!("Failed to process image {}: {}", file_path, e);
                     // Do not retry files the decoder cannot read on every resume.
                     // Status 2 means the image was processed without a face result.

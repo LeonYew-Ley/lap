@@ -1430,6 +1430,11 @@ export async function checkFileAccessibility(filePath) {
   return invoke('check_file_accessibility', { filePath });
 }
 
+// Live check: reading an online-only file would make the cloud provider download it.
+export async function isCloudOnlyFile(filePath) {
+  return invoke('is_cloud_only_file', { filePath }).catch(() => true);
+}
+
 // set file rotate
 export async function setFileRotate(fileId, fileRotate) {
   try {

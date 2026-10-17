@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "Csak online érhető el",
+    "cloud_only_pending": "Csak online érhető el — hiányos fájlinformációk",
     "original_unavailable": "Az eredeti fájl nem érhető el",
     "requires_original": "Az eredeti fájl szükséges. Csatlakoztassa újra a tárolóeszközt."
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "Felszabadítható",
       "groups_title": "Duplikátumcsoportok",
+      "skipped_cloud_only": "Kihagyott, csak online elérhető fájlok: {count}",
       "actions_title": "Műveletek",
       "compare": "Összehasonlítás",
       "rescan": "Újrakeresés",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "Megjelenítés a Finderben...",
       "reveal_in_file_explorer": "Megjelenítés a Fájlkezelőben...",
       "refresh_file_info": "Fájladatok frissítése",
+      "index_cloud_files": "Letöltés, indexelés, majd tárhely felszabadítása",
       "set_album_cover": "Beállítás albumborítóként",
       "set_as": "Beállítás mint",
       "set_desktop_wallpaper": "Beállítás háttérképként",
@@ -1002,7 +1006,10 @@
       "cancelled": "Megszakítva",
       "complete": "Kész",
       "succeeded": "Frissítve: {count}",
-      "failed": "Sikertelen: {count}"
+      "failed": "Sikertelen: {count}",
+      "release_requested": "Felszabadítás kérve: {count}",
+      "kept_local": "Az eszközön megtartva: {count}",
+      "kept_local_hint": "Az eszközön mindig megtartandó fájlok, illetve azok, amelyeknél a Windows nem engedte a Lap számára a tárhely felszabadítását (vezérelt mappahozzáférés)."
     },
     "image_editor": {
       "title": "Szerkesztés",

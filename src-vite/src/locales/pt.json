@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "Disponível somente online",
+    "cloud_only_pending": "Disponível somente online — informações incompletas",
     "original_unavailable": "O ficheiro original está indisponível",
     "requires_original": "Requer o ficheiro original. Volte a ligar o dispositivo de armazenamento."
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "Recuperável",
       "groups_title": "Grupos duplicados",
+      "skipped_cloud_only": "{count} arquivos disponíveis somente online foram ignorados",
       "actions_title": "Ações",
       "compare": "Comparar",
       "rescan": "Verificar novamente",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "Mostrar no Finder...",
       "reveal_in_file_explorer": "Mostrar no Explorer...",
       "refresh_file_info": "Atualizar informações do arquivo",
+      "index_cloud_files": "Baixar, indexar e liberar espaço",
       "set_album_cover": "Definir como capa",
       "set_as": "Definir como",
       "set_desktop_wallpaper": "Definir como papel de parede",
@@ -1002,7 +1006,10 @@
       "cancelled": "Cancelado",
       "complete": "Concluído",
       "succeeded": "Atualizados: {count}",
-      "failed": "Falhas: {count}"
+      "failed": "Falhas: {count}",
+      "release_requested": "Liberação solicitada: {count}",
+      "kept_local": "Mantidos neste dispositivo: {count}",
+      "kept_local_hint": "Arquivos mantidos sempre neste dispositivo ou cujo espaço o Windows não permitiu que o Lap liberasse (acesso controlado a pastas)."
     },
     "image_editor": {
       "title": "Editar",

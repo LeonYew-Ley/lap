@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "仅在线可用",
+    "cloud_only_pending": "仅在线可用 — 文件信息待补全",
     "original_unavailable": "原文件暂时无法访问",
     "requires_original": "需要原文件，请连接存储设备后使用此操作。"
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "可回收",
       "groups_title": "重复组",
+      "skipped_cloud_only": "已跳过 {count} 个仅在线可用的文件",
       "actions_title": "操作",
       "compare": "对比",
       "rescan": "重新扫描",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "在访达中显示...",
       "reveal_in_file_explorer": "在文件资源管理器中显示...",
       "refresh_file_info": "刷新文件信息",
+      "index_cloud_files": "下载、索引并释放空间",
       "set_album_cover": "设置为相册封面",
       "set_as": "设为",
       "set_desktop_wallpaper": "设为桌面壁纸",
@@ -1002,7 +1006,10 @@
       "cancelled": "已取消",
       "complete": "已完成",
       "succeeded": "已更新：{count}",
-      "failed": "失败：{count}"
+      "failed": "失败：{count}",
+      "release_requested": "已请求释放：{count}",
+      "kept_local": "保留在此设备：{count}",
+      "kept_local_hint": "始终保留在此设备上的文件，或 Windows 不允许 Lap 释放空间的文件（受控文件夹访问）。"
     },
     "image_editor": {
       "title": "编辑",

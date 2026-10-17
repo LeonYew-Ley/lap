@@ -158,6 +158,11 @@ fn get_migrations() -> Vec<Migration> {
             description: "Album scan scope and pixel filters",
             sql: "",
         },
+        Migration {
+            version: 19,
+            description: "Cloud-only file state",
+            sql: "",
+        },
     ]
 }
 
@@ -488,6 +493,15 @@ pub fn check_and_migrate(conn: &Connection) -> Result<(), String> {
                     }
                 }
                 tx.commit().map_err(|e| e.to_string())?;
+            } else if migration.version == 19 {
+                let tx = conn.unchecked_transaction().map_err(|e| e.to_string())?;
+                for column in ["cloud_only", "metadata_pending"] {
+                    if !table_has_column(&tx, "afiles", column)? {
+                        tx.execute(&format!("ALTER TABLE afiles ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0"), [])
+                            .map_err(|e| e.to_string())?;
+                    }
+                }
+                tx.commit().map_err(|e| e.to_string())?;
             } else if !migration.sql.trim().is_empty() {
                 conn.execute_batch(migration.sql)
                     .map_err(|e| format!("Migration {} failed: {}", migration.version, e))?;
@@ -552,7 +566,7 @@ mod album_filter_migration_tests {
     #[test]
     fn album_filter_migration_is_restartable_and_defaults_to_off() {
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch("CREATE TABLE albums(id INTEGER PRIMARY KEY); INSERT INTO albums VALUES(1); PRAGMA user_version=17;").unwrap();
+        conn.execute_batch("CREATE TABLE albums(id INTEGER PRIMARY KEY); CREATE TABLE afiles(id INTEGER PRIMARY KEY); INSERT INTO albums VALUES(1); PRAGMA user_version=17;").unwrap();
         check_and_migrate(&conn).unwrap();
         let settings: (i64, Option<i64>, String) = conn.query_row(
             "SELECT file_types,small_image_filter,excluded_folders FROM albums", [],
@@ -561,6 +575,20 @@ mod album_filter_migration_tests {
         // Simulate migration completing before the version was persisted.
         conn.execute_batch("PRAGMA user_version=17;").unwrap();
         check_and_migrate(&conn).unwrap();
-        assert_eq!(conn.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0)).unwrap(),18);
+        assert_eq!(conn.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0)).unwrap(),19);
+    }
+
+    #[test]
+    fn cloud_state_migration_is_restartable_and_defaults_to_local() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE afiles(id INTEGER PRIMARY KEY); INSERT INTO afiles VALUES(1); PRAGMA user_version=18;").unwrap();
+        check_and_migrate(&conn).unwrap();
+        let state: (i64, i64) = conn.query_row("SELECT cloud_only, metadata_pending FROM afiles", [],
+            |row| Ok((row.get(0)?, row.get(1)?))).unwrap();
+        assert_eq!(state, (0, 0));
+        // Simulate migration completing before the version was persisted.
+        conn.execute_batch("PRAGMA user_version=18;").unwrap();
+        check_and_migrate(&conn).unwrap();
+        assert_eq!(conn.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0)).unwrap(), 19);
     }
 }

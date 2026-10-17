@@ -99,6 +99,7 @@ export { default as IconCalendarMonth } from '@/assets/icons/calendar-month.svg'
 export { default as IconCalendarUp } from '@/assets/icons/calendar-up.svg';
 export { default as IconClock } from '@/assets/icons/icon-clock.svg';
 export { default as IconClose } from '@/assets/icons/close.svg';
+export { default as IconCloud } from '@/assets/icons/cloud.svg';
 export { default as IconComment } from '@/assets/icons/comment.svg';
 export { default as IconDot } from '@/assets/icons/dot.svg';
 export { default as IconDownload } from '@/assets/icons/download.svg';

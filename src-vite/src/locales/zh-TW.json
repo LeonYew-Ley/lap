@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "僅線上可用",
+    "cloud_only_pending": "僅線上可用 — 檔案資訊待補齊",
     "original_unavailable": "原始檔案暫時無法存取",
     "requires_original": "需要原始檔案，請連接儲存裝置後使用此操作。"
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "可釋放",
       "groups_title": "重複群組",
+      "skipped_cloud_only": "已略過 {count} 個僅線上可用的檔案",
       "actions_title": "動作",
       "compare": "比較",
       "rescan": "重新掃描",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "在 Finder 中顯示...",
       "reveal_in_file_explorer": "在檔案總管中顯示...",
       "refresh_file_info": "重新整理檔案資訊",
+      "index_cloud_files": "下載、建立索引並釋放空間",
       "set_album_cover": "設為相簿封面",
       "set_as": "設為",
       "set_desktop_wallpaper": "設為桌面桌布",
@@ -1002,7 +1006,10 @@
       "cancelled": "已取消",
       "complete": "完成",
       "succeeded": "已更新：{count}",
-      "failed": "失敗：{count}"
+      "failed": "失敗：{count}",
+      "release_requested": "已要求釋放：{count}",
+      "kept_local": "保留在此裝置：{count}",
+      "kept_local_hint": "一律保留在此裝置上的檔案，或 Windows 不允許 Lap 釋放空間的檔案（受控資料夾存取）。"
     },
     "image_editor": {
       "title": "編輯",

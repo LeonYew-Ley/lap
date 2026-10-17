@@ -21,6 +21,7 @@ pub struct DedupScanStatus {
     pub total: u64,
     pub groups: u64,
     pub is_scanning: bool,
+    pub skipped: u64, // online-only files left unhashed
 }
 
 impl Default for DedupScanStatus {
@@ -31,6 +32,7 @@ impl Default for DedupScanStatus {
             total: 0,
             groups: 0,
             is_scanning: false,
+            skipped: 0,
         }
     }
 }
@@ -103,6 +105,7 @@ pub fn start_scan(
         status.processed = 0;
         status.total = 0;
         status.groups = 0;
+        status.skipped = 0;
         status.is_scanning = true;
     }
 
@@ -186,6 +189,7 @@ fn scan_and_hash_files(
 
     // Step 3: Hash them
     let mut processed = 0;
+    let mut skipped = 0u64;
 
     // We do batch inserts to speed up DB operations
     let tx = conn.transaction().map_err(|e| e.to_string())?;
@@ -200,6 +204,13 @@ fn scan_and_hash_files(
 
         if needs_hash {
             if let Some(path) = &file.file_path {
+                if crate::t_utils::is_cloud_only_path(path) {
+                    // Hashing reads the whole file; Lap must not trigger a download.
+                    // A hash from before a remote change would still group the file as a duplicate.
+                    tx.execute("DELETE FROM file_hashes WHERE file_id = ?1", params![file.id.unwrap()])
+                        .map_err(|e| e.to_string())?;
+                    skipped += 1;
+                } else {
                 match compute_blake3_hash(path) {
                     Ok(hash) => {
                         let now = SystemTime::now()
@@ -216,6 +227,7 @@ fn scan_and_hash_files(
                     }
                     Err(e) => eprintln!("Failed to hash file {}: {}", path, e),
                 }
+                }
             }
         }
 
@@ -230,6 +242,7 @@ fn scan_and_hash_files(
     }
 
     tx.commit().map_err(|e| e.to_string())?;
+    status_mutex.lock().unwrap().skipped = skipped;
 
     // Step 4: Rebuild duplicate groups
     if !cancel_flag.load(Ordering::SeqCst) {
@@ -345,6 +358,8 @@ fn get_files_by_sizes(conn: &Connection) -> Result<Vec<AFile>, String> {
                 motion_photo_offset: None,
                 album_accessible: true,
                 album_visible: true,
+                cloud_only: false,
+                metadata_pending: false,
             })
         })
         .map_err(|e| e.to_string())?;

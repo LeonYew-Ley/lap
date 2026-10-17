@@ -203,7 +203,7 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from '@/common/toast';
 import { createDragPreview, isWindowDragEdge, startNativeFileDrag } from '@/common/nativeDrag';
 
-import { checkFileAccessibility } from '@/common/api';
+import { checkFileAccessibility, isCloudOnlyFile } from '@/common/api';
 import { setFileAccessibility } from '@/common/availability';
 import { IconError, IconBrightness, IconBrightnessUp, IconEmbedded } from '@/common/icons';
 import ImageNavigator from '@/components/ImageNavigator.vue';
@@ -789,6 +789,7 @@ function loadImageResource(filePath?: string) {
   return loadPromise;
 }
 
+let warmImageRequest = 0;
 function warmImage(filePath?: string) {
   if (!filePath || filePath === props.filePath || shouldUseBackendPreview(filePath, Number(props.fileType || 0))) {
     return;
@@ -803,14 +804,18 @@ function warmImage(filePath?: string) {
     warmImageIdleId = null;
   }
 
+  const request = ++warmImageRequest;
   warmImageTimeout = setTimeout(() => {
     warmImageTimeout = null;
     if (props.nextFilePath !== filePath || filePath === props.filePath) return;
 
-    const runWarmup = () => {
+    const runWarmup = async () => {
       warmImageIdleId = null;
       if (props.nextFilePath !== filePath || filePath === props.filePath) return;
 
+      // Preloading is not an explicit request to download the next original.
+      if (await isCloudOnlyFile(filePath)) return;
+      if (request !== warmImageRequest || props.nextFilePath !== filePath || filePath === props.filePath) return;
       void loadImageResource(filePath).catch(() => {
         // Ignore preload failures and let the main load path surface errors.
       });
@@ -826,6 +831,7 @@ function warmImage(filePath?: string) {
 }
 
 function cancelWarmImageScheduling() {
+  warmImageRequest++;
   if (warmImageTimeout) {
     clearTimeout(warmImageTimeout);
     warmImageTimeout = null;

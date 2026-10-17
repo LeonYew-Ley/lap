@@ -599,11 +599,14 @@ export function getThumbnailDataUrl(
   thumbnailSize = 0,
   filePath?: string | null,
   fileVersion = 0,
+  originalReadable = true,
 ): string {
   if (!thumb || thumb.file_id == null || thumb.file_id <= 0) {
     return placeholder;
   }
   if (thumb.error_code === 2) {
+    // A small image is shown from its original; reading an online-only one would download it.
+    if (!originalReadable) return placeholder;
     if (filePath) return getAssetSrc(filePath, fileVersion);
     return getThumbUrl(thumb.file_id, bustCache, thumbnailSize, fileVersion) || placeholder;
   }

@@ -6,6 +6,7 @@ import { DEFAULT_PLATFORM, getShortcutLabel, ShortcutActionId } from '@/common/s
 import {
   IconMonitor,
   IconPrint,
+  IconCloud,
   IconRefresh,
   IconHeart,
   IconStar,
@@ -30,6 +31,7 @@ import {
   IconSplitOn4,
   IconCollage,
 } from '@/common/icons';
+import { isWin } from '@/common/utils';
 
 const OPEN_IN_APP_LABELS = {
   generic: ['open_in_app', 'Open in external app...'],
@@ -48,6 +50,7 @@ export const useFileMenuItems = (
     selectionMediaKind?: Ref<'image' | 'video' | 'mixed' | 'empty'>;
     selectionCount?: Ref<number>;
     selectionHasUnavailable?: Ref<boolean>;
+    selectionHasCloudOnly?: Ref<boolean>;
   }
 ) => {
   const createAction = (actionName: string) => Object.assign(() => {
@@ -108,6 +111,14 @@ export const useFileMenuItems = (
         icon: markRaw(IconRefresh),
         disabled: unavailable || selectionCount === 0,
         action: createAction('refresh-file-info'),
+      },
+      {
+        label: menuLabel(['index_cloud_files', 'Download, index, then free up space']),
+        icon: markRaw(IconCloud),
+        // Freeing up space is a Windows (OneDrive) operation.
+        hidden: !isWin,
+        disabled: unavailable || !options?.selectionHasCloudOnly?.value,
+        action: createAction('index-cloud-files'),
       },
     ];
   };

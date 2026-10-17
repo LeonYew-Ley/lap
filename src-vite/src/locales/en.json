@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "Available online only",
+    "cloud_only_pending": "Available online only — information incomplete",
     "original_unavailable": "Original file is unavailable",
     "requires_original": "Requires the original file. Reconnect the storage device to use this action."
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "Reclaimable",
       "groups_title": "Duplicate Sets",
+      "skipped_cloud_only": "{count} online-only files skipped",
       "actions_title": "Actions",
       "compare": "Compare",
       "rescan": "Rescan",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "Reveal in Finder...",
       "reveal_in_file_explorer": "Reveal in File Explorer...",
       "refresh_file_info": "Refresh file info",
+      "index_cloud_files": "Download, index, then free up space",
       "set_album_cover": "Set as album cover",
       "set_as": "Set as",
       "set_desktop_wallpaper": "Set as desktop wallpaper",
@@ -1002,7 +1006,10 @@
       "cancelled": "Cancelled",
       "complete": "Complete",
       "succeeded": "Updated: {count}",
-      "failed": "Failed: {count}"
+      "failed": "Failed: {count}",
+      "release_requested": "Release requested: {count}",
+      "kept_local": "Kept on this device: {count}",
+      "kept_local_hint": "Files you keep on this device, or that Windows did not let Lap free up (Controlled folder access)."
     },
     "image_editor": {
       "title": "Edit",

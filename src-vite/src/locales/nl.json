@@ -226,6 +226,8 @@
     }
   },
   "offline": {
+    "cloud_only": "Alleen online beschikbaar",
+    "cloud_only_pending": "Alleen online beschikbaar — bestandsinformatie onvolledig",
     "original_unavailable": "Het oorspronkelijke bestand is niet beschikbaar",
     "requires_original": "Hiervoor is het oorspronkelijke bestand nodig. Sluit het opslagapparaat opnieuw aan om deze actie te gebruiken."
   },
@@ -562,6 +564,7 @@
       },
       "reclaimable_size": "Vrij te maken",
       "groups_title": "Duplicaatsets",
+      "skipped_cloud_only": "{count} bestanden die alleen online beschikbaar zijn overgeslagen",
       "actions_title": "Acties",
       "compare": "Vergelijken",
       "rescan": "Opnieuw scannen",
@@ -723,6 +726,7 @@
       "reveal_in_finder": "Toon in Finder...",
       "reveal_in_file_explorer": "Toon in Verkenner...",
       "refresh_file_info": "Bestandsinfo vernieuwen",
+      "index_cloud_files": "Downloaden, indexeren en ruimte vrijmaken",
       "set_album_cover": "Instellen als albumomslag",
       "set_as": "Instellen als",
       "set_desktop_wallpaper": "Instellen als bureaubladachtergrond",
@@ -1002,7 +1006,10 @@
       "cancelled": "Geannuleerd",
       "complete": "Voltooid",
       "succeeded": "Bijgewerkt: {count}",
-      "failed": "Mislukt: {count}"
+      "failed": "Mislukt: {count}",
+      "release_requested": "Vrijmaken aangevraagd: {count}",
+      "kept_local": "Op dit apparaat behouden: {count}",
+      "kept_local_hint": "Bestanden die altijd op dit apparaat moeten blijven, of waarvoor Windows Lap geen ruimte liet vrijmaken (gecontroleerde maptoegang)."
     },
     "image_editor": {
       "title": "Bewerken",

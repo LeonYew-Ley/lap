@@ -1,5 +1,5 @@
 <template>
-  <ModalDialog :title="$t('menu.file.refresh_file_info')" :width="440" @cancel="closeOrCancel">
+  <ModalDialog :title="$t(freeSpace ? 'menu.file.index_cloud_files' : 'menu.file.refresh_file_info')" :width="440" @cancel="closeOrCancel">
     <section class="rounded-box p-2 space-y-2 bg-base-300/30 border border-base-content/5 shadow-sm">
       <div class="font-bold uppercase text-[10px] tracking-widest text-base-content/30">{{ $t('msgbox.file_refresh.status') }}</div>
       <div class="space-y-2 px-1 text-xs" role="status" aria-live="polite">
@@ -12,6 +12,11 @@
           <span>{{ $t('msgbox.file_refresh.succeeded', { count: succeeded.toLocaleString() }) }}</span>
           <span :class="{ 'text-error/70': failed > 0 }">{{ $t('msgbox.file_refresh.failed', { count: failed.toLocaleString() }) }}</span>
         </div>
+        <div v-if="freeSpace" class="flex gap-3 text-base-content/60">
+          <span>{{ $t('msgbox.file_refresh.release_requested', { count: releaseRequested.toLocaleString() }) }}</span>
+          <span :title="$t('msgbox.file_refresh.kept_local_hint')">{{ $t('msgbox.file_refresh.kept_local', { count: keptLocal.toLocaleString() }) }}</span>
+        </div>
+        <p v-if="lastError" class="text-error/70 break-words" role="alert">{{ lastError }}</p>
       </div>
     </section>
     <div class="mt-4 flex justify-end gap-4">
@@ -25,12 +30,13 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { libConfig } from '@/common/config';
+import { config, libConfig } from '@/common/config';
+import { getRawDisplayOptions } from '@/common/rawDisplay';
 import { useUIStore } from '@/stores/uiStore';
 import ModalDialog from '@/components/ModalDialog.vue';
 
-type FileRefreshResult = { file: any; size_delta: number; skipped: boolean };
-const props = defineProps<{ fileIds: number[]; libraryId: string; finishRefresh: (results: FileRefreshResult[]) => Promise<void> }>();
+type FileRefreshResult = { file: any; size_delta: number; skipped: boolean; release_requested: boolean; error?: string | null };
+const props = defineProps<{ fileIds: number[]; libraryId: string; freeSpace?: boolean; finishRefresh: (results: FileRefreshResult[]) => Promise<void> }>();
 const emit = defineEmits(['close']);
 const uiStore = useUIStore();
 const running = ref(true);
@@ -38,6 +44,9 @@ const cancelled = ref(false);
 const processed = ref(0);
 const succeeded = ref(0);
 const failed = ref(0);
+const releaseRequested = ref(0);
+const lastError = ref('');
+const keptLocal = ref(0);
 let disposed = false;
 
 function closeOrCancel() {
@@ -66,14 +75,24 @@ onMounted(async () => {
         break;
       }
       try {
-        const result = await invoke<FileRefreshResult | null>('refresh_selected_file_info', { libraryId: props.libraryId, fileId });
+        const result = props.freeSpace
+          ? await invoke<FileRefreshResult | null>('index_cloud_file', {
+              libraryId: props.libraryId, fileId,
+              thumbnailSize: config.settings.thumbnailSize, rawDisplayOptions: getRawDisplayOptions(),
+            })
+          : await invoke<FileRefreshResult | null>('refresh_selected_file_info', { libraryId: props.libraryId, fileId });
+        if (result && props.freeSpace) result.release_requested ? releaseRequested.value++ : keptLocal.value++;
         if (result) {
           results.push(result);
-          succeeded.value++;
+          if (result.error) {
+            failed.value++;
+            lastError.value = result.error;
+          } else succeeded.value++;
         }
         else failed.value++;
       } catch (error) {
         console.error('Failed to refresh selected file:', fileId, error);
+        lastError.value = String(error);
         failed.value++;
       }
       processed.value++;
