@@ -347,13 +347,21 @@ test('album selection refresh is not duplicated by the accessibility event', () 
   const start = contentSource.indexOf('(event: any) => {', contentSource.indexOf("listen('album-accessibility-changed'"));
   const handler = contentSource.slice(start, contentSource.indexOf('\n  });', start));
   let refreshes = 0;
-  const onAccess = new Function('libConfig', 'updateContent', ts.transpile('const handler = ' + handler, { target: ts.ScriptTarget.ES2022 }) + '; return handler;')(libConfig, () => refreshes++);
+  const deps = { libConfig, config, SIDEBAR: { ALBUM: 1 }, selectedItemIndex: ref(7),
+    gridViewRef: ref({ getScrollTop: () => 320 }), pendingRestoreScrollTop: ref(null),
+    updateContent: () => refreshes++ };
+  const onAccess = new Function(...Object.keys(deps),
+    'let pendingInitialSelectedIndex = -1; let hasRestoredInitialSelection = true; ' +
+    ts.transpile('const handler = ' + handler, { target: ts.ScriptTarget.ES2022 }) + '; return handler;')(...Object.values(deps));
   onAccess({ payload: { libraryId: libConfig._libraryId, selectionChanged: true } });
   assert.equal(refreshes, 0);
   onAccess({ payload: { libraryId: libConfig._libraryId, selectionChanged: false } });
   assert.equal(refreshes, 1);
   onAccess({ payload: { libraryId: 'other-library', selectionChanged: false } });
   assert.equal(refreshes, 1);
+  assert.equal(deps.pendingRestoreScrollTop.value, 320);
+  onAccess({ payload: { libraryId: libConfig._libraryId, albumId: 2, selectionChanged: false } });
+  assert.equal(refreshes, 1, 'recovering another album must not refresh the selected album');
 });
 
 test('oversized drag selection skips native preview and hydration while keeping internal dragging', () => {

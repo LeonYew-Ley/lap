@@ -3555,7 +3555,10 @@ pub fn album_accessible(album_id: i64) -> bool {
 }
 
 pub fn refresh_album_accessibility(album: &mut Album) {
-    let generation = album_accessibility_generation();
+    refresh_album_accessibility_if_current(album, album_accessibility_generation());
+}
+
+pub fn refresh_album_accessibility_if_current(album: &mut Album, generation: u64) {
     album.is_accessible = directory_accessible(&album.path);
     if let Some(album_id) = album.id {
         let mut inaccessible = INACCESSIBLE_ALBUM_IDS.lock().unwrap();

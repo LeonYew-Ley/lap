@@ -516,11 +516,21 @@ pub fn get_album(album_id: i64) -> Result<Album, String> {
 
 /// Recheck one album root when the user selects that album or one of its folders.
 #[tauri::command]
-pub fn check_album_accessibility(album_id: i64) -> Result<bool, String> {
-    let mut album = Album::get_album_by_id(album_id)
-        .map_err(|e| format!("Error while checking album accessibility: {}", e))?;
-    t_utils::refresh_album_accessibility(&mut album);
-    Ok(album.is_accessible)
+pub async fn check_album_accessibility(album_id: i64) -> Result<bool, String> {
+    let library_id = t_config::current_library_id()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let (mut album, generation) = with_current_library(&library_id, || {
+            let album = Album::get_album_by_id(album_id)
+                .map_err(|e| format!("Error while checking album accessibility: {}", e))?;
+            Ok((album, t_utils::album_accessibility_generation()))
+        })?;
+        // Network I/O must not hold the library-switch lock. Ignore stale probes.
+        t_utils::refresh_album_accessibility_if_current(&mut album, generation);
+        if generation != t_utils::album_accessibility_generation() {
+            return Err("Library changed".to_string());
+        }
+        Ok(album.is_accessible)
+    }).await.map_err(|e| format!("Album accessibility check failed: {e}"))?
 }
 
 /// recount files for an album and return updated album

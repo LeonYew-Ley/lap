@@ -188,6 +188,7 @@ import { emit, listen } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getName } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
+import { applyAlbumAccess, recheckOfflineAlbums } from '@/common/albumRecovery';
 import { config, libConfig } from '@/common/config';
 import { useAppUpdater } from '@/common/updater';
 import { useUIStore } from '@/stores/uiStore';
@@ -445,6 +446,11 @@ const libraryMenuItems = computed(() => {
 });
 
 let startupFinished = false;
+function handleAccessRecovery() {
+  if (isSwitchingLibrary.value || databaseCorrupted.value !== false) return;
+  void recheckOfflineAlbums();
+}
+
 async function finishStartup() {
   if (startupFinished) return;
   startupFinished = true;
@@ -485,9 +491,17 @@ onMounted(async () => {
     (panelRef.value as any)?.openAlbumEdit?.(albumId);
   });
 
-  unlistenAlbumsRefreshed = await listen('albums-refreshed', () => {
+  unlistenAlbumsRefreshed = await listen('albums-refreshed', async (event: any) => {
+    const libraryId = event.payload?.libraryId || libConfig._libraryId;
+    if (libraryId !== libConfig._libraryId) return;
+    for (const album of event.payload?.albums || []) {
+      if (typeof album.is_accessible === 'boolean') {
+        await applyAlbumAccess(album, album.is_accessible, libraryId);
+      }
+    }
     void checkLibraryEmpty();
   });
+  window.addEventListener('focus', handleAccessRecovery);
 
   try {
     const name = await getName();
@@ -499,6 +513,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener('focus', handleAccessRecovery);
   clearLeftPanelAnimationTimer();
   window.removeEventListener('keydown', handleHomeKeyDown);
   document.removeEventListener('mousemove', handleCollectionMouseMove);

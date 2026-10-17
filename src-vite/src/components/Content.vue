@@ -5557,7 +5557,13 @@ onMounted( async() => {
   window.addEventListener(PREVIEW_WINDOW_FOCUS_RESTORED, restoreOpenPreviewFocus);
   window.addEventListener('keyup', handleLocalKeyUp);
   unlistenAlbumAccessChanged = await listen('album-accessibility-changed', (event: any) => {
-    if (event.payload?.libraryId === libConfig._libraryId && !event.payload?.selectionChanged) updateContent(true);
+    if (event.payload?.libraryId !== libConfig._libraryId || event.payload?.selectionChanged) return;
+    if (config.main.sidebarIndex === SIDEBAR.ALBUM && Number(libConfig.album.id) > 0
+      && Number(event.payload?.albumId || libConfig.album.id) !== Number(libConfig.album.id)) return;
+    pendingInitialSelectedIndex = selectedItemIndex.value;
+    hasRestoredInitialSelection = false;
+    pendingRestoreScrollTop.value = gridViewRef.value?.getScrollTop() ?? null;
+    updateContent(true);
   });
   unlistenKeydown = await listen('global-keydown', handleKeyDown);
 

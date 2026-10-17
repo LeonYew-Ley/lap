@@ -262,7 +262,7 @@
 
 <script setup lang="ts">
 
-import { resetFileAccessibility } from '@/common/availability';
+import { applyAlbumAccess } from '@/common/albumRecovery';
 import { useToast } from '@/common/toast';
 import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -1196,10 +1196,7 @@ const clickAlbum = async (album: Album) => {
       const previous = album.is_accessible;
       const isAccessible = await refreshAlbumAccess(album);
       if (libraryId !== libConfig._libraryId) return;
-      const clearedUnavailable = resetFileAccessibility(album.path);
-      if (previous !== isAccessible || clearedUnavailable) {
-        await tauriEmit('album-accessibility-changed', { albumId: album.id, rootPath: album.path, available: isAccessible, libraryId, selectionChanged });
-      }
+      await applyAlbumAccess(album, isAccessible, libraryId, { previousAvailable: previous, selectionChanged });
       if (!isAccessible) {
         if (!album.children) await loadCachedAlbumTree(album);
       } else if (!album.children) {

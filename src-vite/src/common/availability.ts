@@ -9,6 +9,14 @@ const key = (id: number | string) => `${libConfig._libraryId}:${id}`;
 export function setAlbumAccessibility(id: number, available: boolean) {
   albums.set(key(id), available);
 }
+export function getAlbumAccessibility(id: number): boolean | undefined {
+  return albums.get(key(id));
+}
+export function getUnavailableAlbumIds(): number[] {
+  const prefix = `${libConfig._libraryId}:`;
+  return [...albums].filter(([id, available]) => id.startsWith(prefix) && !available)
+    .map(([id]) => Number(id.slice(prefix.length)));
+}
 export function setFileAccessibility(path: string, available: boolean) {
   if (available) paths.delete(key(path));
   else paths.set(key(path), false);
