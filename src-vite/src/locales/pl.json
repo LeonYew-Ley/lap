@@ -464,7 +464,8 @@
         "Rozmiar",
         "Wymiary",
         "Czas trwania",
-        "Losowo"
+        "Losowo",
+        "Dodanie"
       ],
       "similarity": "Podobieństwo",
       "sort_order_options": [

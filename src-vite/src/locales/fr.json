@@ -464,7 +464,8 @@
         "Taille",
         "Dimension",
         "Durée",
-        "Aléatoire"
+        "Aléatoire",
+        "Ajout"
       ],
       "similarity": "Similarité",
       "sort_order_options": [

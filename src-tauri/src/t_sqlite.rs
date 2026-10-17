@@ -5460,6 +5460,7 @@ impl AFile {
                 let seed = random_seed.rem_euclid(2_147_483_647);
                 format!("((({id_hash} | {seed}) - ({id_hash} & {seed}))), a.id")
             }
+            8 => format!("a.id {}", dir), // added order
             9 => "a.id ASC".to_string(), // internal: stable append order during scanning
             _ => format!("a.taken_date {}, a.id {}", dir, dir),
         }
@@ -10402,6 +10403,27 @@ fn create_db_internal() -> Result<(), String> {
 #[cfg(test)]
 mod tag_group_query_tests {
     use super::*;
+
+    #[test]
+    fn added_order_pagination_ignores_file_dates_and_rescans() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE afiles(id INTEGER PRIMARY KEY AUTOINCREMENT, taken_date INTEGER, last_scan_time INTEGER);
+            INSERT INTO afiles(taken_date, last_scan_time) VALUES(300, 1), (100, 1), (200, 1);
+            UPDATE afiles SET last_scan_time=2 WHERE id=1;").unwrap();
+        for (direction, expected) in [(0, vec![1_i64, 2, 3]), (1, vec![3_i64, 2, 1])] {
+            let order = AFile::build_order_clause_values(8, direction, 0);
+            let mut ids = Vec::new();
+            for offset in [0, 2] {
+                let mut stmt = conn.prepare(&format!(
+                    "SELECT a.id FROM afiles a ORDER BY {order} LIMIT 2 OFFSET ?1"
+                )).unwrap();
+                ids.extend(stmt.query_map([offset], |row| row.get::<_, i64>(0))
+                    .unwrap().collect::<Result<Vec<_>, _>>().unwrap());
+            }
+            assert_eq!(ids, expected);
+        }
+        assert_eq!(AFile::build_order_clause_values(9, 1, 0), "a.id ASC");
+    }
 
     #[test]
     fn group_filter_and_counts_deduplicate_and_honor_visibility() {
