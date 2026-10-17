@@ -26,6 +26,7 @@ export default defineConfig({
         nav: [
             { text: 'Home', link: '/' },
             { text: 'Guide', link: '/guide/introduction' },
+            { text: 'Try Lap', link: '/demos/lap/index.html', target: '_self' },
             { text: 'Download', link: 'https://github.com/julyx10/lap/releases' }
         ],
         sidebar: [

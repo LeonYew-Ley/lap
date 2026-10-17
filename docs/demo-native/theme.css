@@ -1,0 +1,3 @@
+@import "../../src-vite/src/assets/app.css";
+@source '../../src-vite/src';
+@source './';

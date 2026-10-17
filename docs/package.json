@@ -4,7 +4,11 @@
     "description": "Website for Lap app",
     "scripts": {
         "dev": "vitepress dev",
+        "build:demo": "node scripts/build-native-demo.mjs",
+        "predev": "node scripts/build-native-demo.mjs",
+        "prebuild": "node scripts/build-native-demo.mjs",
         "build": "vitepress build",
+        "test": "node --experimental-vm-modules --test tests/*.test.mjs",
         "preview": "vitepress preview"
     },
     "devDependencies": {

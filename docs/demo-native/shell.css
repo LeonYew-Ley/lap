@@ -1,0 +1,167 @@
+html,
+body,
+#native-demo {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.demo-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-base-300);
+}
+.demo-notice {
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  font-size: 11px;
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.demo-notice strong {
+  font-size: 11px;
+}
+.demo-notice span {
+  opacity: 0.5;
+}
+.demo-notice button {
+  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.demo-workspace {
+  position: relative;
+  transform: translateZ(0);
+  height: calc(100% - 32px);
+  overflow: hidden;
+}
+.demo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #080c1399;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.demo-window {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: min(1100px, 96vw);
+  height: min(850px, 94vh);
+  background: var(--color-base-300);
+  color: var(--color-base-content);
+  border: 1px solid #8893a344;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 100px #0008;
+  transform: translateZ(0);
+}
+.demo-window.settings {
+  width: min(640px, 96vw);
+  height: min(680px, 94vh);
+}
+.demo-window > div:last-child {
+  flex: 1;
+  min-height: 0;
+}
+.demo-native-notice {
+  position: fixed;
+  bottom: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid #8893a355;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 90vw;
+}
+@media (max-width: 700px) {
+  .demo-notice span {
+    display: none;
+  }
+  .demo-overlay {
+    padding: 8px;
+  }
+  .demo-window.settings {
+    width: 100%;
+    height: 96vh;
+  }
+}
+
+.demo-window-bar {
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  z-index: 100;
+  background: transparent;
+  justify-content: center;
+  pointer-events: none;
+}
+.demo-window-bar > button {
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  font-size: 22px;
+  pointer-events: auto;
+  opacity: 0.65;
+  border-radius: 5px;
+}
+.demo-window-bar > button:hover {
+  opacity: 1;
+  background: var(--color-base-100);
+}
+.demo-confirm {
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  border: 1px solid #8893a355;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 480px;
+  box-shadow: 0 20px 80px #0008;
+}
+.demo-confirm::backdrop {
+  background: #0008;
+}
+.demo-confirm small {
+  display: block;
+  opacity: 0.5;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.demo-confirm footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.demo-confirm button {
+  padding: 6px 14px;
+  background: var(--color-base-100);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.demo-confirm button:last-child {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
