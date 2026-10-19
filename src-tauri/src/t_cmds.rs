@@ -3181,6 +3181,38 @@ pub fn batch_update_file_metadata(params: BatchFileMetadataUpdate) -> Result<usi
     .map_err(|e| format!("Error while updating file metadata: {}", e))
 }
 
+// xmp
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct XmpImportSettings {
+    pub import_xmp_sidecars: bool,
+}
+
+#[tauri::command]
+pub fn get_xmp_import_settings() -> XmpImportSettings {
+    XmpImportSettings {
+        import_xmp_sidecars: crate::t_xmp::is_xmp_import_enabled(),
+    }
+}
+
+#[tauri::command]
+pub fn set_xmp_import_settings(import_xmp_sidecars: bool) {
+    crate::t_xmp::set_xmp_import_enabled(import_xmp_sidecars);
+}
+
+#[tauri::command]
+pub async fn import_xmp_metadata(file_ids: Vec<i64>) -> Result<crate::t_xmp::XmpBatchResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let files = AFile::get_files_by_ids(&file_ids)?;
+        let conn = crate::t_sqlite::open_conn()?;
+        let paths: Vec<_> = files.into_iter().filter_map(|f| Some((f.id?, f.file_path?))).collect();
+        Ok(crate::t_xmp::import_batch(&paths, &conn))
+    })
+    .await
+    .map_err(|e| format!("Task join error: {}", e))?
+}
+
 // tag
 
 #[tauri::command]

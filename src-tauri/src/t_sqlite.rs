@@ -3787,6 +3787,7 @@ impl AFile {
         folder_id: i64, file_path: &str, file_type: i64, last_scan_time: i64,
         raw_info: Option<t_libraw::RawInfo>,
     ) -> Result<(Self, i32), String> {
+        let _xmp_scan = crate::t_xmp::sidecar_scan(last_scan_time);
         // Check if the file exists
         let existing_file = Self::fetch(folder_id, file_path)?;
         // Opening an online-only file downloads it: decide from its attributes first.
@@ -3936,6 +3937,20 @@ impl AFile {
                             file.comments = Some(comment);
                         }
                     }
+                    if crate::t_xmp::is_xmp_import_enabled() {
+                        if let Ok(conn) = open_conn() {
+                            if let Ok(true) = crate::t_xmp::import_xmp_for_file_with_conn(
+                                file_id,
+                                file_path,
+                                &conn,
+                                crate::t_xmp::XmpImportMode::RescanNonDestructive,
+                            ) {
+                                if let Ok(Some(refreshed)) = Self::get_file_info(file_id) {
+                                    file = refreshed;
+                                }
+                            }
+                        }
+                    }
                 }
             }
             return Ok((file, 0));
@@ -3955,6 +3970,24 @@ impl AFile {
         }
 
         let new_file = Self::fetch(folder_id, file_path)?;
+        if let Some(ref file) = new_file {
+            if let Some(file_id) = file.id {
+                if crate::t_xmp::is_xmp_import_enabled() {
+                    if let Ok(conn) = open_conn() {
+                        if let Ok(true) = crate::t_xmp::import_xmp_for_file_with_conn(
+                            file_id,
+                            file_path,
+                            &conn,
+                            crate::t_xmp::XmpImportMode::InitialScan,
+                        ) {
+                            if let Ok(Some(refreshed)) = Self::fetch(folder_id, file_path) {
+                                return Ok((refreshed, 1));
+                            }
+                        }
+                    }
+                }
+            }
+        }
         new_file
             .map(|f| (f, 1))
             .ok_or_else(|| format!("Inserted file missing from DB: {}", file_path))
@@ -4012,6 +4045,7 @@ impl AFile {
         file_path: &str,
         last_scan_time: i64,
     ) -> Result<Option<Self>, String> {
+        let _xmp_scan = crate::t_xmp::sidecar_scan(last_scan_time);
         // get old file info
         let old_file_info =
             Self::get_file_info(file_id)?.ok_or_else(|| "File not found".to_string())?;
@@ -4052,6 +4086,14 @@ impl AFile {
 
         // update the file info
         Self::update(file_id, &new_file_info)?;
+
+        if crate::t_xmp::is_xmp_import_enabled() {
+            let _ = crate::t_xmp::import_xmp_for_file_with_mode(
+                file_id,
+                file_path,
+                crate::t_xmp::XmpImportMode::RescanNonDestructive,
+            );
+        }
 
         Self::get_file_info(file_id)
     }
@@ -10400,6 +10442,7 @@ fn create_db_internal() -> Result<(), String> {
 
     // Run schema migrations after base tables are ensured.
     crate::t_migration::check_and_migrate(&conn)?;
+    crate::t_xmp::initialize(&conn)?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_afiles_content_identifier ON afiles(content_identifier)",
         [],
