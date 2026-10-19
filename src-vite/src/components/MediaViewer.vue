@@ -263,7 +263,7 @@
         <div
           v-for="badge in quickViewStatusBadges"
           :key="badge.key"
-          class="thumb-badge thumb-badge-muted"
+          class="thumb-badge"
         >
           <template v-if="badge.icons?.length">
             <div class="flex items-center gap-0.5">

@@ -118,7 +118,7 @@
               >
                 <img v-if="group.representative?.thumbnail" :src="group.representative.thumbnail" class="h-full w-full object-cover" loading="lazy" />
                 <div v-else class="h-full w-full skeleton"></div>
-                <div class="absolute left-1 top-1 rounded bg-base-300/85 px-1.5 py-0.5 text-[10px] font-semibold text-base-content/70 backdrop-blur-sm">
+                <div class="absolute left-0.5 top-0.5 thumb-badge">
                   {{ group.file_count }}
                 </div>
               </button>
@@ -344,7 +344,7 @@
                   loading="lazy"
                 />
                 <div v-else class="h-full w-full skeleton"></div>
-                <div class="absolute left-1 top-1 rounded bg-base-300/85 px-1.5 py-0.5 text-[10px] font-semibold text-base-content/70 backdrop-blur-sm">
+                <div class="absolute left-0.5 top-0.5 thumb-badge">
                   {{ group.file_count }}
                 </div>
                 <div

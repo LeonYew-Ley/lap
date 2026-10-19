@@ -85,10 +85,10 @@
         @error="stopMediaPreview"
       />
 
-      <div v-if="originalUnavailable" class="pointer-events-none absolute right-0.5 bottom-0.5 z-20 thumb-badge thumb-badge-muted" :aria-label="t('offline.original_unavailable')">
+      <div v-if="originalUnavailable" class="pointer-events-none absolute right-0.5 bottom-0.5 z-20 thumb-badge" :aria-label="t('offline.original_unavailable')">
         <IconExclamation class="h-3.5 w-3.5 shrink-0 text-warning/70" />
       </div>
-      <div v-else-if="file.cloud_only" class="absolute right-0.5 bottom-0.5 z-20 thumb-badge thumb-badge-muted" :title="cloudOnlyLabel" :aria-label="cloudOnlyLabel">
+      <div v-else-if="file.cloud_only" class="absolute right-0.5 bottom-0.5 z-20 thumb-badge" :title="cloudOnlyLabel" :aria-label="cloudOnlyLabel">
         <IconCloud class="h-3.5 w-3.5 shrink-0" />
       </div>
 
@@ -104,7 +104,7 @@
         <div
           v-for="badge in statusBadges"
           :key="badge.key"
-          class="thumb-badge thumb-badge-muted"
+          class="thumb-badge"
         >
           <template v-if="badge.icons?.length">
             <div class="flex items-center gap-0.5">
@@ -143,7 +143,7 @@
           hasBottomMediaBadges ? 'bottom-6' : 'bottom-0.5',
         ]"
       >
-        <div class="thumb-badge thumb-badge-muted">
+        <div class="thumb-badge">
           {{ thumbnailBadge }}
         </div>
       </div>
@@ -153,20 +153,20 @@
       >
         <div
           v-if="isLivePhoto || isMotionPhoto"
-          class="thumb-badge thumb-badge-muted"
+          class="thumb-badge"
         >
           <IconLivePhoto class="h-3.5 w-3.5 shrink-0" />
           <span class="leading-none">{{ isLivePhoto ? t('image_viewer.live') : t('image_viewer.motion') }}</span>
         </div>
         <div
           v-if="isRawJpegPair"
-          class="thumb-badge thumb-badge-muted"
+          class="thumb-badge"
         >
           <span class="leading-none">{{ rawJpegPairBadge }}</span>
         </div>
         <div
           v-if="videoDurationBadge"
-          class="thumb-badge thumb-badge-muted"
+          class="thumb-badge"
         >
           {{ videoDurationBadge }}
         </div>
