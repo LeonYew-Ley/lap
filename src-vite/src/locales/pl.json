@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Spróbuj przełączyć się na inną bibliotekę."
   },
   "album": {
+    "drop": {
+      "add": "Przeciągnij folder, aby go dodać",
+      "separate": "Przeciągaj pliki i foldery osobno.",
+      "confirm_folder": "Wybierz folder: {name}",
+      "folders_only": "Przeciągnij folder."
+    },
     "album_list": "Albumy",
     "search_folders": "Szukaj folderów",
     "favorite_folders_only": "Tylko ulubione foldery",

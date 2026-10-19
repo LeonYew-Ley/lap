@@ -54,6 +54,12 @@
     "database_corrupted_hint": "다른 라이브러리로 전환해 보세요."
   },
   "album": {
+    "drop": {
+      "add": "폴더를 드래그하여 추가",
+      "separate": "파일과 폴더를 따로 드래그하세요.",
+      "confirm_folder": "폴더 선택: {name}",
+      "folders_only": "폴더를 드래그하세요."
+    },
     "album_list": "앨범",
     "search_folders": "폴더 검색",
     "favorite_folders_only": "즐겨찾는 폴더만",

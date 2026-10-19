@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Tente mudar para outra biblioteca."
   },
   "album": {
+    "drop": {
+      "add": "Arraste uma pasta para adicionar",
+      "separate": "Arraste arquivos e pastas separadamente.",
+      "confirm_folder": "Selecionar pasta: {name}",
+      "folders_only": "Arraste uma pasta."
+    },
     "album_list": "Álbuns",
     "search_folders": "Pesquisar pastas",
     "favorite_folders_only": "Apenas pastas favoritas",

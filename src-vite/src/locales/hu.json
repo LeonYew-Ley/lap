@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Váltson másik könyvtárra."
   },
   "album": {
+    "drop": {
+      "add": "Húzz ide egy mappát a hozzáadáshoz",
+      "separate": "A fájlokat és mappákat külön húzd ide.",
+      "confirm_folder": "Mappa kiválasztása: {name}",
+      "folders_only": "Húzz ide egy mappát."
+    },
     "album_list": "Albumok",
     "search_folders": "Mappák keresése",
     "favorite_folders_only": "Csak kedvenc mappák",

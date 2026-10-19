@@ -54,6 +54,12 @@
     "database_corrupted_hint": "請嘗試切換到其他媒體庫。"
   },
   "album": {
+    "drop": {
+      "add": "拖入資料夾以新增",
+      "separate": "請分別拖入檔案與資料夾。",
+      "confirm_folder": "選擇資料夾：{name}",
+      "folders_only": "請拖入資料夾。"
+    },
     "album_list": "相簿",
     "search_folders": "搜尋資料夾",
     "favorite_folders_only": "僅我的最愛資料夾",

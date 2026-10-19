@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Intenta cambiar a otra biblioteca."
   },
   "album": {
+    "drop": {
+      "add": "Arrastra una carpeta para añadirla",
+      "separate": "Arrastra archivos y carpetas por separado.",
+      "confirm_folder": "Seleccionar carpeta: {name}",
+      "folders_only": "Arrastra una carpeta."
+    },
     "album_list": "Álbumes",
     "search_folders": "Buscar carpetas",
     "favorite_folders_only": "Solo carpetas favoritas",

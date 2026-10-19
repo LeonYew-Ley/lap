@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Probeer over te schakelen naar een andere bibliotheek."
   },
   "album": {
+    "drop": {
+      "add": "Sleep een map om deze toe te voegen",
+      "separate": "Sleep bestanden en mappen afzonderlijk.",
+      "confirm_folder": "Map selecteren: {name}",
+      "folders_only": "Sleep een map hierheen."
+    },
     "album_list": "Albums",
     "search_folders": "Mappen zoeken",
     "favorite_folders_only": "Alleen favoriete mappen",

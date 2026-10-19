@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Prova a passare a un'altra libreria."
   },
   "album": {
+    "drop": {
+      "add": "Trascina una cartella per aggiungerla",
+      "separate": "Trascina file e cartelle separatamente.",
+      "confirm_folder": "Seleziona cartella: {name}",
+      "folders_only": "Trascina una cartella."
+    },
     "album_list": "Album",
     "search_folders": "Cerca cartelle",
     "favorite_folders_only": "Solo cartelle preferite",

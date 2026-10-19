@@ -54,6 +54,12 @@
     "database_corrupted_hint": "他のライブラリに切り替えてみてください。"
   },
   "album": {
+    "drop": {
+      "add": "フォルダーをドラッグして追加",
+      "separate": "ファイルとフォルダーは別々にドラッグしてください。",
+      "confirm_folder": "フォルダーを選択：{name}",
+      "folders_only": "フォルダーをドラッグしてください。"
+    },
     "album_list": "アルバム",
     "search_folders": "フォルダーを検索",
     "favorite_folders_only": "お気に入りのフォルダーのみ",

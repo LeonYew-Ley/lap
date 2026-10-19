@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Veuillez essayer de passer à une autre bibliothèque."
   },
   "album": {
+    "drop": {
+      "add": "Glissez un dossier pour l’ajouter",
+      "separate": "Glissez les fichiers et les dossiers séparément.",
+      "confirm_folder": "Choisir le dossier : {name}",
+      "folders_only": "Veuillez glisser un dossier."
+    },
     "album_list": "Albums",
     "search_folders": "Rechercher des dossiers",
     "favorite_folders_only": "Dossiers favoris uniquement",

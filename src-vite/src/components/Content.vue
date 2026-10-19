@@ -763,6 +763,8 @@
 </template>
 
 <script setup lang="ts">
+import { externalDragKind, updateExternalDrag, resetExternalDrag, finishExternalDrag } from '@/common/externalDrag';
+import { getExternalDropUris, getExternalHttpDropUrls, getExternalFileDropPaths, fileUrlToPath, hasExternalDropIntent } from '@/common/externalDrop';
 
 import PrintImage from '@/components/PrintImage.vue';
 import { defineAsyncComponent, ref, watch, computed, createVNode, onMounted, onBeforeUnmount, nextTick, render, markRaw } from 'vue';
@@ -2704,44 +2706,6 @@ let pointerDragFiles: Array<{
 let dragGhostHotspotX = 0;
 let dragGhostHotspotY = 0;
 
-function getExternalDropUris(dt: DataTransfer | null) {
-  const value = dt?.getData('text/uri-list')
-    || dt?.getData('text/x-moz-url')
-    || dt?.getData('text/plain')
-    || '';
-  return value
-    .split(/\r?\n/)
-    .map(uri => uri.trim())
-    .filter(uri => uri.length > 0 && !uri.startsWith('#'));
-}
-
-function getExternalHttpDropUrls(uris: string[]) {
-  return uris
-    .filter(uri => uri.startsWith('http://') || uri.startsWith('https://'));
-}
-
-function fileUrlToPath(uri: string) {
-  if (!uri.startsWith('file://')) return null;
-  try {
-    const url = new URL(uri);
-    let path = decodeURIComponent(url.pathname);
-    if (/^\/[A-Za-z]:\//.test(path)) {
-      path = path.slice(1);
-    } else if (url.hostname && url.hostname !== 'localhost') {
-      path = `//${url.hostname}${path}`;
-    }
-    return path || null;
-  } catch {
-    return null;
-  }
-}
-
-function getExternalFileDropPaths(uris: string[]) {
-  return uris
-    .map(fileUrlToPath)
-    .filter((path): path is string => !!path);
-}
-
 function hasExternalDomDrop(event: DragEvent) {
   if (isNativeFileDragActive()) return false;
   return hasExternalDragIntent(event)
@@ -2750,14 +2714,12 @@ function hasExternalDomDrop(event: DragEvent) {
 
 function hasExternalDragIntent(event: DragEvent) {
   if (isContentInternalDrag.value || isNativeFileDragActive()) return false;
-  const dt = event.dataTransfer;
-  if (!dt) return false;
-  const types = Array.from(dt.types || []);
-  return dt.files.length > 0
-    || types.includes('Files')
-    || types.includes('text/uri-list')
-    || types.includes('text/x-moz-url');
+  return hasExternalDropIntent(event.dataTransfer);
 }
+
+watch(externalDragKind, kind => {
+  if (kind !== 'files') clearDropOverlay();
+});
 
 function clearDropOverlay() {
   dragOverCount.value = 0;
@@ -5605,6 +5567,11 @@ onMounted( async() => {
       return;
     }
     if (!hasExternalDragIntent(e)) return;
+    updateExternalDrag(e);
+    if (externalDragKind.value !== 'files') {
+      clearDropOverlay();
+      return;
+    }
     e.preventDefault();
     if (acceptDrops.value) {
       dragOverCount.value++;
@@ -5637,9 +5604,16 @@ onMounted( async() => {
       return;
     }
     if (!hasExternalDragIntent(e)) return;
+    updateExternalDrag(e);
+    if (externalDragKind.value !== 'files') {
+      clearDropOverlay();
+      return;
+    }
+    if (acceptDrops.value) isDragOver.value = true;
     e.preventDefault();
   };
   domDrop = async (e: DragEvent) => {
+    finishExternalDrag();
     if (isReturningNativeFileDrag(e)) {
       e.preventDefault();
       clearDropOverlay();
@@ -5656,6 +5630,8 @@ onMounted( async() => {
     }
     e.preventDefault();
     clearDropOverlay();
+    updateExternalDrag(e);
+    if (externalDragKind.value === 'folders' || externalDragKind.value === 'mixed') return;
     if (!acceptDrops.value) {
       showDropWarning.value = true;
       return;
@@ -5722,7 +5698,7 @@ onMounted( async() => {
     }
     toast.warning(t('msgbox.drop_import.no_files'));
   };
-  domDragEnd = () => clearDropOverlay();
+  domDragEnd = () => { clearDropOverlay(); resetExternalDrag(); };
   document.addEventListener('dragenter', domDragEnter);
   document.addEventListener('dragleave', domDragLeave);
   document.addEventListener('dragover', domDragOver);

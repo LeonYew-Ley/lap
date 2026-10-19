@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Please try switching to another library."
   },
   "album": {
+    "drop": {
+      "add": "Drag a folder to add",
+      "separate": "Drag files and folders separately.",
+      "confirm_folder": "Select folder: {name}",
+      "folders_only": "Please drop a folder."
+    },
     "album_list": "Albums",
     "search_folders": "Search folders",
     "favorite_folders_only": "Favorite folders only",

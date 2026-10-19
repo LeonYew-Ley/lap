@@ -1,5 +1,11 @@
 <template>
-  <div class="sidebar-panel min-h-0">
+  <div
+    class="sidebar-panel min-h-0"
+    :data-album-drop-zone="isMainPane ? true : undefined"
+    @dragover="handleAlbumDragOver"
+    @dragleave="handleAlbumDragLeave"
+    @drop.prevent.stop="clearAlbumDrop"
+  >
     <!-- albums -->
     <div v-if="isMainPane" class="sidebar-panel-header">
       <span class="sidebar-panel-header-title flex-1">
@@ -66,7 +72,7 @@
       class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-box select-none outline-none"
       @keydown="handleLocalAlbumListKeyDown"
       @mousedown.capture="focusAlbumListRoot"
-      @drop.stop
+      @drop.prevent.stop
     >
       <!-- drag to change albums' display order -->
       <VueDraggable
@@ -221,6 +227,18 @@
         </li>
       </VueDraggable>
 
+      <li
+        v-if="isMainPane && showAlbumDrop"
+        ref="albumDropRef"
+        data-album-drop-new
+        class="mx-1 my-1 p-2 min-h-12 flex items-center gap-2 rounded-box border-2 border-dashed border-primary/30 text-primary/70 transition-colors"
+        :class="{ '!bg-primary/10 !border-primary/60': albumDropHovered }"
+        @drop.prevent.stop="handleAlbumFolderDrop"
+      >
+        <IconAdd class="w-6 h-6 shrink-0" />
+        <span class="text-sm">{{ $t('album.drop.add') }}</span>
+      </li>
+
       <li v-if="!isFolderSearchLoading && visibleAlbums.length === 0 && albums.length > 0" class="sidebar-empty text-sm">
         <span class="text-center">{{ $t('album.no_folders_found') }}</span>
       </li>
@@ -264,6 +282,9 @@
 
 import { applyAlbumAccess } from '@/common/albumRecovery';
 import { useToast } from '@/common/toast';
+import { getExternalDropPaths, getDroppedDirectoryNames, hasExternalDropIntent } from '@/common/externalDrop';
+import { isReturningNativeFileDrag } from '@/common/nativeDrag';
+import { externalDragKind, updateExternalDrag, resetExternalDrag, finishExternalDrag } from '@/common/externalDrag';
 import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { VueDraggable } from 'vue-draggable-plus'
@@ -276,12 +297,14 @@ import {
   getThumbnailDataUrl,
   getThumbnailDataUrlInflight,
   isWin,
+  isMac,
+  normalizePathForCompare,
   setThumbnailDataUrlInflight,
   openFolderDialog,
   isWithinRootPath,
 } from '@/common/utils';
 import { getAlbumQueueIndex, getAlbumScanState, getAlbumScanIcon, shouldAnimateAlbumScanIcon } from '@/common/scanStatus';
-import { getAllAlbums, getAlbumVisibleCounts, getAllAlbumFolders, reorderAlbums, addAlbum, editAlbum, removeAlbum,
+import { getAllAlbums, getAlbumVisibleCounts, getAllAlbumFolders, reorderAlbums, addAlbum, editAlbum, removeAlbum, getDragPayload, isDirectoryAccessible,
          fetchFolder, expandFinalFolder, getFileThumbById,
          getAlbum, checkAlbumAccessibility, cancelIndexing as cancelIndexingApi, listenIndexProgress, listenIndexFinished, recountAlbum } from '@/common/api';
 import { Album, Folder } from '@/common/types';
@@ -363,6 +386,130 @@ async function refreshAlbumVisibleCounts() {
 
 // Computed to check if we're in main album pane
 const isMainPane = computed(() => props.selectionSource === 'album');
+const showAlbumDrop = ref(false);
+const albumDropHovered = ref(false);
+const albumDropRef = ref<HTMLElement | null>(null);
+const albumDropBusy = ref(false);
+
+function clearAlbumDrop() {
+  showAlbumDrop.value = false;
+  albumDropHovered.value = false;
+}
+const canAcceptAlbumDrop = computed(() => isMainPane.value && !albumDropBusy.value
+  && !albumEditBusy.value && !showAlbumEdit.value
+  && uiStore.inputStack.every((name: string) => name === 'SearchBox'));
+function acceptsAlbumDrag(event: DragEvent) {
+  return canAcceptAlbumDrop.value && !isReturningNativeFileDrag(event)
+    && hasExternalDropIntent(event.dataTransfer);
+}
+function handleWindowAlbumDrag(event: DragEvent) {
+  if (!acceptsAlbumDrag(event)) return;
+  event.preventDefault();
+  updateExternalDrag(event);
+
+}
+function handleAlbumDragOver(event: DragEvent) {
+  if (!acceptsAlbumDrag(event) || externalDragKind.value !== 'folders') return;
+  event.preventDefault();
+  const overPlaceholder = !!(event.target as Element)?.closest('[data-album-drop-new]');
+  albumDropHovered.value = overPlaceholder;
+  if (event.dataTransfer) event.dataTransfer.dropEffect = overPlaceholder ? 'copy' : 'none';
+}
+function handleAlbumDragLeave() { albumDropHovered.value = false; }
+function finishAlbumDrag() {
+  clearAlbumDrop();
+  if (isMainPane.value) resetExternalDrag();
+}
+function handleWindowDragLeave(event: DragEvent) {
+  if (!event.relatedTarget && (event.clientX <= 0 || event.clientY <= 0
+    || event.clientX >= window.innerWidth || event.clientY >= window.innerHeight)) finishAlbumDrag();
+}
+function handleWindowDrop(event: DragEvent) {
+  if (canAcceptAlbumDrop.value && hasExternalDropIntent(event.dataTransfer)) {
+    const wasUnknown = externalDragKind.value === 'unknown';
+    updateExternalDrag(event);
+    if (externalDragKind.value === 'mixed') {
+      event.preventDefault();
+      event.stopPropagation();
+      useToast().warning(t('album.drop.separate'));
+    } else if (wasUnknown && externalDragKind.value !== 'files'
+      && (event.target as Element)?.closest('[data-album-drop-zone]')) {
+      // Protected data may reveal directories only at drop time. The Albums
+      // pane remains usable even if no placeholder could be shown beforehand.
+      event.preventDefault();
+      event.stopPropagation();
+      void handleAlbumFolderDrop(event);
+    }
+  }
+  // Let the target read the shared classification and drag payload first.
+  finishExternalDrag();
+}
+function cancelAlbumDrag(event: KeyboardEvent) {
+  if (event.key === 'Escape') finishAlbumDrag();
+}
+async function handleAlbumFolderDrop(event: DragEvent) {
+  const accepted = acceptsAlbumDrag(event)
+    && externalDragKind.value !== 'files' && externalDragKind.value !== 'mixed';
+  clearAlbumDrop();
+  if (!accepted) return;
+  const paths = getExternalDropPaths(event.dataTransfer);
+  const directoryNames = getDroppedDirectoryNames(event.dataTransfer);
+  // Read the native pasteboard immediately, before any directory checks/awaits.
+  const nativePayload = isMac ? getDragPayload() : Promise.resolve(null);
+  const libraryId = libConfig._libraryId;
+  albumDropBusy.value = true;
+  const toast = useToast();
+  try {
+    const native = await nativePayload;
+    paths.push(...(native?.filePaths || []));
+    // Some WebViews expose folder entries but withhold their absolute paths.
+    // Let the user confirm the source rather than guessing or copying its contents.
+    if (paths.length === 0) {
+      for (const name of directoryNames) {
+        if (libraryId !== libConfig._libraryId) return;
+        const path = await openFolderDialog(t('album.drop.confirm_folder', { name }));
+        if (!path) continue;
+        paths.push(path);
+      }
+      if (directoryNames.length > 0 && paths.length === 0) return;
+    }
+    const knownAlbums = await getAllAlbums();
+    let foundDirectory = false;
+    for (const path of [...new Set(paths)]) {
+      if (libraryId !== libConfig._libraryId) break;
+      if (!await isDirectoryAccessible(path)) continue;
+      if (libraryId !== libConfig._libraryId) break;
+      foundDirectory = true;
+      const existing = knownAlbums.find((a: Album) => normalizePathForCompare(a.path) === normalizePathForCompare(path));
+      if (existing) {
+        toast.warning(t('tooltip.album_exists'));
+        await clickAlbum(existing);
+        continue;
+      }
+      if (knownAlbums.some((a: Album) => isWithinRootPath(path, a.path) || isWithinRootPath(a.path, path))) {
+        toast.warning(t('tooltip.album_nested'));
+        continue;
+      }
+      try {
+        const album = await createAndIndexAlbum(path, getFolderName(path), '', {
+          fileTypes: 7, smallImageFilter: 0, excludedFolders: [],
+        });
+        knownAlbums.push(album);
+      } catch (error) {
+        console.error('Adding dropped album failed:', error);
+        toast.error(t('album.edit.save_failed'));
+      }
+    }
+    if (!foundDirectory && libraryId === libConfig._libraryId) toast.warning(t('album.drop.folders_only'));
+  } catch (error) {
+    console.error('Reading dropped folders failed:', error);
+    toast.error(t('album.edit.save_failed'));
+  } finally {
+    albumDropBusy.value = false;
+  }
+}
+watch(() => libConfig._libraryId, finishAlbumDrag);
+
 const isMainSourceActive = computed(() => libConfig.activePane !== 'collection');
 const albumListRootRef = ref<HTMLElement | null>(null);
 
@@ -388,6 +535,13 @@ const isNewAlbum = ref(false);
 const newAlbumFolderPath = ref('');
 const editingAlbumId = ref(0);
 const isLoading = ref(true);    // loading albums
+watch([externalDragKind, canAcceptAlbumDrop], ([kind, enabled]) => {
+  const visible = kind === 'folders' && enabled;
+  if (visible && !showAlbumDrop.value) void nextTick(() => albumDropRef.value?.scrollIntoView({ block: 'nearest' }));
+  showAlbumDrop.value = visible;
+  if (!visible) albumDropHovered.value = false;
+});
+
 const isDragging = ref(false);  // dragging albums
 const reorderingAlbumId = ref<number | null>(null);
 const albumCoverErrors = ref<Record<number, boolean>>({});
@@ -767,6 +921,13 @@ const loadAlbumCovers = async () => {
 
 onMounted( async () => {
   document.addEventListener('pointerdown', handleReorderOutsidePointerDown, true);
+  document.addEventListener('dragenter', handleWindowAlbumDrag, true);
+  document.addEventListener('dragover', handleWindowAlbumDrag, true);
+  document.addEventListener('dragleave', handleWindowDragLeave);
+  document.addEventListener('drop', handleWindowDrop, true);
+  document.addEventListener('dragend', finishAlbumDrag);
+  document.addEventListener('keydown', cancelAlbumDrag);
+  window.addEventListener('blur', finishAlbumDrag);
   if (albums.value.length === 0) {
     // Startup defers the full filesystem probe until the first content paint.
     albums.value = await getAllAlbums(uiStore.startupReady || !isMainPane.value);
@@ -968,7 +1129,15 @@ watch(isFolderFiltering, (filtering) => {
 });
 
 onBeforeUnmount(() => {
+  if (isMainPane.value) resetExternalDrag();
   document.removeEventListener('pointerdown', handleReorderOutsidePointerDown, true);
+  document.removeEventListener('dragenter', handleWindowAlbumDrag, true);
+  document.removeEventListener('dragover', handleWindowAlbumDrag, true);
+  document.removeEventListener('dragleave', handleWindowDragLeave);
+  document.removeEventListener('drop', handleWindowDrop, true);
+  document.removeEventListener('dragend', finishAlbumDrag);
+  document.removeEventListener('keydown', cancelAlbumDrag);
+  window.removeEventListener('blur', finishAlbumDrag);
   if (unlistenAlbumCoverChanged) unlistenAlbumCoverChanged();
   if (unlistenExpandAlbumFolder) unlistenExpandAlbumFolder();
   if (unlistenIndexProgress) unlistenIndexProgress();
@@ -981,7 +1150,7 @@ onBeforeUnmount(() => {
 /// Add a new album
 const clickNewAlbum = async () => {
   const folderPath = await openFolderDialog(t('album.edit.select_folder'));
-  if (!folderPath) return;
+  if (!folderPath || albumDropBusy.value) return;
   newAlbumFolderPath.value = folderPath;
   editingAlbumId.value = 0;
   showAlbumEdit.value = true;
@@ -1012,6 +1181,21 @@ const handleRootRenamed = (payload: { albumId: number; newPath: string }) => {
   album.path = payload.newPath;
 };
 
+async function createAndIndexAlbum(path: string, name: string, description: string,
+  filters: { fileTypes: number; smallImageFilter: number; excludedFolders: string[] }) {
+  const libraryId = libConfig._libraryId;
+  const album = await addAlbum(path, name, description, filters);
+  if (!album) throw new Error('Could not create album');
+  if (libraryId !== libConfig._libraryId) return album;
+  config.leftPanel.show = true;
+  albums.value.push(album);
+  await clickAlbum(album);
+  await tauriEmit('albums-refreshed');
+  await tauriEmit('library-total-refreshed');
+  if (libraryId === libConfig._libraryId) await clickIndexAlbum(album.id);
+  return album;
+}
+
 /// edit album information or add new album
 const clickEditAlbum = async (folderPathParam: string, newName: string, newDescription: string, isNew: boolean,
   filters: { fileTypes: number; smallImageFilter: number; excludedFolders: string[] }, filtersChanged: boolean) => {
@@ -1020,15 +1204,8 @@ const clickEditAlbum = async (folderPathParam: string, newName: string, newDescr
   let interruptedScan: { id: number; libraryId: string; position: number; status: number; paused: boolean } | null = null;
   try {
     if (isNew) {
-      const newAlbum = await addAlbum(folderPathParam, newName, newDescription, filters);
-      if (!newAlbum) throw new Error('Could not create album');
-      config.leftPanel.show = true;
-      albums.value.push(newAlbum);
-      clickAlbum(newAlbum);
+      await createAndIndexAlbum(folderPathParam, newName, newDescription, filters);
       showAlbumEdit.value = false;
-      await tauriEmit('albums-refreshed');
-      await tauriEmit('library-total-refreshed');
-      await clickIndexAlbum(newAlbum.id);
     } else {
       const current = editingAlbum.value;
       const scopeChanged = current?.file_types !== filters.fileTypes

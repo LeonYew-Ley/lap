@@ -54,6 +54,12 @@
     "database_corrupted_hint": "请尝试切换到其他库。"
   },
   "album": {
+    "drop": {
+      "add": "拖入文件夹以添加",
+      "separate": "请分别拖入文件和文件夹。",
+      "confirm_folder": "选择文件夹：{name}",
+      "folders_only": "请拖入文件夹。"
+    },
     "album_list": "相册",
     "search_folders": "搜索文件夹",
     "favorite_folders_only": "仅收藏文件夹",

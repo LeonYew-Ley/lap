@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Спробуйте перемкнутися на іншу бібліотеку."
   },
   "album": {
+    "drop": {
+      "add": "Перетягніть папку, щоб додати",
+      "separate": "Перетягуйте файли та папки окремо.",
+      "confirm_folder": "Виберіть папку: {name}",
+      "folders_only": "Перетягніть папку."
+    },
     "album_list": "Альбоми",
     "search_folders": "Шукати теки",
     "favorite_folders_only": "Лише улюблені теки",

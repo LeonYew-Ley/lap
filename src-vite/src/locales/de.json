@@ -54,6 +54,12 @@
     "database_corrupted_hint": "Bitte versuchen Sie, zu einer anderen Bibliothek zu wechseln."
   },
   "album": {
+    "drop": {
+      "add": "Ordner zum Hinzufügen hierherziehen",
+      "separate": "Dateien und Ordner getrennt ziehen.",
+      "confirm_folder": "Ordner auswählen: {name}",
+      "folders_only": "Bitte einen Ordner hierherziehen."
+    },
     "album_list": "Alben",
     "search_folders": "Ordner suchen",
     "favorite_folders_only": "Nur Lieblingsordner",
