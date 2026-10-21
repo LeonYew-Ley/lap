@@ -73,7 +73,7 @@
             class="absolute top-0 left-[68px] right-0 z-10 h-10 flex items-center"
             data-tauri-drag-region
           >
-            <ContextMenu :menuItems="libraryMenuItems">
+            <ContextMenu :menuItems="getLibraryMenuItems">
               <template #trigger="{ toggle }">
                 <button
                   class="p-2 flex items-center gap-1 border border-base-200 rounded-box text-base-content/70 hover:bg-base-100/30 hover:border-base-100/15 hover:text-base-content cursor-pointer transition-colors"
@@ -195,7 +195,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { isWin, isMac, isLinux, SCALE_VALUES } from '@/common/utils';
 import { matchesShortcut, ShortcutPlatform } from '@/common/shortcuts';
 import { SIDEBAR, SETTINGS_TAB, SETTINGS_BASE_WIDTH, SETTINGS_BASE_HEIGHT, PANEL_ANIMATION_MS } from '@/common/constants';
-import { getAppConfig, switchLibrary, cancelIndexing, cancelFaceIndex } from '@/common/api';
+import { getAppConfig, getLibraryVisibleCounts, switchLibrary, cancelIndexing, cancelFaceIndex } from '@/common/api';
 
 // vue components
 import Library from '@/components/Library.vue';
@@ -412,6 +412,19 @@ watch(() => config.libraryChangedVersion, async () => {
   appConfig.value = await getAppConfig();
 });
 
+const libraryFileCounts = ref<Record<string, number | null>>({});
+let libraryCountsRefreshing = false;
+function getLibraryMenuItems() {
+  if (!libraryCountsRefreshing) {
+    libraryCountsRefreshing = true;
+    void Promise.all((appConfig.value?.libraries || []).filter(lib => !lib.hidden).map(async lib => {
+      const counts = await getLibraryVisibleCounts(lib.id);
+      libraryFileCounts.value[lib.id] = counts?.all ?? null;
+    })).finally(() => { libraryCountsRefreshing = false; });
+  }
+  return libraryMenuItems.value;
+}
+
 const libraryMenuItems = computed(() => {
   const items: any[] = [];
   
@@ -422,6 +435,11 @@ const libraryMenuItems = computed(() => {
       const isSelected = lib.id === appConfig.value.current_library_id;
       items.push({
         label: lib.name,
+        // ContextMenu snapshots items on open; a getter keeps its badge reactive.
+        get count() {
+          const count = libraryFileCounts.value[lib.id];
+          return count === 0 ? undefined : count === null ? '—' : count?.toLocaleString(locale.value) ?? '…';
+        },
         icon: isSelected ? IconDot : null,
         action: () => {
           if (!isSelected) {

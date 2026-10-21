@@ -1248,8 +1248,10 @@ pub async fn get_query_file_ids(params: QueryParams) -> Result<Vec<i64>, String>
 }
 
 #[tauri::command]
-pub fn get_library_visible_counts() -> Result<t_sqlite::LibraryVisibleCounts, String> {
-    AFile::get_library_visible_counts()
+pub async fn get_library_visible_counts(id: Option<String>) -> Result<t_sqlite::LibraryVisibleCounts, String> {
+    tauri::async_runtime::spawn_blocking(move || AFile::get_library_visible_counts(id.as_deref()))
+        .await
+        .map_err(|e| format!("Failed to join library count task: {}", e))?
         .map_err(|e| format!("Error while getting library visible counts: {}", e))
 }
 

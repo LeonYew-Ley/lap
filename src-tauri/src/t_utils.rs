@@ -3554,6 +3554,7 @@ pub fn album_accessible(album_id: i64) -> bool {
     !INACCESSIBLE_ALBUM_IDS.lock().unwrap().ids.contains(&album_id)
 }
 
+#[cfg(test)]
 pub fn refresh_album_accessibility(album: &mut Album) {
     refresh_album_accessibility_if_current(album, album_accessibility_generation());
 }

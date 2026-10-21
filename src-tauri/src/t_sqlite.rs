@@ -2227,7 +2227,16 @@ pub(crate) fn cloud_scan_action(cloud_only: bool, stored: Option<&AFile>, size: 
 }
 
 impl AFile {
-    pub fn get_library_visible_counts() -> Result<LibraryVisibleCounts, String> {
+    pub fn get_library_visible_counts(id: Option<&str>) -> Result<LibraryVisibleCounts, String> {
+        if let Some(id) = id {
+            let _lease = t_storage::DbConnectionLease::acquire()?;
+            let db_path = t_storage::get_library_db_path(id)?;
+            let conn = Connection::open_with_flags(
+                db_path,
+                rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
+            ).map_err(|e| e.to_string())?;
+            return Self::get_library_visible_counts_on(&conn);
+        }
         let conn = open_conn()?;
         Self::get_library_visible_counts_on(&conn)
     }

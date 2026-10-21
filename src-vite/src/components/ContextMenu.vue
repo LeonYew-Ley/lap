@@ -55,7 +55,8 @@
                     />
                   </div>
                   <span class="ml-2 mr-4">{{ item.label }}</span>
-                  <span class="ml-auto text-base-content/30">{{ item.shortcut }}</span>
+                  <span v-if="item.count != null" class="ml-auto sidebar-item-count">{{ item.count }}</span>
+                  <span v-else class="ml-auto text-base-content/30">{{ item.shortcut }}</span>
                   <IconRight v-if="item.children?.length" class="ml-2 w-3 h-3 text-base-content/70 group-hover:text-base-content"/>
                 </div>
               </button>

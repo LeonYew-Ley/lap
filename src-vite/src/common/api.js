@@ -779,8 +779,8 @@ export async function getQueryCountAndSum(params) {
   return null;
 }
 
-export async function getLibraryVisibleCounts() {
-  try { return await invoke('get_library_visible_counts'); }
+export async function getLibraryVisibleCounts(id) {
+  try { return await invoke('get_library_visible_counts', { id }); }
   catch (error) { console.error('getLibraryVisibleCounts:', error); }
   return null;
 }
