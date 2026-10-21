@@ -785,6 +785,7 @@ import { getAlbum, getAllAlbums, recountAlbum, getQueryCountAndSum, getQueryTime
          dedupDelete, getQueryFilePosition, getFolderSearchExcluded,
          listCollections, createCollection, addFilesToCollection, removeFilesFromCollection, getFileCollections, getCollectionCountAndSum, getCollectionFiles, getCollectionGroupedQueryRows, getCollectionGroupFileIds, getCollectionQueryFileIds, fetchFolder, isDirectoryAccessible, checkAlbumAccessibility, addTagToFile } from '@/common/api';
 import { config, libConfig } from '@/common/config';
+import { createThumbnailScheduler } from '@/common/thumbnailScheduler';
 import {
   gridSizeFromPosition,
   gridSizePositionFromGridSize,
@@ -1109,7 +1110,7 @@ async function refreshSelectionPanelPreviews() {
   const previews = previewIds.map(id => filesById.get(id)).filter(Boolean);
   if (requestId !== selectionPreviewRequestId) return;
   selectionPreviewFiles.value = previews;
-  await getFileListThumb(previews, 0, 4);
+  await getFileListThumb(previews, { viewportBound: false });
 }
 
 watch([selectMode, selectedFilesVersion], () => {
@@ -1201,7 +1202,7 @@ async function finishSelectedFileRefresh(results: Array<{ file: any; size_delta:
   await nextTick();
   if (selection.libraryId !== libConfig._libraryId || selection.requestId !== currentContentRequestId) return;
   if (scrollTop !== undefined) gridViewRef.value?.scrollToPosition(scrollTop);
-  await getFileListThumb(refreshedFiles, 0, 4, true);
+  await getFileListThumb(refreshedFiles, { bustCache: true, viewportBound: false });
 }
 
 const selectionAccessFiles = ref<any[]>([]);
@@ -2315,7 +2316,7 @@ function enterMetadataTempView(
   if (tempViewMode.value === 'none') {
     backupState.value = createViewBackup();
   }
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   tempViewMode.value = mode;
   showQuickView.value = false;
   contentTitle.value = title;
@@ -5950,7 +5951,7 @@ onMounted( async() => {
       activeFile.file_path = activePath;
     }
 
-    getFileListThumb(loadedFiles, 0, 8, true);
+    getFileListThumb(loadedFiles, { bustCache: true });
   });
 
   // listen for external refresh requests (e.g. from folder context menu)
@@ -6096,7 +6097,7 @@ onBeforeUnmount(() => {
 watch(
   () => [config.settings.rawPreviewSource, config.settings.rawRenderBrightness, config.settings.rawPairDisplaySource, config.settings.groupRawJpegPairs],
   () => {
-    currentThumbRequestId++;
+    invalidateThumbnailRequests();
     for (const file of fileList.value) {
       if (Number(file.file_type) === 3) {
         clearCachedThumbnailDataUrl(file.id, config.settings.thumbnailSize);
@@ -6370,7 +6371,7 @@ function toggleMapView() {
 function openMapClusterTempView(payload: { fileIds?: number[]; minLat: number; maxLat: number; minLon: number; maxLon: number; count: number; view: { lat: number; lon: number; zoom: number } }) {
   if (tempViewMode.value === 'none') backupState.value = createViewBackup();
   mapTempViewState.value = payload.view;
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   tempViewMode.value = 'map';
   showQuickView.value = false;
   contentTitle.value = t('map.photos_in_view', { count: payload.count });
@@ -7065,13 +7066,14 @@ async function fetchMissingVisibleThumbnails(startIndex: number, endIndex: numbe
 }
 
 function handleVisibleRangeUpdate({ startIndex, endIndex }: { startIndex: number, endIndex: number }) {
+  const unchanged = lastVisibleRange.start === startIndex && lastVisibleRange.end === endIndex;
+  lastVisibleRange = { start: startIndex, end: endIndex };
+  refreshThumbnailViewport();
   // Skip if the range hasn't changed significantly
-  if (lastVisibleRange.start === startIndex && lastVisibleRange.end === endIndex) {
+  if (unchanged) {
     void fetchMissingVisibleThumbnails(startIndex, endIndex);
     return;
   }
-
-  lastVisibleRange = { start: startIndex, end: endIndex };
 
   const buffer = Math.max(40, Math.min(visibleItemCount.value, 120));
   const seqId = ++visibleRangeSeqId;
@@ -7746,7 +7748,7 @@ async function updateContent(force = false, preserveMultiSelection = selectMode.
   backupState.value = null;
   
   // Increment request ID to cancel any previous thumbnail generation and reset queue
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   const requestId = ++currentContentRequestId;
   // Leaving the folder view re-arms its sync, so coming back picks up changes that
   // leave the folder mtime untouched (e.g. OneDrive "Free up space").
@@ -8108,7 +8110,7 @@ function enterSimilarSearchMode(file: any) {
   }
 
   // Increment request ID to cancel any previous thumbnail generation and reset queue
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   // 1. Backup current state
   if (tempViewMode.value === 'none') {
     backupState.value = createViewBackup();
@@ -8167,7 +8169,7 @@ async function enterPersonTempView(personId: number, personName: string) {
   if (!config.settings.face.enabled || !personId || personId <= 0) return;
 
   // Increment request ID to cancel any previous thumbnail generation and reset queue
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   // 1. Backup current state
   if (tempViewMode.value === 'none') {
     backupState.value = createViewBackup();
@@ -8218,7 +8220,7 @@ function enterAlbumPreviewMode(file: any, targetFolderPath?: string) {
   }
   
   // Increment request ID to cancel any previous thumbnail generation and reset queue
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
   // 2. Set mode
   tempViewMode.value = 'album';
   showQuickView.value = false;
@@ -8290,7 +8292,7 @@ function exitTempViewMode() {
   currentCollectionId.value = state.currentCollectionId || null;
   currentSearchFileIds.value = [...(state.currentSearchFileIds || [])];
   // Increment request ID to cancel any previous thumbnail generation (from temp view)
-  currentThumbRequestId++;
+  invalidateThumbnailRequests();
 
   // 2. Reset Mode
   tempViewMode.value = 'none';
@@ -10450,11 +10452,46 @@ function handleCollectionDeleted(collectionId: number) {
   void tauriEmit('refresh-content');
 }
 
-// Helper to yield to main thread
-const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
-
 // Track current thumbnail request to enable cancellation when switching folders
 let currentThumbRequestId = 0;
+let thumbnailRefreshVersion = 0;
+let thumbnailPriorities = new Map<number, number>();
+const thumbnailScheduler = createThumbnailScheduler({
+  // Cache-read IPC has a separate budget from backend background generation.
+  priority: (task: any) => task.requestId !== currentThumbRequestId ? null
+    : thumbnailPriorities.get(Number(task.file.id)) ?? (task.viewportBound ? null : 2),
+  loadBatch: (tasks: any[]) => getFileThumbs(tasks.map(({ file }) => ({
+    fileId: file.id, filePath: file.file_path, fileType: file.file_type,
+    orientation: file.e_orientation || 0, albumId: file.album_id || 0,
+  })), tasks[0].thumbnailSize, false, tasks[0].trustCached),
+});
+
+function invalidateThumbnailRequests() {
+  currentThumbRequestId++;
+  thumbnailPriorities.clear();
+  thumbnailScheduler.refresh();
+}
+
+function refreshThumbnailViewport() {
+  const start = Math.max(0, lastVisibleRange.start);
+  const end = lastVisibleRange.end >= start ? lastVisibleRange.end
+    : start + Math.max(1, visibleItemCount.value) - 1;
+  const buffer = Math.max(40, Math.min(visibleItemCount.value, 120));
+  const rows = gridRows.value;
+  const priorities = new Map<number, number>();
+  for (let index = Math.max(0, start - buffer); index <= Math.min(rows.length - 1, end + buffer); index++) {
+    const row = rows[index];
+    const file = isItemRow(row) ? row.file : row;
+    if (isRealFileItem(file)) priorities.set(Number(file.id), index >= start && index <= end ? 0 : 1);
+  }
+  thumbnailPriorities = priorities;
+  thumbnailScheduler.refresh();
+}
+
+onBeforeUnmount(() => {
+  currentThumbRequestId++;
+  thumbnailScheduler.dispose();
+});
 // A reconnected album can safely show its existing local thumbnail cache first.
 // A later scan/sync remains responsible for detecting files changed while offline.
 let trustCachedThumbnailRequestId = -1;
@@ -10478,115 +10515,50 @@ function preserveLoadedThumbnails(files: any[]) {
   });
 }
 
-// Get the thumbnail for the files (non-blocking, runs in background)
-// Automatically cancels when a new request starts (e.g., switching folders)
-async function getFileListThumb(files: any[], offset = 0, concurrencyLimit = 4, bustCache = false) {
-  // Use current request ID to check for cancellation
+// All grid loads share one queue with centrally capped batch size and concurrency.
+async function getFileListThumb(files: any[], { bustCache = false, viewportBound = true } = {}) {
   const requestId = currentThumbRequestId;
   const thumbnailSize = config.settings.thumbnailSize;
-  const batchSize = Math.max(1, concurrencyLimit);
+  const trustCached = requestId === trustCachedThumbnailRequestId;
+  const refreshVersion = bustCache ? ++thumbnailRefreshVersion : 0;
+  const group = `${requestId}:${thumbnailSize}:${trustCached}:${refreshVersion}`;
+  refreshThumbnailViewport();
 
-  const applyThumbToFile = (file: any, thumb: any) => {
-    if (!thumb) return;
-
-    if (thumb.error_code === 0 || thumb.error_code === 2) {
-      file.thumbnail = getThumbnailDataUrl(thumb, thumbnailPlaceholder, bustCache, thumbnailSize, file.file_path, Number(file.modified_at || 0), !file.cloud_only);
+  const candidates = files.filter((file: any) => isRealFileItem(file)
+    && (!file.thumbnail || file.rawThumbnailStale)
+    && (!viewportBound || thumbnailPriorities.has(Number(file.id))));
+  const load = async (file: any) => {
+    const cached = getCachedThumbnailDataUrl(file.id, thumbnailSize);
+    if (cached) {
+      file.thumbnail = cached;
       file.rawThumbnailStale = false;
-    } else if (thumb.error_code === 1) {
-      file.rawThumbnailStale = false;
-      file.thumbnail = thumbnailPlaceholder;
+      return;
     }
-  };
-
-  const processBatch = async (startIndex: number) => {
-    if (requestId !== currentThumbRequestId) return;
-
-    const endIndex = Math.min(startIndex + batchSize, files.length);
-    const batchFiles: any[] = [];
-
-    for (let i = startIndex; i < endIndex; i++) {
-      const file = files[i];
-      if (!file || (file.thumbnail && !file.rawThumbnailStale)) continue;
-
-      const cached = getCachedThumbnailDataUrl(file.id, thumbnailSize);
-      if (cached) {
-        file.thumbnail = cached;
-        file.rawThumbnailStale = false;
-        continue;
-      }
-
-      batchFiles.push(file);
-    }
-
-    if (batchFiles.length === 0) return;
-
-    const requests = batchFiles.map((file: any) => ({
-      fileId: file.id,
-      filePath: file.file_path,
-      fileType: file.file_type,
-      orientation: file.e_orientation || 0,
-      albumId: file.album_id || 0,
-    }));
-
     try {
-      const thumbs = await getFileThumbs(
-        requests,
-        thumbnailSize,
-        false,
-        requestId === trustCachedThumbnailRequestId,
-      );
-
-      if (requestId !== currentThumbRequestId) return;
-
-      for (let j = 0; j < batchFiles.length; j++) {
-        applyThumbToFile(batchFiles[j], Array.isArray(thumbs) ? thumbs[j] : null);
+      // group includes the refresh version, keeping forced refreshes independent.
+      const key = `${group}:${file.id}:${file.modified_at || 0}`;
+      const thumb = await thumbnailScheduler.request(key, group, {
+        file, requestId, thumbnailSize, trustCached, viewportBound,
+      });
+      if (!thumb || requestId !== currentThumbRequestId) return;
+      if (thumb.error_code === 0 || thumb.error_code === 2) {
+        file.thumbnail = getThumbnailDataUrl(thumb, thumbnailPlaceholder, bustCache, thumbnailSize, file.file_path, Number(file.modified_at || 0), !file.cloud_only);
+        file.rawThumbnailStale = false;
+      } else if (thumb.error_code === 1) {
+        file.rawThumbnailStale = false;
+        file.thumbnail = thumbnailPlaceholder;
       }
     } catch (error) {
-      console.log('Error fetching thumbnails:', error);
+      console.log('Error fetching thumbnail:', error);
     }
   };
-
-  const runWithConcurrencyLimit = async (files: any[]) => {
-    const queue: Promise<void>[] = [];
-    let activeRequests = 0;
-
-    for (let i = offset; i < files.length; i += batchSize) {
-      if (requestId !== currentThumbRequestId) {
-        console.log(`Thumbnail generation cancelled (request ${requestId} superseded by ${currentThumbRequestId})`);
-        return;
-      }
-
-      // Wait for a slot to free up before starting a new batch
-      while (activeRequests >= concurrencyLimit) {
-        await Promise.race(queue);
-      }
-
-      const batchPromise = processBatch(i)
-        .then(() => {
-          queue.splice(queue.indexOf(batchPromise), 1);
-          activeRequests--;
-        })
-        .catch(() => {
-          queue.splice(queue.indexOf(batchPromise), 1);
-          activeRequests--;
-        });
-
-      queue.push(batchPromise);
-      activeRequests++;
-
-      // Yield to main thread periodically to keep UI responsive
-      if (i > 0 && i % (batchSize * 10) === 0) {
-        await yieldToMain();
-      }
-    }
-
-    // Wait for remaining batches (only if not cancelled)
-    if (requestId === currentThumbRequestId && queue.length > 0) {
-      await Promise.all(queue);
-    }
-  };
-
-  return runWithConcurrencyLimit(files);
+  // Large explicit refreshes retain offscreen demand, but enqueue just one batch
+  // at a time. Visible work can take priority before the next batch is submitted.
+  const windowSize = viewportBound ? Math.max(1, candidates.length) : 4;
+  for (let start = 0; start < candidates.length; start += windowSize) {
+    if (requestId !== currentThumbRequestId) return;
+    await Promise.all(candidates.slice(start, start + windowSize).map(load));
+  }
 }
 
 // Open the image viewer window

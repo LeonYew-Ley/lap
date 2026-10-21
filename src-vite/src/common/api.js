@@ -1294,12 +1294,11 @@ export async function getFileThumbById(fileId, thumbnailSize, forceRegenerate = 
 }
 
 export async function getFileThumbs(files, thumbnailSize, forceRegenerate = false, trustCached = false) {
-  try {
-    return await invoke('get_file_thumbs', { files, thumbnailSize, rawDisplayOptions: getRawDisplayOptions(), forceRegenerate, trustCached });
-  } catch (error) {
-    console.log('Failed to get file thumbs:', error);
+  const thumbs = await invoke('get_file_thumbs', { files, thumbnailSize, rawDisplayOptions: getRawDisplayOptions(), forceRegenerate, trustCached });
+  if (!Array.isArray(thumbs) || thumbs.length !== files.length) {
+    throw new Error(`Invalid thumbnail batch response: expected ${files.length} results, received ${Array.isArray(thumbs) ? thumbs.length : 'a non-array response'}`);
   }
-  return [];
+  return thumbs;
 }
 
 // get file info

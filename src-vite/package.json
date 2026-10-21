@@ -9,6 +9,7 @@
     "build": "vite build",
     "test:drop": "node --experimental-vm-modules --test tests/external-drop.test.mjs tests/external-drag.test.mjs",
     "test:startup": "node --experimental-vm-modules --test tests/startup.test.mjs",
+    "test:thumbnails": "node --test tests/thumbnail-scheduler.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
