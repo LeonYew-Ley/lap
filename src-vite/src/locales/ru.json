@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Дополнительно",
-      "section_thumbnail_cache": "Кэш миниатюр",
-      "thumbnail_quality": "Качество миниатюр",
-      "thumbnail_quality_hint": "Разрешение создаваемых миниатюр (чем выше, тем они чётче, но создаются дольше и занимают больше места на диске)",
-      "section_map": "Карта",
-      "map_provider": "Поставщик карт",
-      "map_provider_hint": "Выберите картографический сервис для просмотра карты",
-      "map_provider_options": [
-        "Глобальный (по умолчанию)",
-        "Китай (Tianditu)"
-      ],
-      "tianditu_token": "Токен API Tianditu",
-      "tianditu_token_hint": "Требуется для тайлов Tianditu",
-      "tianditu_token_placeholder": "Вставьте токен",
-      "tianditu_token_status_saved": "Сохранено",
-      "tianditu_token_status_empty": "Не настроено",
-      "thumbnail_quality_options": [
-        "Низкое (256 пкс)",
-        "Стандартное (512 пкс)",
-        "Высокое (1024 пкс)"
-      ],
-      "section_external_apps": "Внешние приложения",
-      "manage_external_apps": "Управление внешними приложениями",
-      "external_image_editor": "Открыть фото с помощью",
-      "external_video_app": "Открыть видео с помощью",
-      "external_app_not_selected": "Не выбрано приложение",
-      "choose_app": "Выбрать",
-      "clear_app": "Очистить",
-      "default_app": "По умолчанию",
-      "set_default_app": "Сделать стандартным",
+      "external_app": {
+        "section_external_apps": "Внешние приложения",
+        "manage_external_apps": "Управление внешними приложениями",
+        "external_image_editor": "Открыть фото с помощью",
+        "external_video_app": "Открыть видео с помощью",
+        "external_app_not_selected": "Не выбрано приложение",
+        "choose_app": "Выбрать",
+        "clear_app": "Очистить",
+        "default_app": "По умолчанию",
+        "set_default_app": "Сделать стандартным"
+      },
       "section_diagnostics": "Диагностика",
-      "debug_mode": "Режим отладки"
+      "debug_mode": "Режим отладки",
+      "map": {
+        "section_map": "Карта",
+        "map_provider": "Поставщик карт",
+        "map_provider_hint": "Выберите картографический сервис для просмотра карты",
+        "map_provider_options": [
+          "Глобальный (по умолчанию)",
+          "Китай (Tianditu)"
+        ],
+        "tianditu_token": "Токен API Tianditu",
+        "tianditu_token_hint": "Требуется для тайлов Tianditu",
+        "tianditu_token_placeholder": "Вставьте токен",
+        "tianditu_token_status_saved": "Сохранено",
+        "tianditu_token_status_empty": "Не настроено"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Откат изменений…",
+        "cancelled": "Отменено. Исходный кэш сохранён.",
+        "new_location": "Новое расположение: {path}",
+        "migrating": "Перенос миниатюр…",
+        "migration_hint": "Миниатюры всех библиотек будут перемещены. Новое расположение вступит в силу только после успешного завершения миграции. При отмене сохранится текущее расположение кэша.",
+        "migration_progress": "Ход миграции",
+        "ready": "Готово к миграции",
+        "start": "Начать",
+        "cancelling": "Отмена…",
+        "rebuild_message": "Прежняя папка кэша недоступна. Продолжить без переноса файлов? Миниатюры будут создаваться заново в новой папке по мере необходимости. Данные библиотек, исходные фотографии и файлы на прежнем диске не изменятся.",
+        "rebuild_confirm": "Продолжить и создать заново",
+        "section_thumbnail_cache": "Кэш миниатюр",
+        "thumbnail_quality": "Изменить разрешение миниатюр",
+        "thumbnail_quality_hint": "При более высоком разрешении миниатюры чётче, но создаются дольше и занимают больше места на диске",
+        "thumbnail_quality_options": [
+          "Низкое (256 пкс)",
+          "Стандартное (512 пкс)",
+          "Высокое (1024 пкс)"
+        ],
+        "unavailable": "Папка кэша недоступна. Подключите диск перед использованием или переносом кэша.",
+        "current_location": "Изменить расположение кэша",
+        "counting": "Подсчёт файлов кэша…",
+        "finishing": "Завершение переноса кэша…",
+        "success": "Расположение кэша миниатюр изменено",
+        "cleanup_warning": "Кэш перемещён, но некоторые старые файлы не удалось удалить:",
+        "busy": "Дождитесь завершения переноса кэша миниатюр."
+      }
     },
     "database": {
       "title": "Хранилище",

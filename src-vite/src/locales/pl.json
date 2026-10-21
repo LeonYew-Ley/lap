@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Zaawansowane",
-      "section_thumbnail_cache": "Cache miniatur",
-      "thumbnail_quality": "Jakość miniatur",
-      "thumbnail_quality_hint": "Ustawia rozdzielczość generowanych miniatur. Wyższe ustawienia wyglądają ostrzej, ale generowanie trwa dłużej i zajmuje więcej miejsca na dysku",
-      "section_map": "Mapa",
-      "map_provider": "Dostawca map",
-      "map_provider_hint": "Wybierz usługę mapową dla widoku mapy",
-      "map_provider_options": [
-        "Globalny (domyślny)",
-        "Chiny (Tianditu)"
-      ],
-      "tianditu_token": "Token API Tianditu",
-      "tianditu_token_hint": "Wymagany dla kafelków map Tianditu",
-      "tianditu_token_placeholder": "Wklej swój token",
-      "tianditu_token_status_saved": "Zapisano",
-      "tianditu_token_status_empty": "Nieskonfigurowany",
-      "thumbnail_quality_options": [
-        "Niska (256 px)",
-        "Standardowa (512 px)",
-        "Wysoka (1024 px)"
-      ],
-      "section_external_apps": "Aplikacje zewnętrzne",
-      "manage_external_apps": "Zarządzaj aplikacjami zewnętrznymi",
-      "external_image_editor": "Otwieraj zdjęcia w",
-      "external_video_app": "Otwieraj filmy w",
-      "external_app_not_selected": "Nie wybrano aplikacji",
-      "choose_app": "Wybierz",
-      "clear_app": "Wyczyść",
-      "default_app": "Domyślna",
-      "set_default_app": "Ustaw jako domyślną",
+      "external_app": {
+        "section_external_apps": "Aplikacje zewnętrzne",
+        "manage_external_apps": "Zarządzaj aplikacjami zewnętrznymi",
+        "external_image_editor": "Otwieraj zdjęcia w",
+        "external_video_app": "Otwieraj filmy w",
+        "external_app_not_selected": "Nie wybrano aplikacji",
+        "choose_app": "Wybierz",
+        "clear_app": "Wyczyść",
+        "default_app": "Domyślna",
+        "set_default_app": "Ustaw jako domyślną"
+      },
       "section_diagnostics": "Diagnostyka",
-      "debug_mode": "Tryb debugowania"
+      "debug_mode": "Tryb debugowania",
+      "map": {
+        "section_map": "Mapa",
+        "map_provider": "Dostawca map",
+        "map_provider_hint": "Wybierz usługę mapową dla widoku mapy",
+        "map_provider_options": [
+          "Globalny (domyślny)",
+          "Chiny (Tianditu)"
+        ],
+        "tianditu_token": "Token API Tianditu",
+        "tianditu_token_hint": "Wymagany dla kafelków map Tianditu",
+        "tianditu_token_placeholder": "Wklej swój token",
+        "tianditu_token_status_saved": "Zapisano",
+        "tianditu_token_status_empty": "Nieskonfigurowany"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Wycofywanie zmian…",
+        "cancelled": "Anulowano. Oryginalna pamięć podręczna została zachowana.",
+        "new_location": "Nowa lokalizacja: {path}",
+        "migrating": "Przenoszenie miniatur…",
+        "migration_hint": "Miniatury wszystkich bibliotek zostaną przeniesione. Nowa lokalizacja zacznie działać dopiero po zakończeniu migracji. Anulowanie zachowa obecną lokalizację pamięci podręcznej.",
+        "migration_progress": "Postęp migracji",
+        "ready": "Gotowe do migracji",
+        "start": "Rozpocznij",
+        "cancelling": "Anulowanie…",
+        "rebuild_message": "Poprzednia lokalizacja pamięci podręcznej jest niedostępna. Kontynuować bez przenoszenia plików? Miniatury będą tworzone w nowej lokalizacji w razie potrzeby. Dane bibliotek, oryginalne zdjęcia i pliki na poprzednim dysku pozostaną bez zmian.",
+        "rebuild_confirm": "Kontynuuj i utwórz ponownie",
+        "section_thumbnail_cache": "Cache miniatur",
+        "thumbnail_quality": "Zmień rozdzielczość miniatur",
+        "thumbnail_quality_hint": "Wyższe ustawienia wyglądają ostrzej, ale generowanie trwa dłużej i zajmuje więcej miejsca na dysku",
+        "thumbnail_quality_options": [
+          "Niska (256 px)",
+          "Standardowa (512 px)",
+          "Wysoka (1024 px)"
+        ],
+        "unavailable": "Lokalizacja pamięci podręcznej jest niedostępna. Podłącz dysk przed jej użyciem lub przeniesieniem.",
+        "current_location": "Zmień lokalizację pamięci podręcznej",
+        "counting": "Liczenie plików pamięci podręcznej…",
+        "finishing": "Kończenie przenoszenia…",
+        "success": "Zmieniono lokalizację pamięci podręcznej miniatur",
+        "cleanup_warning": "Pliki przeniesiono, ale nie udało się usunąć niektórych starych plików:",
+        "busy": "Poczekaj na zakończenie przenoszenia pamięci podręcznej miniatur."
+      }
     },
     "database": {
       "title": "Przechowywanie",

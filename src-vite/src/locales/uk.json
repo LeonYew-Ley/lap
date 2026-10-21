@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Додатково",
-      "section_thumbnail_cache": "Кеш мініатюр",
-      "thumbnail_quality": "Якість мініатюр",
-      "thumbnail_quality_hint": "Задає роздільність створюваних мініатюр. Вищі значення виглядають чіткіше, але створюються довше й займають більше місця на диску",
-      "section_map": "Мапа",
-      "map_provider": "Постачальник мап",
-      "map_provider_hint": "Виберіть сервіс мап для перегляду мапи",
-      "map_provider_options": [
-        "Глобальний (типовий)",
-        "Китай (Tianditu)"
-      ],
-      "tianditu_token": "Ключ API Tianditu",
-      "tianditu_token_hint": "Потрібен для тайлів мапи Tianditu",
-      "tianditu_token_placeholder": "Вставте свій ключ",
-      "tianditu_token_status_saved": "Збережено",
-      "tianditu_token_status_empty": "Не налаштовано",
-      "thumbnail_quality_options": [
-        "Низька (256 px)",
-        "Стандартна (512 px)",
-        "Висока (1024 px)"
-      ],
-      "section_external_apps": "Зовнішні застосунки",
-      "manage_external_apps": "Керувати зовнішніми застосунками",
-      "external_image_editor": "Відкривати фотографію в",
-      "external_video_app": "Відкривати відео в",
-      "external_app_not_selected": "Застосунок не вибрано",
-      "choose_app": "Вибрати",
-      "clear_app": "Очистити",
-      "default_app": "Типовий",
-      "set_default_app": "Зробити типовим",
+      "external_app": {
+        "section_external_apps": "Зовнішні застосунки",
+        "manage_external_apps": "Керувати зовнішніми застосунками",
+        "external_image_editor": "Відкривати фотографію в",
+        "external_video_app": "Відкривати відео в",
+        "external_app_not_selected": "Застосунок не вибрано",
+        "choose_app": "Вибрати",
+        "clear_app": "Очистити",
+        "default_app": "Типовий",
+        "set_default_app": "Зробити типовим"
+      },
       "section_diagnostics": "Діагностика",
-      "debug_mode": "Режим налагодження"
+      "debug_mode": "Режим налагодження",
+      "map": {
+        "section_map": "Мапа",
+        "map_provider": "Постачальник мап",
+        "map_provider_hint": "Виберіть сервіс мап для перегляду мапи",
+        "map_provider_options": [
+          "Глобальний (типовий)",
+          "Китай (Tianditu)"
+        ],
+        "tianditu_token": "Ключ API Tianditu",
+        "tianditu_token_hint": "Потрібен для тайлів мапи Tianditu",
+        "tianditu_token_placeholder": "Вставте свій ключ",
+        "tianditu_token_status_saved": "Збережено",
+        "tianditu_token_status_empty": "Не налаштовано"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Відкат змін…",
+        "cancelled": "Скасовано. Початковий кеш збережено.",
+        "new_location": "Нове розташування: {path}",
+        "migrating": "Переміщення мініатюр…",
+        "migration_hint": "Мініатюри всіх бібліотек буде переміщено. Нове розташування набуде чинності лише після успішного завершення міграції. Скасування збереже поточне розташування кешу.",
+        "migration_progress": "Перебіг міграції",
+        "ready": "Готово до міграції",
+        "start": "Почати",
+        "cancelling": "Скасування…",
+        "rebuild_message": "Попередня папка кешу недоступна. Продовжити без перенесення файлів? Мініатюри створюватимуться в новій папці за потреби. Дані бібліотек, оригінальні фотографії та файли на попередньому диску не зміняться.",
+        "rebuild_confirm": "Продовжити й створити заново",
+        "section_thumbnail_cache": "Кеш мініатюр",
+        "thumbnail_quality": "Змінити роздільність мініатюр",
+        "thumbnail_quality_hint": "Вищі значення виглядають чіткіше, але створюються довше й займають більше місця на диску",
+        "thumbnail_quality_options": [
+          "Низька (256 px)",
+          "Стандартна (512 px)",
+          "Висока (1024 px)"
+        ],
+        "unavailable": "Папка кешу недоступна. Підключіть диск перед використанням або перенесенням кешу.",
+        "current_location": "Змінити розташування кешу",
+        "counting": "Підрахунок файлів кешу…",
+        "finishing": "Завершення перенесення кешу…",
+        "success": "Розташування кешу мініатюр змінено",
+        "cleanup_warning": "Кеш переміщено, але деякі старі файли не вдалося видалити:",
+        "busy": "Дочекайтеся завершення перенесення кешу мініатюр."
+      }
     },
     "database": {
       "title": "Зберігання",

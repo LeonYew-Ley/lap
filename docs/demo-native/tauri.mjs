@@ -27,6 +27,8 @@ db.tagGroupIds ||= Object.fromEntries(db.tagNames.map((name) => [name, 1]));
 let libraryState = db.libraryState || null,
   dedupScanned = false,
   similarScanned = false;
+let thumbnailCacheLocation = { path: "/Browser/Lap Demo/Cache", custom: false };
+const thumbnailCacheMigrations = new Map();
 const keeps = new Map(),
   listeners = new Map();
 export const commands = [];
@@ -1261,6 +1263,39 @@ export async function invoke(command, args = {}) {
     command === "download_multilingual_image_search_model"
   )
     return { activeModel: args.model || 0, multilingualAvailable: true };
+  if (command === "get_thumbnail_cache_location") return { ...thumbnailCacheLocation };
+  if (command === "get_thumbnail_cache_migration_count") return 20;
+  if (command === "cancel_thumbnail_cache_migration") {
+    const migration = thumbnailCacheMigrations.get(args.operationId);
+    if (!migration) return false;
+    migration.cancelled = true;
+    return true;
+  }
+  if (command === "change_thumbnail_cache_location") {
+    const migration = { cancelled: false };
+    thumbnailCacheMigrations.set(args.operationId, migration);
+    try {
+      args.onProgress?.onmessage({ phase: "counting", completed: 0, total: 0 });
+      for (let completed = 0; completed <= 20; completed++) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (migration.cancelled) {
+          args.onProgress?.onmessage({ phase: "rolling_back", completed: 0, total: 20 });
+          await new Promise(resolve => setTimeout(resolve, 400));
+          args.onProgress?.onmessage({ phase: "rolled_back", completed: 0, total: 20 });
+          throw { code: "CANCELLED", message: "Cache migration cancelled." };
+        }
+        args.onProgress?.onmessage({ phase: "copying", completed, total: 20 });
+      }
+      args.onProgress?.onmessage({ phase: "finishing", completed: 20, total: 20 });
+      thumbnailCacheLocation = args.newDir == null
+        ? { path: "/Browser/Lap Demo/Cache", custom: false }
+        : { path: `${args.newDir}/lap-thumbnail-cache`, custom: true };
+      inform("Cache migration is simulated. No real files are moved.");
+      return { ...thumbnailCacheLocation, cleanupWarnings: [] };
+    } finally {
+      thumbnailCacheMigrations.delete(args.operationId);
+    }
+  }
   if (command === "get_db_storage_dir") return "/Browser/Lap Demo";
   if (command === "get_package_info")
     return {

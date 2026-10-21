@@ -1,5 +1,5 @@
 <template>
-  <ModalDialog :title="$t('settings.advanced.manage_external_apps')" :width="480" @cancel="close">
+  <ModalDialog :title="$t('settings.advanced.external_app.manage_external_apps')" :width="480" @cancel="close">
     <div class="space-y-4">
       <section v-for="group in externalAppGroups" :key="group.kind" class="space-y-2">
         <div class="flex items-center justify-between gap-3">
@@ -7,7 +7,7 @@
           <TButton
             :icon="IconAdd"
             :buttonSize="'small'"
-            :tooltip="$t('settings.advanced.choose_app')"
+            :tooltip="$t('settings.advanced.external_app.choose_app')"
             :disabled="group.apps.length >= MAX_EXTERNAL_APPS"
             @click="selectExternalApp(group.kind)"
           />
@@ -24,18 +24,18 @@
                 :checked="group.defaultId === app.id"
                 @change="setDefaultExternalApp(group.kind, app.id)"
               />
-              {{ $t('settings.advanced.default_app') }}
+              {{ $t('settings.advanced.external_app.default_app') }}
             </label>
             <TButton
               :icon="IconTrash"
               :buttonSize="'small'"
-              :tooltip="$t('settings.advanced.clear_app')"
+              :tooltip="$t('settings.advanced.external_app.clear_app')"
               @click="removeExternalApp(group.kind, app.id)"
             />
           </div>
         </div>
         <div v-else class="rounded-box px-2 py-3 text-xs text-base-content/30 bg-base-100/20 border border-base-content/5">
-          {{ $t('settings.advanced.external_app_not_selected') }}
+          {{ $t('settings.advanced.external_app.external_app_not_selected') }}
         </div>
       </section>
     </div>
@@ -68,8 +68,8 @@ const uiStore = useUIStore();
 const externalAppGroups = computed(() => ['image', 'video'].map((kind) => ({
   kind: kind as ExternalAppKind,
   label: kind === 'image'
-    ? localeMsg.value.settings.advanced.external_image_editor
-    : localeMsg.value.settings.advanced.external_video_app,
+    ? localeMsg.value.settings.advanced.external_app.external_image_editor
+    : localeMsg.value.settings.advanced.external_app.external_video_app,
   apps: config.externalAppsFor(kind),
   defaultId: config.settings.externalApps?.[kind]?.defaultId || null,
 })));
@@ -98,8 +98,8 @@ function handleKeyDown(event: KeyboardEvent) {
 async function selectExternalApp(kind: ExternalAppKind) {
   const result = await openDialog({
     title: kind === 'image'
-      ? localeMsg.value.settings.advanced.external_image_editor
-      : localeMsg.value.settings.advanced.external_video_app,
+      ? localeMsg.value.settings.advanced.external_app.external_image_editor
+      : localeMsg.value.settings.advanced.external_app.external_video_app,
     multiple: false,
     directory: false,
     ...(isMac

@@ -174,7 +174,7 @@ pub fn reset_db_storage_dir() -> Result<DbStorageChangeResult, String> {
 
 fn migrate_db_storage(new_dir: Option<&str>) -> Result<DbStorageChangeResult, String> {
     let _migration_guard = DbMigrationGuard::acquire()?;
-    let mut config = t_config::load_app_config()?;
+    let config = t_config::load_app_config()?;
     let target_dir = match new_dir {
         Some(dir) => PathBuf::from(dir),
         None => t_config::get_libraries_dir()?,
@@ -201,8 +201,10 @@ fn migrate_db_storage(new_dir: Option<&str>) -> Result<DbStorageChangeResult, St
             migrated_libraries.push(library.clone());
         }
     }
-    config.db_storage_dir = new_dir.map(|_| path.clone());
-    t_config::save_app_config(&config)?;
+    t_config::update_app_config(|config| {
+        config.db_storage_dir = new_dir.map(|_| path.clone());
+        Ok(())
+    })?;
 
     let cleanup_warnings = if current_dir != target_dir {
         cleanup_old_databases(&current_dir, &migrated_libraries)
@@ -468,7 +470,7 @@ pub fn restore_databases(
     selections: &[RestoreSelection],
 ) -> Result<RestoreResult, String> {
     let _migration_guard = DbMigrationGuard::acquire()?;
-    let mut config = t_config::load_app_config()?;
+    let config = t_config::load_app_config()?;
 
     let file =
         fs::File::open(backup_path).map_err(|e| format!("Failed to open backup file: {}", e))?;
@@ -494,6 +496,7 @@ pub fn restore_databases(
     }
 
     let mut restored_names = Vec::new();
+    let mut restored_libraries = Vec::new();
     let mut existing_names: std::collections::HashSet<String> =
         config.libraries.iter().map(|l| l.name.clone()).collect();
 
@@ -532,12 +535,15 @@ pub fn restore_databases(
             )
         })?;
 
-        config.libraries.push(new_lib);
+        restored_libraries.push(new_lib);
         existing_names.insert(final_lib_name.clone());
         restored_names.push(final_lib_name);
     }
 
-    t_config::save_app_config(&config)?;
+    t_config::update_app_config(|config| {
+        config.libraries.extend(restored_libraries);
+        Ok(())
+    })?;
     Ok(RestoreResult {
         restored_count: restored_names.len(),
         restored_names,

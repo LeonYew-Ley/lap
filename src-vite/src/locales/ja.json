@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "詳細",
-      "section_thumbnail_cache": "サムネイルキャッシュ",
-      "thumbnail_quality": "サムネイル品質",
-      "thumbnail_quality_hint": "生成されるサムネイルの解像度を設定します。高い設定ほど鮮明になりますが、生成に時間がかかりディスク容量を多く使用します",
-      "section_map": "地図",
-      "map_provider": "地図サービス",
-      "map_provider_hint": "地図ビューで使用する地図サービスを選択します",
-      "map_provider_options": [
-        "グローバル（デフォルト）",
-        "中国（天地图）"
-      ],
-      "tianditu_token": "天地图 API トークン",
-      "tianditu_token_hint": "天地图のタイルに必要です",
-      "tianditu_token_placeholder": "トークンを貼り付け",
-      "tianditu_token_status_saved": "保存済み",
-      "tianditu_token_status_empty": "未設定",
-      "thumbnail_quality_options": [
-        "低 (256 px)",
-        "標準 (512 px)",
-        "高 (1024 px)"
-      ],
-      "section_external_apps": "外部アプリ",
-      "manage_external_apps": "外部アプリを管理",
-      "external_image_editor": "写真を次で開く",
-      "external_video_app": "動画を開くアプリ",
-      "external_app_not_selected": "アプリが選択されていません",
-      "choose_app": "選択",
-      "clear_app": "クリア",
-      "default_app": "デフォルト",
-      "set_default_app": "デフォルトに設定",
+      "external_app": {
+        "section_external_apps": "外部アプリ",
+        "manage_external_apps": "外部アプリを管理",
+        "external_image_editor": "写真を次で開く",
+        "external_video_app": "動画を開くアプリ",
+        "external_app_not_selected": "アプリが選択されていません",
+        "choose_app": "選択",
+        "clear_app": "クリア",
+        "default_app": "デフォルト",
+        "set_default_app": "デフォルトに設定"
+      },
       "section_diagnostics": "診断",
-      "debug_mode": "デバッグモード"
+      "debug_mode": "デバッグモード",
+      "map": {
+        "section_map": "地図",
+        "map_provider": "地図サービス",
+        "map_provider_hint": "地図ビューで使用する地図サービスを選択します",
+        "map_provider_options": [
+          "グローバル（デフォルト）",
+          "中国（天地图）"
+        ],
+        "tianditu_token": "天地图 API トークン",
+        "tianditu_token_hint": "天地图のタイルに必要です",
+        "tianditu_token_placeholder": "トークンを貼り付け",
+        "tianditu_token_status_saved": "保存済み",
+        "tianditu_token_status_empty": "未設定"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "元に戻しています…",
+        "cancelled": "キャンセルしました。元のキャッシュは保持されています。",
+        "new_location": "新しい保存先：{path}",
+        "migrating": "サムネイルを移行しています…",
+        "migration_hint": "すべてのライブラリのサムネイルを移行します。新しい保存先は移行がすべて成功した後に有効になります。キャンセルすると現在の保存先が維持されます。",
+        "migration_progress": "移行の進行状況",
+        "ready": "移行の準備完了",
+        "start": "開始",
+        "cancelling": "キャンセルしています…",
+        "rebuild_message": "以前のサムネイルキャッシュを利用できません。ファイルを移動せずに続行しますか？必要に応じて新しい場所にサムネイルを再生成します。ライブラリデータ、元の写真、以前のドライブのキャッシュは変更されません。",
+        "rebuild_confirm": "続行して再生成",
+        "section_thumbnail_cache": "サムネイルキャッシュ",
+        "thumbnail_quality": "サムネイルの解像度を変更",
+        "thumbnail_quality_hint": "高い設定ほど鮮明になりますが、生成に時間がかかりディスク容量を多く使用します",
+        "thumbnail_quality_options": [
+          "低 (256 px)",
+          "標準 (512 px)",
+          "高 (1024 px)"
+        ],
+        "unavailable": "キャッシュの保存先が利用できません。使用または移動する前にドライブを再接続してください。",
+        "current_location": "キャッシュの保存先を変更",
+        "counting": "キャッシュファイルを集計中…",
+        "finishing": "キャッシュの移動を完了しています…",
+        "success": "サムネイルキャッシュの保存先を変更しました",
+        "cleanup_warning": "キャッシュを移動しましたが、一部の古いファイルを削除できませんでした：",
+        "busy": "サムネイルキャッシュの移動が完了するまでお待ちください。"
+      }
     },
     "database": {
       "title": "ストレージ",

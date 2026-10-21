@@ -271,9 +271,55 @@ fn gstreamer_element_missing(exit_code: Option<i32>, stderr: &[u8]) -> bool {
 /// set last selected item index
 #[tauri::command]
 pub fn set_last_selected_item_index(index: i64) -> Result<(), String> {
-    let mut config = t_config::load_app_config()?;
-    config.last_selected_item_index = index;
-    t_config::save_app_config(&config)
+    t_config::update_app_config(|config| {
+        config.last_selected_item_index = index;
+        Ok(())
+    })
+}
+
+#[tauri::command]
+pub fn get_thumbnail_cache_location() -> Result<crate::t_cache_storage::CacheLocation, String> {
+    crate::t_cache_storage::location()
+}
+
+#[tauri::command]
+pub async fn get_thumbnail_cache_migration_count() -> Result<u64, crate::t_cache_storage::CacheChangeError> {
+    tauri::async_runtime::spawn_blocking(crate::t_cache_storage::migration_file_count)
+        .await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn change_thumbnail_cache_location(
+    new_dir: Option<String>,
+    operation_id: String,
+    allow_missing_source: Option<bool>,
+    on_progress: tauri::ipc::Channel<crate::t_cache_storage::CacheProgress>,
+    status_state: State<'_, t_face::FaceIndexingStatus>,
+) -> Result<crate::t_cache_storage::CacheChangeResult, crate::t_cache_storage::CacheChangeError> {
+    ensure_db_storage_change_allowed(&status_state)?;
+    let operation = crate::t_cache_storage::MigrationOperation::begin(operation_id)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = cache_migration_library_guard(&operation.cancellation)?;
+        crate::t_cache_storage::change(new_dir, allow_missing_source.unwrap_or(false), &operation.cancellation, |progress| { let _ = on_progress.send(progress); })
+    }).await.map_err(|e| e.to_string())?
+}
+
+fn cache_migration_library_guard(
+    cancellation: &crate::t_cache_storage::MigrationCancellation,
+) -> Result<std::sync::RwLockWriteGuard<'static, ()>, crate::t_cache_storage::CacheChangeError> {
+    loop {
+        cancellation.check()?;
+        match FILE_REFRESH_LIBRARY_LOCK.try_write() {
+            Ok(guard) => return Ok(guard),
+            Err(std::sync::TryLockError::WouldBlock) => std::thread::sleep(std::time::Duration::from_millis(50)),
+            Err(error) => return Err(error.to_string().into()),
+        }
+    }
+}
+
+#[tauri::command]
+pub fn cancel_thumbnail_cache_migration(operation_id: String) -> Result<bool, String> {
+    crate::t_cache_storage::cancel_migration(&operation_id)
 }
 
 #[tauri::command]
@@ -619,12 +665,8 @@ pub async fn remove_album(state: State<'_, IndexCancellation>, id: i64) -> Resul
     let library_id = crate::t_config::load_app_config()
         .map(|c| c.current_library_id)
         .unwrap_or_else(|_| "default".to_string());
-    let album_cache_dir = crate::t_config::get_app_cache_dir()
-        .map(|dir| dir.join(library_id).join(id.to_string()))
-        .map_err(|e| format!("Error while resolving album thumbnail cache path: {}", e))?;
-    if album_cache_dir.exists() {
-        std::fs::remove_dir_all(&album_cache_dir)
-            .map_err(|e| format!("Error while removing album thumbnail cache: {}", e))?;
+    if let Err(error) = crate::t_cache_storage::remove_album_cache(&library_id, id) {
+        eprintln!("Album {id} was removed, but its thumbnail cache could not be cleaned: {error}");
     }
 
     Ok(result)

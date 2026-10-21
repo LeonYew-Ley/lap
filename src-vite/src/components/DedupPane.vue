@@ -137,7 +137,7 @@
               <span class="text-[10px] uppercase tracking-widest font-bold text-base-content/30">
                 {{ $t('info_panel.dedup.actions_title') }}
               </span>
-              <span v-if="selectedSimilarCount > 0" class="ml-auto text-[10px] font-semibold text-base-content/30">
+              <span v-if="selectedSimilarCount > 0" class="ml-auto text-xs text-base-content/70">
                 {{ $t('toolbar.filter.select_count', { count: selectedSimilarCount.toLocaleString() }) }} · {{ formatFileSize(selectedSimilarBytes) }}
               </span>
             </div>
@@ -372,7 +372,7 @@
             <span class="text-[10px] uppercase tracking-widest font-bold text-base-content/30">
               {{ $t('info_panel.dedup.actions_title') }}
             </span>
-            <span v-if="selectedDeleteCount > 0" class="ml-auto text-[10px] font-semibold text-base-content/30">
+            <span v-if="selectedDeleteCount > 0" class="ml-auto text-xs text-base-content/70">
               {{ $t('toolbar.filter.select_count', { count: selectedDeleteCount.toLocaleString() }) }} · {{ formatFileSize(selectedDeleteBytes) }}
             </span>
           </div>

@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Avancé",
-      "section_thumbnail_cache": "Cache des miniatures",
-      "thumbnail_quality": "Qualité des miniatures",
-      "thumbnail_quality_hint": "Définit la résolution des miniatures générées. Des réglages plus élevés offrent un aperçu plus net, mais nécessitent plus de temps de génération et d’espace disque",
-      "section_map": "Carte",
-      "map_provider": "Fournisseur de cartes",
-      "map_provider_hint": "Choisissez le service de cartes pour la vue Carte",
-      "map_provider_options": [
-        "Global (par défaut)",
-        "Chine (Tianditu)"
-      ],
-      "tianditu_token": "Jeton API Tianditu",
-      "tianditu_token_hint": "Requis pour les tuiles Tianditu",
-      "tianditu_token_placeholder": "Collez votre jeton",
-      "tianditu_token_status_saved": "Enregistré",
-      "tianditu_token_status_empty": "Non configuré",
-      "thumbnail_quality_options": [
-        "Faible (256 px)",
-        "Standard (512 px)",
-        "Élevée (1024 px)"
-      ],
-      "section_external_apps": "Applications externes",
-      "manage_external_apps": "Gérer les applications externes",
-      "external_image_editor": "Ouvrir la photo avec",
-      "external_video_app": "Ouvrir la vidéo avec",
-      "external_app_not_selected": "Aucune app selectionnee",
-      "choose_app": "Choisir",
-      "clear_app": "Effacer",
-      "default_app": "Par défaut",
-      "set_default_app": "Définir par défaut",
+      "external_app": {
+        "section_external_apps": "Applications externes",
+        "manage_external_apps": "Gérer les applications externes",
+        "external_image_editor": "Ouvrir la photo avec",
+        "external_video_app": "Ouvrir la vidéo avec",
+        "external_app_not_selected": "Aucune app selectionnee",
+        "choose_app": "Choisir",
+        "clear_app": "Effacer",
+        "default_app": "Par défaut",
+        "set_default_app": "Définir par défaut"
+      },
       "section_diagnostics": "Diagnostics",
-      "debug_mode": "Mode débogage"
+      "debug_mode": "Mode débogage",
+      "map": {
+        "section_map": "Carte",
+        "map_provider": "Fournisseur de cartes",
+        "map_provider_hint": "Choisissez le service de cartes pour la vue Carte",
+        "map_provider_options": [
+          "Global (par défaut)",
+          "Chine (Tianditu)"
+        ],
+        "tianditu_token": "Jeton API Tianditu",
+        "tianditu_token_hint": "Requis pour les tuiles Tianditu",
+        "tianditu_token_placeholder": "Collez votre jeton",
+        "tianditu_token_status_saved": "Enregistré",
+        "tianditu_token_status_empty": "Non configuré"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Restauration en cours…",
+        "cancelled": "Annulé. Le cache d’origine est conservé.",
+        "new_location": "Nouvel emplacement : {path}",
+        "migrating": "Migration des miniatures…",
+        "migration_hint": "Les miniatures de toutes les bibliothèques seront déplacées. Le nouvel emplacement ne sera utilisé qu’après la réussite de la migration. L’annulation conserve l’emplacement actuel.",
+        "migration_progress": "Progression de la migration",
+        "ready": "Prêt pour la migration",
+        "start": "Démarrer",
+        "cancelling": "Annulation en cours…",
+        "rebuild_message": "L’ancien emplacement du cache est indisponible. Continuer sans déplacer ses fichiers ? Les miniatures seront régénérées au besoin au nouvel emplacement. Les données des bibliothèques, les photos originales et les fichiers de l’ancien disque resteront inchangés.",
+        "rebuild_confirm": "Continuer et régénérer",
+        "section_thumbnail_cache": "Cache des miniatures",
+        "thumbnail_quality": "Modifier la résolution des miniatures",
+        "thumbnail_quality_hint": "Des réglages plus élevés offrent un aperçu plus net, mais nécessitent plus de temps de génération et d’espace disque",
+        "thumbnail_quality_options": [
+          "Faible (256 px)",
+          "Standard (512 px)",
+          "Élevée (1024 px)"
+        ],
+        "unavailable": "Emplacement du cache indisponible. Reconnectez le disque avant d’utiliser ou de déplacer ce cache.",
+        "current_location": "Changer l’emplacement du cache",
+        "counting": "Comptage des fichiers du cache…",
+        "finishing": "Finalisation du déplacement…",
+        "success": "L’emplacement du cache des miniatures a été modifié",
+        "cleanup_warning": "Le cache a été déplacé, mais certains anciens fichiers n’ont pas pu être supprimés :",
+        "busy": "Veuillez attendre la fin du déplacement du cache des miniatures."
+      }
     },
     "database": {
       "title": "Stockage",

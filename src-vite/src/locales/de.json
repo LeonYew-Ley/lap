@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Erweitert",
-      "section_thumbnail_cache": "Miniaturansichts-Cache",
-      "thumbnail_quality": "Miniaturansichtsqualität",
-      "thumbnail_quality_hint": "Legt die Auflösung generierter Miniaturansichten fest. Höhere Einstellungen sehen schärfer aus, benötigen aber mehr Zeit zur Erstellung und mehr Speicherplatz",
-      "section_map": "Karte",
-      "map_provider": "Kartendienst",
-      "map_provider_hint": "Wählt den Kartendienst für die Kartenansicht",
-      "map_provider_options": [
-        "Global (Standard)",
-        "China (Tianditu)"
-      ],
-      "tianditu_token": "Tianditu-API-Token",
-      "tianditu_token_hint": "Für Tianditu-Kacheln erforderlich",
-      "tianditu_token_placeholder": "Token einfügen",
-      "tianditu_token_status_saved": "Gespeichert",
-      "tianditu_token_status_empty": "Nicht konfiguriert",
-      "thumbnail_quality_options": [
-        "Niedrig (256 px)",
-        "Standard (512 px)",
-        "Hoch (1024 px)"
-      ],
-      "section_external_apps": "Externe Apps",
-      "manage_external_apps": "Externe Apps verwalten",
-      "external_image_editor": "Foto öffnen mit",
-      "external_video_app": "Video öffnen mit",
-      "external_app_not_selected": "Keine App ausgewählt",
-      "choose_app": "Auswählen",
-      "clear_app": "Zurücksetzen",
-      "default_app": "Standard",
-      "set_default_app": "Als Standard festlegen",
+      "external_app": {
+        "section_external_apps": "Externe Apps",
+        "manage_external_apps": "Externe Apps verwalten",
+        "external_image_editor": "Foto öffnen mit",
+        "external_video_app": "Video öffnen mit",
+        "external_app_not_selected": "Keine App ausgewählt",
+        "choose_app": "Auswählen",
+        "clear_app": "Zurücksetzen",
+        "default_app": "Standard",
+        "set_default_app": "Als Standard festlegen"
+      },
       "section_diagnostics": "Diagnose",
-      "debug_mode": "Debug-Modus"
+      "debug_mode": "Debug-Modus",
+      "map": {
+        "section_map": "Karte",
+        "map_provider": "Kartendienst",
+        "map_provider_hint": "Wählt den Kartendienst für die Kartenansicht",
+        "map_provider_options": [
+          "Global (Standard)",
+          "China (Tianditu)"
+        ],
+        "tianditu_token": "Tianditu-API-Token",
+        "tianditu_token_hint": "Für Tianditu-Kacheln erforderlich",
+        "tianditu_token_placeholder": "Token einfügen",
+        "tianditu_token_status_saved": "Gespeichert",
+        "tianditu_token_status_empty": "Nicht konfiguriert"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Änderungen werden zurückgenommen…",
+        "cancelled": "Abgebrochen. Der ursprüngliche Cache bleibt erhalten.",
+        "new_location": "Neuer Speicherort: {path}",
+        "migrating": "Miniaturansichten werden verschoben…",
+        "migration_hint": "Die Miniaturansichten aller Bibliotheken werden verschoben. Der neue Speicherort gilt erst nach erfolgreichem Abschluss. Beim Abbrechen bleibt der bisherige Speicherort erhalten.",
+        "migration_progress": "Fortschritt der Migration",
+        "ready": "Bereit zur Migration",
+        "start": "Starten",
+        "cancelling": "Wird abgebrochen…",
+        "rebuild_message": "Der bisherige Cache ist nicht verfügbar. Ohne Verschieben der Dateien fortfahren? Vorschaubilder werden bei Bedarf am neuen Ort erzeugt. Bibliotheksdaten, Originalfotos und Dateien auf dem bisherigen Laufwerk bleiben unverändert.",
+        "rebuild_confirm": "Fortfahren und neu erzeugen",
+        "section_thumbnail_cache": "Miniaturansichts-Cache",
+        "thumbnail_quality": "Auflösung der Miniaturansichten ändern",
+        "thumbnail_quality_hint": "Höhere Einstellungen sehen schärfer aus, benötigen aber mehr Zeit zur Erstellung und mehr Speicherplatz",
+        "thumbnail_quality_options": [
+          "Niedrig (256 px)",
+          "Standard (512 px)",
+          "Hoch (1024 px)"
+        ],
+        "unavailable": "Cache-Speicherort nicht verfügbar. Verbinden Sie das Laufwerk, bevor Sie den Cache verwenden oder verschieben.",
+        "current_location": "Cache-Speicherort ändern",
+        "counting": "Cache-Dateien werden gezählt…",
+        "finishing": "Cache-Umzug wird abgeschlossen…",
+        "success": "Speicherort des Vorschaubild-Caches geändert",
+        "cleanup_warning": "Der Cache wurde verschoben, aber einige alte Dateien konnten nicht gelöscht werden:",
+        "busy": "Bitte warten Sie, bis der Vorschaubild-Cache verschoben wurde."
+      }
     },
     "database": {
       "title": "Speicher",

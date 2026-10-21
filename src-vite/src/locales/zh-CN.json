@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "高级",
-      "section_thumbnail_cache": "缩略图缓存",
-      "thumbnail_quality": "缩略图质量",
-      "thumbnail_quality_hint": "控制生成缩略图的分辨率。更高设置更清晰，但生成更慢且占用更多磁盘空间",
-      "section_map": "地图",
-      "map_provider": "地图服务提供者",
-      "map_provider_hint": "选择地图视图使用的地图服务",
-      "map_provider_options": [
-        "全球（默认）",
-        "中国（天地图）"
-      ],
-      "tianditu_token": "天地图 API Token",
-      "tianditu_token_hint": "使用天地图瓦片时需要提供",
-      "tianditu_token_placeholder": "粘贴你的 Token",
-      "tianditu_token_status_saved": "已保存",
-      "tianditu_token_status_empty": "未配置",
-      "thumbnail_quality_options": [
-        "低 (256 px)",
-        "标准 (512 px)",
-        "高 (1024 px)"
-      ],
-      "section_external_apps": "外部应用",
-      "manage_external_apps": "管理外部应用",
-      "external_image_editor": "使用以下应用打开照片",
-      "external_video_app": "使用以下应用打开视频",
-      "external_app_not_selected": "未选择应用",
-      "choose_app": "选择",
-      "clear_app": "清空",
-      "default_app": "默认",
-      "set_default_app": "设为默认",
+      "external_app": {
+        "section_external_apps": "外部应用",
+        "manage_external_apps": "管理外部应用",
+        "external_image_editor": "使用以下应用打开照片",
+        "external_video_app": "使用以下应用打开视频",
+        "external_app_not_selected": "未选择应用",
+        "choose_app": "选择",
+        "clear_app": "清空",
+        "default_app": "默认",
+        "set_default_app": "设为默认"
+      },
       "section_diagnostics": "诊断",
-      "debug_mode": "调试模式"
+      "debug_mode": "调试模式",
+      "map": {
+        "section_map": "地图",
+        "map_provider": "地图服务提供者",
+        "map_provider_hint": "选择地图视图使用的地图服务",
+        "map_provider_options": [
+          "全球（默认）",
+          "中国（天地图）"
+        ],
+        "tianditu_token": "天地图 API Token",
+        "tianditu_token_hint": "使用天地图瓦片时需要提供",
+        "tianditu_token_placeholder": "粘贴你的 Token",
+        "tianditu_token_status_saved": "已保存",
+        "tianditu_token_status_empty": "未配置"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "正在回滚…",
+        "cancelled": "已取消，原缓存已保留。",
+        "new_location": "新位置：{path}",
+        "migrating": "正在迁移缩略图…",
+        "migration_hint": "将迁移所有库的缩略图，全部成功后新位置才生效。取消将保留当前缓存位置。",
+        "migration_progress": "迁移进度",
+        "ready": "准备迁移",
+        "start": "开始",
+        "cancelling": "正在取消…",
+        "rebuild_message": "原缩略图缓存位置不可用。是否继续而不迁移旧文件？缩略图将在新位置按需重新生成，图库数据和原始照片不受影响，原磁盘上的缓存文件也不会被删除。",
+        "rebuild_confirm": "继续并重新生成",
+        "section_thumbnail_cache": "缩略图缓存",
+        "thumbnail_quality": "修改缩略图分辨率",
+        "thumbnail_quality_hint": "分辨率越高，缩略图越清晰，但生成更慢且占用更多磁盘空间",
+        "thumbnail_quality_options": [
+          "低 (256 px)",
+          "标准 (512 px)",
+          "高 (1024 px)"
+        ],
+        "unavailable": "缓存位置不可用，请连接原磁盘后再使用或迁移缓存。",
+        "current_location": "更改缓存位置",
+        "counting": "正在统计缓存文件…",
+        "finishing": "正在完成缓存迁移…",
+        "success": "缩略图缓存位置已更改",
+        "cleanup_warning": "缓存已迁移，但部分旧文件未能删除：",
+        "busy": "请等待缩略图缓存迁移完成。"
+      }
     },
     "database": {
       "title": "存储",

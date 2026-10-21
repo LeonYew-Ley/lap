@@ -7049,7 +7049,7 @@ impl AThumb {
             return Err("Invalid thumbnail cache key".to_string());
         }
 
-        let cache_root = t_config::get_app_cache_dir()?
+        let cache_root = crate::t_cache_storage::root()?
             .join(library_id)
             .join(album_id.to_string());
         Ok(cache_root
@@ -7063,6 +7063,7 @@ impl AThumb {
         thumb_key: &str,
         preferred_extension: &str,
     ) -> Result<Option<Vec<u8>>, String> {
+        let _cache_access = crate::t_cache_storage::access()?;
         let extensions = if preferred_extension == "png" {
             Self::CACHE_EXTENSIONS
         } else {
@@ -7092,6 +7093,7 @@ impl AThumb {
         thumb_key: &str,
         data: &[u8],
     ) -> Result<PathBuf, String> {
+        let _cache_access = crate::t_cache_storage::access()?;
         let extension = if Self::is_png_bytes(data) {
             "png"
         } else if Self::is_complete_jpeg(data) {
@@ -7130,6 +7132,7 @@ impl AThumb {
         album_id: i64,
         thumb_key: &str,
     ) {
+        let Ok(_cache_access) = crate::t_cache_storage::access() else { return; };
         for extension in Self::CACHE_EXTENSIONS {
             if let Ok(path) =
                 Self::get_thumb_cache_path_for_key(library_id, album_id, thumb_key, extension)
@@ -7178,7 +7181,8 @@ impl AThumb {
                 .collect::<Result<HashSet<String>, String>>()?
         };
 
-        let cache_root = t_config::get_app_cache_dir()?.join(&target_library_id);
+        let _cache_access = crate::t_cache_storage::access()?;
+        let cache_root = crate::t_cache_storage::root()?.join(&target_library_id);
         if !cache_root.is_dir() {
             return Ok(ThumbnailCacheCleanupResult {
                 files_removed: 0,
@@ -7232,6 +7236,7 @@ impl AThumb {
         old_album_id: i64,
         new_album_id: i64,
     ) -> Result<(), String> {
+        let _cache_access = crate::t_cache_storage::access()?;
         for extension in Self::CACHE_EXTENSIONS {
             let old_path = Self::get_thumb_cache_path_for_key(
                 library_id,

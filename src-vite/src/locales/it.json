@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Avanzate",
-      "section_thumbnail_cache": "Cache delle miniature",
-      "thumbnail_quality": "Qualità delle miniature",
-      "thumbnail_quality_hint": "Imposta la risoluzione delle miniature generate. Valori più alti sono più nitidi ma richiedono più tempo e più spazio su disco",
-      "section_map": "Mappa",
-      "map_provider": "Fornitore della mappa",
-      "map_provider_hint": "Scegli il servizio di mappe per la vista Mappa",
-      "map_provider_options": [
-        "Globale (predefinito)",
-        "Cina (Tianditu)"
-      ],
-      "tianditu_token": "Token API Tianditu",
-      "tianditu_token_hint": "Necessario per i tile della mappa Tianditu",
-      "tianditu_token_placeholder": "Incolla il tuo token",
-      "tianditu_token_status_saved": "Salvato",
-      "tianditu_token_status_empty": "Non configurato",
-      "thumbnail_quality_options": [
-        "Bassa (256 px)",
-        "Standard (512 px)",
-        "Alta (1024 px)"
-      ],
-      "section_external_apps": "App esterne",
-      "manage_external_apps": "Gestisci app esterne",
-      "external_image_editor": "Apri foto in",
-      "external_video_app": "Apri video in",
-      "external_app_not_selected": "Nessuna app selezionata",
-      "choose_app": "Scegli",
-      "clear_app": "Cancella",
-      "default_app": "Predefinita",
-      "set_default_app": "Imposta predefinita",
+      "external_app": {
+        "section_external_apps": "App esterne",
+        "manage_external_apps": "Gestisci app esterne",
+        "external_image_editor": "Apri foto in",
+        "external_video_app": "Apri video in",
+        "external_app_not_selected": "Nessuna app selezionata",
+        "choose_app": "Scegli",
+        "clear_app": "Cancella",
+        "default_app": "Predefinita",
+        "set_default_app": "Imposta predefinita"
+      },
       "section_diagnostics": "Diagnostica",
-      "debug_mode": "Modalità debug"
+      "debug_mode": "Modalità debug",
+      "map": {
+        "section_map": "Mappa",
+        "map_provider": "Fornitore della mappa",
+        "map_provider_hint": "Scegli il servizio di mappe per la vista Mappa",
+        "map_provider_options": [
+          "Globale (predefinito)",
+          "Cina (Tianditu)"
+        ],
+        "tianditu_token": "Token API Tianditu",
+        "tianditu_token_hint": "Necessario per i tile della mappa Tianditu",
+        "tianditu_token_placeholder": "Incolla il tuo token",
+        "tianditu_token_status_saved": "Salvato",
+        "tianditu_token_status_empty": "Non configurato"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Ripristino…",
+        "cancelled": "Annullato. La cache originale è stata mantenuta.",
+        "new_location": "Nuova posizione: {path}",
+        "migrating": "Migrazione delle miniature…",
+        "migration_hint": "Verranno spostate le miniature di tutte le librerie. La nuova posizione sarà usata solo al termine della migrazione. Annullando si mantiene la posizione attuale.",
+        "migration_progress": "Avanzamento della migrazione",
+        "ready": "Pronto per la migrazione",
+        "start": "Avvia",
+        "cancelling": "Annullamento…",
+        "rebuild_message": "La cache precedente non è disponibile. Continuare senza spostarne i file? Le miniature verranno rigenerate nella nuova posizione quando necessario. I dati delle librerie, le foto originali e i file sull’unità precedente non verranno modificati.",
+        "rebuild_confirm": "Continua e rigenera",
+        "section_thumbnail_cache": "Cache delle miniature",
+        "thumbnail_quality": "Modifica la risoluzione delle miniature",
+        "thumbnail_quality_hint": "Valori più alti sono più nitidi ma richiedono più tempo e più spazio su disco",
+        "thumbnail_quality_options": [
+          "Bassa (256 px)",
+          "Standard (512 px)",
+          "Alta (1024 px)"
+        ],
+        "unavailable": "Posizione della cache non disponibile. Ricollega l’unità prima di usare o spostare la cache.",
+        "current_location": "Cambia posizione della cache",
+        "counting": "Conteggio dei file della cache…",
+        "finishing": "Completamento dello spostamento…",
+        "success": "Posizione della cache delle miniature modificata",
+        "cleanup_warning": "La cache è stata spostata, ma alcuni vecchi file non sono stati eliminati:",
+        "busy": "Attendi il completamento dello spostamento della cache delle miniature."
+      }
     },
     "database": {
       "title": "Archiviazione",

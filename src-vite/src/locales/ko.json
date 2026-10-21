@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "고급",
-      "section_thumbnail_cache": "썸네일 캐시",
-      "thumbnail_quality": "썸네일 품질",
-      "thumbnail_quality_hint": "생성된 썸네일의 해상도를 설정합니다. 높은 설정일수록 더 선명하지만 생성 시간이 길고 디스크 공간을 더 사용합니다",
-      "section_map": "지도",
-      "map_provider": "지도 서비스",
-      "map_provider_hint": "지도 보기에 사용할 지도 서비스를 선택합니다",
-      "map_provider_options": [
-        "글로벌(기본값)",
-        "중국(톈디투)"
-      ],
-      "tianditu_token": "톈디투 API 토큰",
-      "tianditu_token_hint": "톈디투 타일에 필요합니다",
-      "tianditu_token_placeholder": "토큰 붙여넣기",
-      "tianditu_token_status_saved": "저장됨",
-      "tianditu_token_status_empty": "설정되지 않음",
-      "thumbnail_quality_options": [
-        "낮음 (256 px)",
-        "표준 (512 px)",
-        "높음 (1024 px)"
-      ],
-      "section_external_apps": "외부 앱",
-      "manage_external_apps": "외부 앱 관리",
-      "external_image_editor": "사진을 다음으로 열기",
-      "external_video_app": "동영상 열기 앱",
-      "external_app_not_selected": "선택된 앱이 없습니다",
-      "choose_app": "선택",
-      "clear_app": "지우기",
-      "default_app": "기본값",
-      "set_default_app": "기본값으로 설정",
+      "external_app": {
+        "section_external_apps": "외부 앱",
+        "manage_external_apps": "외부 앱 관리",
+        "external_image_editor": "사진을 다음으로 열기",
+        "external_video_app": "동영상 열기 앱",
+        "external_app_not_selected": "선택된 앱이 없습니다",
+        "choose_app": "선택",
+        "clear_app": "지우기",
+        "default_app": "기본값",
+        "set_default_app": "기본값으로 설정"
+      },
       "section_diagnostics": "진단",
-      "debug_mode": "디버그 모드"
+      "debug_mode": "디버그 모드",
+      "map": {
+        "section_map": "지도",
+        "map_provider": "지도 서비스",
+        "map_provider_hint": "지도 보기에 사용할 지도 서비스를 선택합니다",
+        "map_provider_options": [
+          "글로벌(기본값)",
+          "중국(톈디투)"
+        ],
+        "tianditu_token": "톈디투 API 토큰",
+        "tianditu_token_hint": "톈디투 타일에 필요합니다",
+        "tianditu_token_placeholder": "토큰 붙여넣기",
+        "tianditu_token_status_saved": "저장됨",
+        "tianditu_token_status_empty": "설정되지 않음"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "되돌리는 중…",
+        "cancelled": "취소되었습니다. 기존 캐시가 유지됩니다.",
+        "new_location": "새 위치: {path}",
+        "migrating": "썸네일 이동 중…",
+        "migration_hint": "모든 라이브러리의 썸네일을 이동합니다. 새 위치는 이동이 모두 완료된 후 적용됩니다. 취소하면 현재 캐시 위치가 유지됩니다.",
+        "migration_progress": "이동 진행률",
+        "ready": "이동 준비 완료",
+        "start": "시작",
+        "cancelling": "취소 중…",
+        "rebuild_message": "이전 썸네일 캐시 위치를 사용할 수 없습니다. 이전 파일을 이동하지 않고 계속할까요? 새 위치에서 필요에 따라 썸네일을 다시 생성합니다. 라이브러리 데이터, 원본 사진 및 이전 드라이브의 캐시 파일은 변경되지 않습니다.",
+        "rebuild_confirm": "계속하고 다시 생성",
+        "section_thumbnail_cache": "썸네일 캐시",
+        "thumbnail_quality": "썸네일 해상도 변경",
+        "thumbnail_quality_hint": "높은 설정일수록 더 선명하지만 생성 시간이 길고 디스크 공간을 더 사용합니다",
+        "thumbnail_quality_options": [
+          "낮음 (256 px)",
+          "표준 (512 px)",
+          "높음 (1024 px)"
+        ],
+        "unavailable": "캐시 위치를 사용할 수 없습니다. 사용하거나 이동하기 전에 드라이브를 다시 연결하세요.",
+        "current_location": "캐시 위치 변경",
+        "counting": "캐시 파일 집계 중…",
+        "finishing": "캐시 이동 마무리 중…",
+        "success": "썸네일 캐시 위치가 변경되었습니다",
+        "cleanup_warning": "캐시를 이동했지만 일부 이전 파일을 삭제하지 못했습니다:",
+        "busy": "썸네일 캐시 이동이 완료될 때까지 기다려 주세요."
+      }
     },
     "database": {
       "title": "저장소",

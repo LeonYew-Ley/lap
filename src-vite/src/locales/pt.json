@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Avançado",
-      "section_thumbnail_cache": "Cache de miniaturas",
-      "thumbnail_quality": "Qualidade das miniaturas",
-      "thumbnail_quality_hint": "Define a resolução das miniaturas geradas. Configurações mais altas deixam as miniaturas mais nítidas, mas demoram mais para gerar e usam mais espaço em disco",
-      "section_map": "Mapa",
-      "map_provider": "Provedor de mapas",
-      "map_provider_hint": "Escolha o serviço de mapas para a vista de mapa",
-      "map_provider_options": [
-        "Global (padrão)",
-        "China (Tianditu)"
-      ],
-      "tianditu_token": "Token de API do Tianditu",
-      "tianditu_token_hint": "Necessário para blocos do Tianditu",
-      "tianditu_token_placeholder": "Cole seu token",
-      "tianditu_token_status_saved": "Guardado",
-      "tianditu_token_status_empty": "Não configurado",
-      "thumbnail_quality_options": [
-        "Baixa (256 px)",
-        "Padrão (512 px)",
-        "Alta (1024 px)"
-      ],
-      "section_external_apps": "Apps externos",
-      "manage_external_apps": "Gerenciar apps externos",
-      "external_image_editor": "Abrir foto com",
-      "external_video_app": "Abrir vídeo com",
-      "external_app_not_selected": "Nenhum app selecionado",
-      "choose_app": "Escolher",
-      "clear_app": "Limpar",
-      "default_app": "Padrão",
-      "set_default_app": "Definir como padrão",
+      "external_app": {
+        "section_external_apps": "Apps externos",
+        "manage_external_apps": "Gerenciar apps externos",
+        "external_image_editor": "Abrir foto com",
+        "external_video_app": "Abrir vídeo com",
+        "external_app_not_selected": "Nenhum app selecionado",
+        "choose_app": "Escolher",
+        "clear_app": "Limpar",
+        "default_app": "Padrão",
+        "set_default_app": "Definir como padrão"
+      },
       "section_diagnostics": "Diagnóstico",
-      "debug_mode": "Modo debug"
+      "debug_mode": "Modo debug",
+      "map": {
+        "section_map": "Mapa",
+        "map_provider": "Provedor de mapas",
+        "map_provider_hint": "Escolha o serviço de mapas para a vista de mapa",
+        "map_provider_options": [
+          "Global (padrão)",
+          "China (Tianditu)"
+        ],
+        "tianditu_token": "Token de API do Tianditu",
+        "tianditu_token_hint": "Necessário para blocos do Tianditu",
+        "tianditu_token_placeholder": "Cole seu token",
+        "tianditu_token_status_saved": "Guardado",
+        "tianditu_token_status_empty": "Não configurado"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Revertendo…",
+        "cancelled": "Cancelado. O cache original foi mantido.",
+        "new_location": "Novo local: {path}",
+        "migrating": "Migrando miniaturas…",
+        "migration_hint": "As miniaturas de todas as bibliotecas serão movidas. O novo local só será usado após a migração ser concluída com sucesso. Cancelar mantém o local atual do cache.",
+        "migration_progress": "Progresso da migração",
+        "ready": "Pronto para migrar",
+        "start": "Iniciar",
+        "cancelling": "Cancelando…",
+        "rebuild_message": "O local anterior do cache está indisponível. Continuar sem mover os arquivos? As miniaturas serão regeneradas no novo local conforme necessário. Os dados das bibliotecas, as fotos originais e os arquivos da unidade anterior não serão alterados.",
+        "rebuild_confirm": "Continuar e regenerar",
+        "section_thumbnail_cache": "Cache de miniaturas",
+        "thumbnail_quality": "Alterar a resolução das miniaturas",
+        "thumbnail_quality_hint": "Configurações mais altas deixam as miniaturas mais nítidas, mas demoram mais para gerar e usam mais espaço em disco",
+        "thumbnail_quality_options": [
+          "Baixa (256 px)",
+          "Padrão (512 px)",
+          "Alta (1024 px)"
+        ],
+        "unavailable": "Local do cache indisponível. Reconecte a unidade antes de usar ou mover o cache.",
+        "current_location": "Alterar local do cache",
+        "counting": "Contando arquivos do cache…",
+        "finishing": "Finalizando a migração do cache…",
+        "success": "Local do cache de miniaturas alterado",
+        "cleanup_warning": "O cache foi movido, mas alguns arquivos antigos não puderam ser removidos:",
+        "busy": "Aguarde a conclusão da migração do cache de miniaturas."
+      }
     },
     "database": {
       "title": "Armazenamento",

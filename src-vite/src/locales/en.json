@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Advanced",
-      "section_thumbnail_cache": "Thumbnail cache",
-      "thumbnail_quality": "Thumbnail quality",
-      "thumbnail_quality_hint": "Sets the resolution of generated thumbnails. Higher settings look sharper but take longer to generate and use more disk space",
-      "section_map": "Map",
-      "map_provider": "Map provider",
-      "map_provider_hint": "Choose the map service for Map view",
-      "map_provider_options": [
-        "Global (default)",
-        "China (Tianditu)"
-      ],
-      "tianditu_token": "Tianditu API token",
-      "tianditu_token_hint": "Required for Tianditu map tiles",
-      "tianditu_token_placeholder": "Paste your token",
-      "tianditu_token_status_saved": "Saved",
-      "tianditu_token_status_empty": "Not configured",
-      "thumbnail_quality_options": [
-        "Low (256 px)",
-        "Standard (512 px)",
-        "High (1024 px)"
-      ],
-      "section_external_apps": "External apps",
-      "manage_external_apps": "Manage external apps",
-      "external_image_editor": "Open photo in",
-      "external_video_app": "Open video in",
-      "external_app_not_selected": "No app selected",
-      "choose_app": "Choose",
-      "clear_app": "Clear",
-      "default_app": "Default",
-      "set_default_app": "Set default",
+      "external_app": {
+        "section_external_apps": "External apps",
+        "manage_external_apps": "Manage external apps",
+        "external_image_editor": "Open photo in",
+        "external_video_app": "Open video in",
+        "external_app_not_selected": "No app selected",
+        "choose_app": "Choose",
+        "clear_app": "Clear",
+        "default_app": "Default",
+        "set_default_app": "Set default"
+      },
       "section_diagnostics": "Diagnostics",
-      "debug_mode": "Debug mode"
+      "debug_mode": "Debug mode",
+      "map": {
+        "section_map": "Map",
+        "map_provider": "Map provider",
+        "map_provider_hint": "Choose the map service for Map view",
+        "map_provider_options": [
+          "Global (default)",
+          "China (Tianditu)"
+        ],
+        "tianditu_token": "Tianditu API token",
+        "tianditu_token_hint": "Required for Tianditu map tiles",
+        "tianditu_token_placeholder": "Paste your token",
+        "tianditu_token_status_saved": "Saved",
+        "tianditu_token_status_empty": "Not configured"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Rolling back…",
+        "cancelled": "Cancelled. Original cache retained.",
+        "new_location": "New location: {path}",
+        "migrating": "Migrating thumbnails…",
+        "migration_hint": "All libraries’ thumbnails will be moved. The new location takes effect only after migration succeeds. Cancelling keeps the current cache location.",
+        "migration_progress": "Migration progress",
+        "ready": "Ready to migrate",
+        "start": "Start",
+        "cancelling": "Cancelling…",
+        "rebuild_message": "The previous thumbnail cache location is unavailable. Continue without moving its files? Thumbnails will be regenerated as needed at the new location. Your library data and original photos will not be changed. Files on the previous drive will be left untouched.",
+        "rebuild_confirm": "Continue and regenerate",
+        "section_thumbnail_cache": "Thumbnail cache",
+        "thumbnail_quality": "Change thumbnail resolution",
+        "thumbnail_quality_hint": "Higher settings look sharper but take longer to generate and use more disk space",
+        "thumbnail_quality_options": [
+          "Low (256 px)",
+          "Standard (512 px)",
+          "High (1024 px)"
+        ],
+        "unavailable": "Cache location unavailable. Reconnect the drive before using or moving this cache.",
+        "current_location": "Change cache location",
+        "counting": "Counting cache files…",
+        "finishing": "Finishing cache migration…",
+        "success": "Thumbnail cache location changed successfully",
+        "cleanup_warning": "The cache was moved, but some old files could not be removed:",
+        "busy": "Please wait for the thumbnail cache migration to finish."
+      }
     },
     "database": {
       "title": "Storage",

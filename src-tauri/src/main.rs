@@ -43,6 +43,7 @@ mod t_protocol;
 mod t_similar;
 mod t_sqlite;
 mod t_storage;
+mod t_cache_storage;
 mod t_startup;
 mod t_utils;
 mod t_video;
@@ -215,6 +216,10 @@ async fn main() {
             t_cmds::get_ffmpeg_backed_image_extensions,
             t_cmds::check_gstreamer_available,
             t_cmds::set_last_selected_item_index,
+            t_cmds::get_thumbnail_cache_location,
+            t_cmds::get_thumbnail_cache_migration_count,
+            t_cmds::change_thumbnail_cache_location,
+            t_cmds::cancel_thumbnail_cache_migration,
             t_cmds::get_db_storage_dir,
             t_cmds::is_using_custom_db_storage,
             t_cmds::change_db_storage_dir,

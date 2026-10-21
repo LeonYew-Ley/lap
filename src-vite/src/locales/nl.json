@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Geavanceerd",
-      "section_thumbnail_cache": "Miniaturencache",
-      "thumbnail_quality": "Kwaliteit miniaturen",
-      "thumbnail_quality_hint": "Bepaalt de resolutie van gegenereerde miniaturen. Hogere instellingen zijn scherper, maar genereren duurt langer en kost meer schijfruimte",
-      "section_map": "Kaart",
-      "map_provider": "Kaartaanbieder",
-      "map_provider_hint": "Kies de kaartdienst voor de kaartweergave",
-      "map_provider_options": [
-        "Wereldwijd (standaard)",
-        "China (Tianditu)"
-      ],
-      "tianditu_token": "Tianditu API-token",
-      "tianditu_token_hint": "Vereist voor Tianditu-kaarttegels",
-      "tianditu_token_placeholder": "Plak je token",
-      "tianditu_token_status_saved": "Opgeslagen",
-      "tianditu_token_status_empty": "Niet ingesteld",
-      "thumbnail_quality_options": [
-        "Laag (256 px)",
-        "Standaard (512 px)",
-        "Hoog (1024 px)"
-      ],
-      "section_external_apps": "Externe apps",
-      "manage_external_apps": "Externe apps beheren",
-      "external_image_editor": "Foto openen in",
-      "external_video_app": "Video openen in",
-      "external_app_not_selected": "Geen app gekozen",
-      "choose_app": "Kiezen",
-      "clear_app": "Wissen",
-      "default_app": "Standaard",
-      "set_default_app": "Als standaard instellen",
+      "external_app": {
+        "section_external_apps": "Externe apps",
+        "manage_external_apps": "Externe apps beheren",
+        "external_image_editor": "Foto openen in",
+        "external_video_app": "Video openen in",
+        "external_app_not_selected": "Geen app gekozen",
+        "choose_app": "Kiezen",
+        "clear_app": "Wissen",
+        "default_app": "Standaard",
+        "set_default_app": "Als standaard instellen"
+      },
       "section_diagnostics": "Diagnose",
-      "debug_mode": "Debugmodus"
+      "debug_mode": "Debugmodus",
+      "map": {
+        "section_map": "Kaart",
+        "map_provider": "Kaartaanbieder",
+        "map_provider_hint": "Kies de kaartdienst voor de kaartweergave",
+        "map_provider_options": [
+          "Wereldwijd (standaard)",
+          "China (Tianditu)"
+        ],
+        "tianditu_token": "Tianditu API-token",
+        "tianditu_token_hint": "Vereist voor Tianditu-kaarttegels",
+        "tianditu_token_placeholder": "Plak je token",
+        "tianditu_token_status_saved": "Opgeslagen",
+        "tianditu_token_status_empty": "Niet ingesteld"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Terugdraaien…",
+        "cancelled": "Geannuleerd. De oorspronkelijke cache is behouden.",
+        "new_location": "Nieuwe locatie: {path}",
+        "migrating": "Miniaturen worden verplaatst…",
+        "migration_hint": "Miniaturen van alle bibliotheken worden verplaatst. De nieuwe locatie wordt pas actief na een geslaagde migratie. Bij annuleren blijft de huidige cachelocatie behouden.",
+        "migration_progress": "Migratievoortgang",
+        "ready": "Klaar om te migreren",
+        "start": "Starten",
+        "cancelling": "Annuleren…",
+        "rebuild_message": "De vorige cachelocatie is niet beschikbaar. Doorgaan zonder de bestanden te verplaatsen? Miniaturen worden zo nodig op de nieuwe locatie opnieuw gemaakt. Bibliotheekgegevens, originele foto’s en bestanden op de vorige schijf blijven ongewijzigd.",
+        "rebuild_confirm": "Doorgaan en opnieuw maken",
+        "section_thumbnail_cache": "Miniaturencache",
+        "thumbnail_quality": "Resolutie van miniaturen wijzigen",
+        "thumbnail_quality_hint": "Hogere instellingen zijn scherper, maar genereren duurt langer en kost meer schijfruimte",
+        "thumbnail_quality_options": [
+          "Laag (256 px)",
+          "Standaard (512 px)",
+          "Hoog (1024 px)"
+        ],
+        "unavailable": "Cachelocatie niet beschikbaar. Sluit de schijf weer aan voordat u deze cache gebruikt of verplaatst.",
+        "current_location": "Cachelocatie wijzigen",
+        "counting": "Cachebestanden tellen…",
+        "finishing": "Verplaatsing afronden…",
+        "success": "Cachelocatie voor miniaturen gewijzigd",
+        "cleanup_warning": "De cache is verplaatst, maar sommige oude bestanden konden niet worden verwijderd:",
+        "busy": "Wacht tot de miniaturencache is verplaatst."
+      }
     },
     "database": {
       "title": "Opslag",

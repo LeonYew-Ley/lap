@@ -1602,37 +1602,61 @@
     },
     "advanced": {
       "title": "Speciális",
-      "section_thumbnail_cache": "Bélyegkép-gyorsítótár",
-      "thumbnail_quality": "Bélyegképek minősége",
-      "thumbnail_quality_hint": "A bélyegképek felbontása. A nagyobb érték élesebb képet ad, de lassabb és több tárhelyet használ",
-      "section_map": "Térkép",
-      "map_provider": "Térképszolgáltató",
-      "map_provider_hint": "Térképszolgáltatás kiválasztása a Térkép nézethez",
-      "map_provider_options": [
-        "Globális (alapértelmezett)",
-        "Kína (Tianditu)"
-      ],
-      "tianditu_token": "Tianditu API-token",
-      "tianditu_token_hint": "A Tianditu térképcsempéihez szükséges",
-      "tianditu_token_placeholder": "Token beillesztése",
-      "tianditu_token_status_saved": "Mentve",
-      "tianditu_token_status_empty": "Nincs beállítva",
-      "thumbnail_quality_options": [
-        "Alacsony (256 px)",
-        "Normál (512 px)",
-        "Magas (1024 px)"
-      ],
-      "section_external_apps": "Külső alkalmazások",
-      "manage_external_apps": "Külső alkalmazások kezelése",
-      "external_image_editor": "Fotó megnyitása ezzel",
-      "external_video_app": "Videó megnyitása ezzel",
-      "external_app_not_selected": "Nincs kijelölt alkalmazás",
-      "choose_app": "Kiválasztás",
-      "clear_app": "Törlés",
-      "default_app": "Alapértelmezett",
-      "set_default_app": "Alapértelmezetté tétel",
+      "external_app": {
+        "section_external_apps": "Külső alkalmazások",
+        "manage_external_apps": "Külső alkalmazások kezelése",
+        "external_image_editor": "Fotó megnyitása ezzel",
+        "external_video_app": "Videó megnyitása ezzel",
+        "external_app_not_selected": "Nincs kijelölt alkalmazás",
+        "choose_app": "Kiválasztás",
+        "clear_app": "Törlés",
+        "default_app": "Alapértelmezett",
+        "set_default_app": "Alapértelmezetté tétel"
+      },
       "section_diagnostics": "Diagnosztika",
-      "debug_mode": "Hibakeresési mód"
+      "debug_mode": "Hibakeresési mód",
+      "map": {
+        "section_map": "Térkép",
+        "map_provider": "Térképszolgáltató",
+        "map_provider_hint": "Térképszolgáltatás kiválasztása a Térkép nézethez",
+        "map_provider_options": [
+          "Globális (alapértelmezett)",
+          "Kína (Tianditu)"
+        ],
+        "tianditu_token": "Tianditu API-token",
+        "tianditu_token_hint": "A Tianditu térképcsempéihez szükséges",
+        "tianditu_token_placeholder": "Token beillesztése",
+        "tianditu_token_status_saved": "Mentve",
+        "tianditu_token_status_empty": "Nincs beállítva"
+      },
+      "thumbnail_cache": {
+        "rolling_back": "Visszaállítás…",
+        "cancelled": "Megszakítva. Az eredeti gyorsítótár megmaradt.",
+        "new_location": "Új hely: {path}",
+        "migrating": "Bélyegképek áthelyezése…",
+        "migration_hint": "Az összes könyvtár bélyegképei átkerülnek. Az új hely csak sikeres áthelyezés után lép érvénybe. Megszakításkor a jelenlegi gyorsítótárhely marad meg.",
+        "migration_progress": "Áthelyezés állapota",
+        "ready": "Áthelyezésre kész",
+        "start": "Indítás",
+        "cancelling": "Megszakítás…",
+        "rebuild_message": "A korábbi gyorsítótár nem érhető el. Folytatja a fájlok áthelyezése nélkül? A bélyegképek szükség szerint újra létrejönnek az új helyen. A könyvtáradatok, az eredeti fényképek és a korábbi meghajtó fájljai nem változnak.",
+        "rebuild_confirm": "Folytatás és újragenerálás",
+        "section_thumbnail_cache": "Bélyegkép-gyorsítótár",
+        "thumbnail_quality": "Bélyegképek felbontásának módosítása",
+        "thumbnail_quality_hint": "A nagyobb érték élesebb képet ad, de az előállítás tovább tart és több tárhelyet használ",
+        "thumbnail_quality_options": [
+          "Alacsony (256 px)",
+          "Normál (512 px)",
+          "Magas (1024 px)"
+        ],
+        "unavailable": "A gyorsítótár helye nem érhető el. Használat vagy áthelyezés előtt csatlakoztassa a meghajtót.",
+        "current_location": "Gyorsítótár helyének módosítása",
+        "counting": "Gyorsítótárfájlok számlálása…",
+        "finishing": "Áthelyezés befejezése…",
+        "success": "A bélyegkép-gyorsítótár helye megváltozott",
+        "cleanup_warning": "A gyorsítótár áthelyezése sikerült, de néhány régi fájl nem törölhető:",
+        "busy": "Várja meg a bélyegkép-gyorsítótár áthelyezésének befejezését."
+      }
     },
     "database": {
       "title": "Tárhely",

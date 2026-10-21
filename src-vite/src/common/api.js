@@ -1,5 +1,5 @@
 import { setAlbumAccessibility } from '@/common/availability';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, Channel } from '@tauri-apps/api/core';
 import { locale } from '@tauri-apps/plugin-os';
 import { listen } from '@tauri-apps/api/event';
 import { config, libConfig } from '@/common/config';
@@ -95,6 +95,24 @@ export async function resetDbStorageDir() {
     console.error('Failed to reset DB storage dir:', error);
     throw error;
   }
+}
+
+export function getThumbnailCacheLocation() {
+  return invoke('get_thumbnail_cache_location');
+}
+
+export function getThumbnailCacheMigrationCount() {
+  return invoke('get_thumbnail_cache_migration_count');
+}
+
+export function changeThumbnailCacheLocation(newDir, onProgress, allowMissingSource = false, operationId) {
+  const channel = new Channel();
+  channel.onmessage = onProgress;
+  return invoke('change_thumbnail_cache_location', { newDir, onProgress: channel, allowMissingSource, operationId });
+}
+
+export function cancelThumbnailCacheMigration(operationId) {
+  return invoke('cancel_thumbnail_cache_migration', { operationId });
 }
 
 // backup / restore
