@@ -5288,6 +5288,10 @@ async function syncScanStreamingTitle(albumId: number) {
 }
 
 function enterScanStreamingMode(albumId: number) {
+  // Scan order is a new query snapshot: pages from the previous sort or album
+  // must not hydrate its placeholders or enqueue thumbnails after this reset.
+  currentContentRequestId++;
+  invalidateThumbnailRequests();
   scanStreamAlbumId.value = albumId;
   void syncScanStreamingTitle(albumId);
   clearSelectionForFileListUpdate();
