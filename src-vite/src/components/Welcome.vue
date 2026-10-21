@@ -1,12 +1,5 @@
 <template>
   <div class="absolute inset-0 flex items-center justify-center px-6" data-tauri-drag-region>
-    <select
-      :value="config.settings.language" @change="config.setLanguage(($event.target as HTMLSelectElement).value)"
-      class="select select-bordered select-sm absolute top-4 right-6 w-auto"
-      :aria-label="$t('settings.general.select_language')"
-    >
-      <option v-for="lang in languages" :key="lang.value" :value="lang.value">{{ lang.label }}</option>
-    </select>
     <div class="max-w-3xl w-full text-center">
       <div class="mb-8 flex flex-col items-center gap-3">
         <img :src="iconLogo" class="w-32 h-32 select-none" draggable="false" />
@@ -51,9 +44,6 @@ import { emit as tauriEmit } from '@tauri-apps/api/event';
 import { getPackageInfo } from '@/common/api';
 import { IconAdd, IconBookmark, IconFolderCog, IconFolders } from '@/common/icons';
 import iconLogo from '@/assets/images/icon.png';
-import { useConfigStore } from '@/stores/configStore';
-
-const config = useConfigStore();
 const appName = ref('');
 
 onMounted(async () => {
@@ -64,24 +54,6 @@ onMounted(async () => {
     console.error('Failed to load app name:', error);
   }
 });
-
-const languages = [
-  { label: 'English', value: 'en' },
-  { label: 'Deutsch', value: 'de' },
-  { label: 'Español', value: 'es' },
-  { label: 'Français', value: 'fr' },
-  { label: 'Italiano', value: 'it' },
-  { label: 'Magyar', value: 'hu' },
-  { label: 'Nederlands', value: 'nl' },
-  { label: 'Polski', value: 'pl' },
-  { label: 'Português', value: 'pt' },
-  { label: 'Русский', value: 'ru' },
-  { label: 'Українська', value: 'uk' },
-  { label: '中文简体', value: 'zh' },
-  { label: '中文繁體', value: 'zh-TW' },
-  { label: '日本語', value: 'ja' },
-  { label: '한국어', value: 'ko' },
-];
 
 const requestAddAlbum = () => {
   tauriEmit('add-album-requested');

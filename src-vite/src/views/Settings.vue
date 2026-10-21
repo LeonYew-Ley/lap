@@ -37,7 +37,7 @@
                 <div>{{ $t('settings.general.select_language') }}</div>
                 <div v-if="config.settings.language !== 'en'" class="text-xs text-base-content/30">Select language</div>
               </div>
-              <select class="select  select-bordered select-sm min-w-32" :value="config.settings.language" @change="config.setLanguage(($event.target as HTMLSelectElement).value)">
+              <select class="select  select-bordered select-sm min-w-32" :value="config.settings.language" @change="changeLanguage(($event.target as HTMLSelectElement).value)">
                 <option v-for="(lang, index) in languages" :key="index" :value="lang.value">{{ lang.label }}</option>
               </select>
             </div>
@@ -1516,10 +1516,11 @@ watch(() => config.settings.scale, (newValue) => {
   updateSettingsWindowSize(Number(newValue || 1));
   emit('settings-scale-changed', newValue);
 });
-watch(() => config.settings.language, (newValue) => {
-  locale.value = newValue;
-  emit('settings-language-changed', newValue);
-}, { immediate: true });
+function changeLanguage(language: string) {
+  // Notify main immediately; waiting for the locale bundle would lose startup races.
+  void emit('settings-language-changed', language);
+  void config.setLanguage(language, { fromUser: true });
+}
 watch(() => config.settings.showToolTip, (newValue) => {
   emit('settings-showToolTip-changed', newValue);
 });

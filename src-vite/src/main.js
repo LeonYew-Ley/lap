@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
-import { i18n, initializeLanguage } from '@/common/i18n'
+import { i18n, initializeLanguage, resolveSystemLanguage } from '@/common/i18n'
+import { locale as getSystemLanguage } from '@tauri-apps/plugin-os'
 import { createPinia } from 'pinia'
 import piniaPersistedState from 'pinia-plugin-persistedstate'
 import { emit, listen } from '@tauri-apps/api/event'
@@ -52,7 +53,7 @@ if (isMainWindow) {
   listen('config-settings-synced', async (event) => {
     const request = ++settingsSyncRequest
     if (isSettingsWindow) {
-      // Settings also needs language updates made from the welcome screen.
+      // Settings receives application language updates without replacing unsaved fields.
       config.setLanguage(event.payload.language)
     } else {
       const { language, ...settings } = event.payload
@@ -64,9 +65,16 @@ if (isMainWindow) {
 }
 
 // Load only the active language and English before components read messages.
+if (!config.settings.languageInitialized) {
+  const systemLanguage = await getSystemLanguage().catch(() => null)
+  if (!config.settings.languageInitialized) config.settings.language = resolveSystemLanguage(systemLanguage)
+}
 const initialLanguage = config.settings.language
 const loadedLanguage = await initializeLanguage(initialLanguage)
-if (config.settings.language === initialLanguage) config.settings.language = loadedLanguage
+if (config.settings.language === initialLanguage) {
+  config.settings.language = loadedLanguage
+  config.settings.languageInitialized = true
+}
 else i18n.global.locale.value = config.settings.language
 performance.mark('startup-language-ready')
 if (isMainWindow) void invoke('record_startup_stage', { stage: 'language-ready' }).catch(console.error)
@@ -101,7 +109,7 @@ if (isMainWindow) {
     config.setExternalApps(event.payload)
   })
   listen('settings-language-changed', (event) => {
-    config.setLanguage(event.payload)
+    config.setLanguage(event.payload, { fromUser: true })
   })
   listen('settings-showToolTip-changed', (event) => {
     config.setShowToolTip(event.payload)

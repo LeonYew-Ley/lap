@@ -5,6 +5,18 @@ const pending = new Map();
 const fileLocale = language => language === 'zh' ? 'zh-CN' : language;
 export const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages: {} });
 
+export function resolveSystemLanguage(locale) {
+  try {
+    const parsed = new Intl.Locale(String(locale).replaceAll('_', '-'));
+    const language = parsed.language === 'zh'
+      ? parsed.maximize().script === 'Hant' ? 'zh-TW' : 'zh'
+      : parsed.language;
+    return loaders[`../locales/${fileLocale(language)}.json`] ? language : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
 export async function loadLanguage(language) {
   const loader = loaders[`../locales/${fileLocale(language)}.json`];
   if (!loader) throw new Error(`Unsupported language: ${language}`);
