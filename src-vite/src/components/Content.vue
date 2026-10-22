@@ -4655,13 +4655,12 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  // Disable keyboard events during slideshow except close and toggle slideshow.
+  // Keep only close and background shortcuts available during slideshow.
   if (
     isSlideShow.value &&
     !matchesShortcut('view.close', event, shortcutPlatform) &&
     !matchesShortcut('view.cycleBackground', event, shortcutPlatform) &&
-    getMatchedViewBackground(event) === null &&
-    !matchesShortcut('slideshow.toggle', event, shortcutPlatform)
+    getMatchedViewBackground(event) === null
   ) {
     return;
   }
@@ -4673,7 +4672,7 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     if (selectMode.value) {
       void selectModeSetRatings(ratingShortcut);
     } else {
-      void setSelectedFileRating(ratingShortcut);
+      if (!event.repeat) void setSelectedFileRating(ratingShortcut, event.shiftKey);
     }
     return;
   }
@@ -4685,7 +4684,7 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     if (selectMode.value) {
       void selectModeSetCullingFlags(cullingShortcut);
     } else {
-      void setSelectedFileCullingFlag(cullingShortcut);
+      if (!event.repeat) void setSelectedFileCullingFlag(cullingShortcut, event.shiftKey);
     }
     return;
   }
@@ -4725,11 +4724,6 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  if ((showQuickView.value || isFilmstripView.value) && matchesShortcut('slideshow.toggle', event, shortcutPlatform)) {
-    event.preventDefault();
-    toggleSlideShow();
-    return;
-  }
 
   if (getActivePreviewMode() !== 'none' && matchesShortcut('view.zoomIn', event, shortcutPlatform) && event.key === '=') {
     event.preventDefault();
@@ -4762,7 +4756,7 @@ function handleLocalKeyDown(event: KeyboardEvent) {
     if (selectMode.value) {
       void toggleSelectModeFavorite();
     } else {
-      void toggleFavorite();
+      if (!event.repeat) void toggleFavorite(event.shiftKey);
     }
     return;
   }
@@ -9477,14 +9471,27 @@ const indexAndInsertSavedFile = async (filePath: string, saveAsContext: SaveAsCo
   return insertIndexedFileIntoList(indexedFile);
 };
 
+function advanceAfterMetadataShortcut(fileId: number, requestId: number) {
+  if (!selectMode.value && requestId === currentContentRequestId
+      && fileList.value[selectedItemIndex.value]?.id === fileId) {
+    performNavigate('next');
+  }
+}
+
 // toggle the selected file's favorite status (selectMode = false)
-const toggleFavorite = async () => {
+const toggleFavorite = async (advance = false) => {
+  const requestId = currentContentRequestId;
   if (selectedItemIndex.value >= 0) {
     const item = fileList.value[selectedItemIndex.value];
-    item.is_favorite = !item.is_favorite;
+    const previous = item.is_favorite;
+    item.is_favorite = !previous;
     // update the favorite status in the database
-    await setFileFavorite(item.id, item.is_favorite);
+    if (await setFileFavorite(item.id, item.is_favorite) === null) {
+      item.is_favorite = previous;
+      return;
+    }
     syncFileMetaToImageViewer(item.id, { is_favorite: item.is_favorite });
+    if (advance) advanceAfterMetadataShortcut(item.id, requestId);
   }
 };
 
@@ -9517,13 +9524,19 @@ const toggleSelectModeFavorite = async () => {
   await selectModeSetFavorites(shouldFavorite);
 };
 
-const setSelectedFileRating = async (rating: number) => {
+const setSelectedFileRating = async (rating: number, advance = false) => {
+  const requestId = currentContentRequestId;
   if (selectedItemIndex.value >= 0) {
     const item = fileList.value[selectedItemIndex.value];
-    const normalized = item.rating === rating ? 0 : rating;
+    const previous = item.rating;
+    const normalized = Math.max(0, Math.min(5, rating));
     item.rating = normalized;
-    await setFileRating(item.id, normalized);
+    if (await setFileRating(item.id, normalized) === null) {
+      item.rating = previous;
+      return;
+    }
     syncFileMetaToImageViewer(item.id, { rating: normalized });
+    if (advance) advanceAfterMetadataShortcut(item.id, requestId);
   }
 };
 
@@ -9548,7 +9561,8 @@ const selectModeSetRatings = async (rating: number) => {
   }
 }
 
-const setSelectedFileCullingFlag = async (cullingFlag: number) => {
+const setSelectedFileCullingFlag = async (cullingFlag: number, advance = false) => {
+  const requestId = currentContentRequestId;
   if (selectedItemIndex.value < 0) return;
   const item = fileList.value[selectedItemIndex.value];
   if (!item) return;
@@ -9562,6 +9576,7 @@ const setSelectedFileCullingFlag = async (cullingFlag: number) => {
   }
   syncFileMetaToImageViewer(item.id, { culling_flag: normalized });
   void tauriEmit('culling-status-updated', { fileIds: [item.id], cullingFlag: normalized });
+  if (advance) advanceAfterMetadataShortcut(item.id, requestId);
 };
 
 const selectModeSetCullingFlags = async (cullingFlag: number) => {

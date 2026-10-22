@@ -44,7 +44,6 @@
             :tooltip="!canSlideShow
               ? $t('image_viewer.toolbar.slide_show')
               : (isSlideShow ? $t('image_viewer.toolbar.pause') : $t('image_viewer.toolbar.slide_show'))"
-            :shortcut="shortcut('slideshow.toggle')"
             @click="handleToggleSlideShow"
           />
           <ContextMenu v-if="isSlideShow && canSlideShow"

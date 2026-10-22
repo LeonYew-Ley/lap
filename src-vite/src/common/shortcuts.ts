@@ -68,8 +68,7 @@ export type ShortcutActionId =
   | 'view.backgroundMediumGray'
   | 'view.backgroundLightGray'
   | 'view.backgroundWhite'
-  | 'view.togglePane'
-  | 'slideshow.toggle';
+  | 'view.togglePane';
 
 export type ShortcutModifier = 'ctrl' | 'meta' | 'alt' | 'shift' | 'cmdOrCtrl';
 
@@ -267,37 +266,55 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
   {
     id: 'meta.rating.clear',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '0', label: '0' }],
+    defaultBindings: [
+      { key: '0', label: '0' },
+      { code: 'Digit0', modifiers: ['shift'], label: { mac: '⇧0', windows: 'Shift+0', linux: 'Shift+0' } },
+    ],
   },
   {
     id: 'meta.rating.one',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '1', label: '1' }],
+    defaultBindings: [
+      { key: '1', label: '1' },
+      { code: 'Digit1', modifiers: ['shift'], label: { mac: '⇧1', windows: 'Shift+1', linux: 'Shift+1' } },
+    ],
   },
   {
     id: 'meta.rating.two',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '2', label: '2' }],
+    defaultBindings: [
+      { key: '2', label: '2' },
+      { code: 'Digit2', modifiers: ['shift'], label: { mac: '⇧2', windows: 'Shift+2', linux: 'Shift+2' } },
+    ],
   },
   {
     id: 'meta.rating.three',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '3', label: '3' }],
+    defaultBindings: [
+      { key: '3', label: '3' },
+      { code: 'Digit3', modifiers: ['shift'], label: { mac: '⇧3', windows: 'Shift+3', linux: 'Shift+3' } },
+    ],
   },
   {
     id: 'meta.rating.four',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '4', label: '4' }],
+    defaultBindings: [
+      { key: '4', label: '4' },
+      { code: 'Digit4', modifiers: ['shift'], label: { mac: '⇧4', windows: 'Shift+4', linux: 'Shift+4' } },
+    ],
   },
   {
     id: 'meta.rating.five',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ key: '5', label: '5' }],
+    defaultBindings: [
+      { key: '5', label: '5' },
+      { code: 'Digit5', modifiers: ['shift'], label: { mac: '⇧5', windows: 'Shift+5', linux: 'Shift+5' } },
+    ],
   },
   {
     id: 'meta.culling.pick',
     contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [{ code: 'KeyP', label: 'P' }],
+    defaultBindings: [{ code: 'KeyP', allowShift: true, label: 'P' }],
   },
   {
     id: 'meta.culling.reject',
@@ -427,33 +444,17 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
       { code: 'KeyB', modifiers: ['shift'], label: { mac: '⇧B', windows: 'Shift+B', linux: 'Shift+B' } },
     ],
   },
-  ...VIEW_BACKGROUND_SHORTCUTS.map(({ actionId, value }) => ({
+  ...VIEW_BACKGROUND_SHORTCUTS.map(({ actionId }) => ({
     id: actionId,
     contexts: ['content', 'media-viewer', 'image-viewer'] as const,
-    defaultBindings: [
-      {
-        code: `Digit${value + 1}`,
-        modifiers: ['shift'] as const,
-        label: { mac: `⇧${value + 1}`, windows: `Shift+${value + 1}`, linux: `Shift+${value + 1}` },
-      },
-    ],
+    defaultBindings: [],
   })),
   {
     id: 'view.togglePane',
     contexts: ['image-viewer'],
     defaultBindings: [{ key: 'Tab', label: 'Tab' }],
   },
-  {
-    id: 'slideshow.toggle',
-    contexts: ['content', 'media-viewer', 'image-viewer'],
-    defaultBindings: [
-      {
-        code: 'KeyP',
-        modifiers: ['shift'],
-        label: { mac: '⇧P', windows: 'Shift+P', linux: 'Shift+P' },
-      },
-    ],
-  },
+
 ] as const;
 
 const shortcutMap = new Map<ShortcutActionId, ShortcutDefinition>(

@@ -637,20 +637,22 @@
               <span class="font-bold uppercase text-[10px] tracking-widest">{{ section.title }}</span>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1">
-              <div
-                v-for="item in section.items"
-                :key="item.actionId"
-                class="min-h-9 flex items-center justify-between gap-4 px-1 rounded-box hover:bg-base-100/10 transition-colors duration-200"
-              >
-                <div class="min-w-0 text-sm leading-5 truncate">{{ item.label }}</div>
-                <div class="shrink-0 flex items-center gap-1">
-                  <span
-                    v-for="(key, keyIndex) in item.keys"
-                    :key="`${item.actionId}-${keyIndex}-${key}`"
-                    class="min-w-7 h-7 px-2 inline-flex items-center justify-center rounded-box border border-base-content/10 bg-base-100/40 text-xs font-semibold text-base-content/30 shadow-sm"
-                  >
-                    {{ key }}
-                  </span>
+              <div v-for="item in section.items" :key="item.actionId">
+                <div
+                  v-for="(row, rowIndex) in item.rows"
+                  :key="rowIndex"
+                  class="min-h-9 flex items-center justify-between gap-4 px-1 py-1 rounded-box hover:bg-base-100/10 transition-colors duration-200"
+                >
+                  <div class="min-w-0 text-sm leading-5">{{ row.label }}</div>
+                  <div class="shrink-0 flex items-center gap-1">
+                    <span
+                      v-for="(key, keyIndex) in row.keys"
+                      :key="keyIndex"
+                      class="min-w-7 h-7 px-2 inline-flex items-center justify-center rounded-box border border-base-content/10 bg-base-100/40 text-xs font-semibold text-base-content/30 shadow-sm"
+                    >
+                      {{ key }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1162,6 +1164,7 @@ const faceClusterOptions = computed(() => {
 type ShortcutDisplayItem = {
   actionId: ShortcutActionId;
   labelKey: string;
+  advanceLabelKey?: string;
   keys?: string[];
   backgroundValue?: number;
 };
@@ -1204,13 +1207,6 @@ const shortcutDisplaySections: Array<{ key: string; items: ShortcutDisplayItem[]
       { actionId: 'view.zoomOut', labelKey: 'zoom_out' },
       { actionId: 'view.zoomFit', labelKey: 'zoom_fit' },
       { actionId: 'view.cycleBackground', labelKey: 'cycle_background' },
-      { actionId: 'view.backgroundTheme', labelKey: 'cycle_background', backgroundValue: 0 },
-      { actionId: 'view.backgroundBlack', labelKey: 'cycle_background', backgroundValue: 1 },
-      { actionId: 'view.backgroundDarkGray', labelKey: 'cycle_background', backgroundValue: 2 },
-      { actionId: 'view.backgroundMediumGray', labelKey: 'cycle_background', backgroundValue: 3 },
-      { actionId: 'view.backgroundLightGray', labelKey: 'cycle_background', backgroundValue: 4 },
-      { actionId: 'view.backgroundWhite', labelKey: 'cycle_background', backgroundValue: 5 },
-      { actionId: 'slideshow.toggle', labelKey: 'toggle_slideshow' },
     ],
   },
   {
@@ -1237,11 +1233,11 @@ const shortcutDisplaySections: Array<{ key: string; items: ShortcutDisplayItem[]
   {
     key: 'metadata',
     items: [
-      { actionId: 'meta.favorite', labelKey: 'toggle_favorite' },
-      { actionId: 'meta.rating.clear', labelKey: 'set_clear_rating', keys: ['0 ~ 5'] },
-      { actionId: 'meta.culling.pick', labelKey: 'mark_pick' },
-      { actionId: 'meta.culling.reject', labelKey: 'mark_rejected' },
-      { actionId: 'meta.culling.unreviewed', labelKey: 'mark_unreviewed' },
+      { actionId: 'meta.favorite', labelKey: 'toggle_favorite', advanceLabelKey: 'toggle_favorite_and_next' },
+      { actionId: 'meta.rating.clear', labelKey: 'set_clear_rating', advanceLabelKey: 'set_clear_rating_and_next', keys: ['0 ~ 5'] },
+      { actionId: 'meta.culling.pick', labelKey: 'mark_pick', advanceLabelKey: 'mark_pick_and_next' },
+      { actionId: 'meta.culling.reject', labelKey: 'mark_rejected', advanceLabelKey: 'mark_rejected_and_next' },
+      { actionId: 'meta.culling.unreviewed', labelKey: 'mark_unreviewed', advanceLabelKey: 'mark_unreviewed_and_next' },
       { actionId: 'meta.tag', labelKey: 'edit_tags' },
       { actionId: 'meta.collection', labelKey: 'edit_collections' },
       { actionId: 'meta.comment', labelKey: 'edit_comment' },
@@ -1258,14 +1254,21 @@ const shortcutSections = computed(() => {
     key: section.key,
     title: shortcutMessages.sections[section.key],
     items: section.items
-      .map((item) => ({
-        actionId: item.actionId,
-        label: item.backgroundValue === undefined
+      .map((item) => {
+        const keys = item.keys ?? getDisplayShortcutKeys(item.actionId);
+        const label = item.backgroundValue === undefined
           ? shortcutMessages.actions[getShortcutActionLabelKey(item)]
-          : `${localeMsg.value.settings.image_view.view_background}: ${localeMsg.value.settings.image_view.view_background_options[item.backgroundValue]}`,
-        keys: item.keys ?? getDisplayShortcutKeys(item.actionId),
-      }))
-      .filter((item) => item.keys.length > 0),
+          : `${localeMsg.value.settings.image_view.view_background}: ${localeMsg.value.settings.image_view.view_background_options[item.backgroundValue]}`;
+        const rows = [{ label, keys }];
+        if (item.advanceLabelKey) {
+          rows.push({
+            label: shortcutMessages.actions[item.advanceLabelKey],
+            keys: [shortcutPlatform === 'mac' ? '⇧' : 'Shift', ...keys],
+          });
+        }
+        return { actionId: item.actionId, rows };
+      })
+      .filter((item) => item.rows[0].keys.length > 0),
   }));
 });
 
