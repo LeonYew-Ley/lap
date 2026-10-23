@@ -9742,6 +9742,7 @@ impl ALocation {
 /// the cluster, while `count` contains every matching photo in the cell.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AGpsMapPoint {
+    pub rank: i64,
     pub lat: f64,
     pub lon: f64,
     pub count: i64,
@@ -9753,9 +9754,9 @@ impl AGpsMapPoint {
         let conn = open_conn()?;
         let (joins, where_clause, sql_params) = AFile::build_search_query_parts(params);
         let query = format!(
-            "SELECT AVG(gps_latitude) AS lat, AVG(gps_longitude) AS lon, COUNT(*) AS cnt, MIN(id) AS file_id
+            "SELECT AVG(gps_latitude) AS lat, AVG(gps_longitude) AS lon, COUNT(*) AS cnt, id AS file_id, MIN(query_rank) AS query_rank
              FROM (
-                 SELECT a.id, a.gps_latitude, a.gps_longitude
+                 SELECT a.id, a.gps_latitude, a.gps_longitude, ROW_NUMBER() OVER (ORDER BY {}) AS query_rank
                  FROM afiles a
                  LEFT JOIN afolders b ON a.folder_id = b.id
                  LEFT JOIN albums c ON b.album_id = c.id
@@ -9763,7 +9764,7 @@ impl AGpsMapPoint {
                  GROUP BY a.id
              )
              GROUP BY ROUND(gps_latitude, 2), ROUND(gps_longitude, 2)",
-            joins, where_clause,
+            AFile::build_order_clause(params), joins, where_clause,
         );
         let final_params: Vec<&dyn ToSql> = sql_params.iter().map(|p| p.as_ref()).collect();
         let mut stmt = conn.prepare(&query).map_err(|e| e.to_string())?;
@@ -9774,6 +9775,7 @@ impl AGpsMapPoint {
                     lon: row.get(1)?,
                     count: row.get(2)?,
                     file_id: row.get(3)?,
+                    rank: row.get(4)?,
                 })
             })
             .map_err(|e| e.to_string())?

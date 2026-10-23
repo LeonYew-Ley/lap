@@ -195,6 +195,7 @@
           :collection-id="currentCollectionId"
           :file-ids="currentSearchFileIds"
           :restore-view="mapTempViewState"
+          :selected-file="fileList[selectedItemIndex]"
           @open-cluster="openMapClusterTempView"
           @select-file="selectMapFile"
           @preview-file="openMapPreviewFile"
@@ -6400,12 +6401,24 @@ function toggleMapView() {
 }
 
 function openMapClusterTempView(payload: { fileIds?: number[]; minLat: number; maxLat: number; minLon: number; maxLon: number; count: number; view: { lat: number; lon: number; zoom: number } }) {
+  const selectionRequestId = ++mapSelectionRequestId;
+  checkUnsavedChanges(async () => {
+    if (payload.fileIds?.length) {
+      const index = await resolveFileIndexForDedup(payload.fileIds[0]);
+      if (selectionRequestId !== mapSelectionRequestId || !isMapContentVisible.value) return;
+      if (index >= 0) selectedItemIndex.value = index;
+    }
+    enterMapClusterTempView(payload);
+  });
+}
+
+function enterMapClusterTempView(payload: { fileIds?: number[]; minLat: number; maxLat: number; minLon: number; maxLon: number; count: number; view: { lat: number; lon: number; zoom: number } }) {
   if (tempViewMode.value === 'none') backupState.value = createViewBackup();
   mapTempViewState.value = payload.view;
   invalidateThumbnailRequests();
   tempViewMode.value = 'map';
   showQuickView.value = false;
-  contentTitle.value = t('map.photos_in_view', { count: payload.count });
+  contentTitle.value = t('map.photos_in_view', { count: payload.count.toLocaleString() });
   const requestId = ++currentContentRequestId;
   showLoadingContent(requestId);
   scrollPosition.value = 0;
@@ -6453,6 +6466,8 @@ async function selectMapFile(fileId: number) {
   const requestId = ++mapSelectionRequestId;
   const index = await resolveFileIndexForDedup(fileId);
   if (requestId !== mapSelectionRequestId || index < 0) return;
+  // Map selections are independent of the grid viewport used by thumbnail scheduling.
+  void getFileListThumb([fileList.value[index]], { viewportBound: false });
   handleItemClicked(index);
 }
 
@@ -6460,6 +6475,7 @@ async function openMapPreviewFile(fileId: number) {
   const requestId = ++mapPreviewRequestId;
   const index = await resolveFileIndexForDedup(fileId);
   if (requestId !== mapPreviewRequestId || index < 0) return;
+  void getFileListThumb([fileList.value[index]], { viewportBound: false });
   handleItemDblClicked(index);
 }
 
@@ -7278,7 +7294,8 @@ async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<
     const files = await getFilesByIds(fileIds);
     if (requestId !== currentContentRequestId) return;
 
-    const inCluster = (files || []).filter((file: any) => {
+    const orderedIds = new Map(fileIds.map((id, index) => [Number(id), index]));
+    const inCluster = (files || []).sort((a, b) => (orderedIds.get(Number(a.id)) ?? Infinity) - (orderedIds.get(Number(b.id)) ?? Infinity)).filter((file: any) => {
       if (!passesAlbumFilters(file)) return false;
       if (exactMembers) return true;
       if (file.gps_latitude == null || file.gps_longitude == null || file.gps_latitude === '' || file.gps_longitude === '') return false;
@@ -7294,6 +7311,10 @@ async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<
     clearSelectionForFileListUpdate();
     resetGroupingState();
     fileList.value = preserveLoadedThumbnails(inCluster);
+    selectedItemIndex.value = inCluster.length > 0 ? 0 : -1;
+    if (inCluster.length > 0) {
+      void getFileListThumb([fileList.value[0]], { viewportBound: false });
+    }
     currentSearchFileIds.value = inCluster
       .map((file: any) => Number(file.id))
       .filter((id: number) => Number.isFinite(id) && id > 0);
@@ -8295,7 +8316,8 @@ function exitTempViewMode() {
   for (const file of state.fileList) {
     if (file) file.isSelected = false;
   }
-  fileList.value = state.fileList;
+  // Keep thumbnails loaded in the temporary view when restoring its source list.
+  fileList.value = preserveLoadedThumbnails(state.fileList);
   groupedModeActive.value = Boolean(state.groupedModeActive);
   groupedRows.value = state.groupedRows || [];
   totalRowCount.value = Number(state.totalRowCount || 0);
@@ -8324,6 +8346,11 @@ function exitTempViewMode() {
   currentSearchFileIds.value = [...(state.currentSearchFileIds || [])];
   // Increment request ID to cancel any previous thumbnail generation (from temp view)
   invalidateThumbnailRequests();
+  if (tempViewMode.value === 'map' && isRealFileItem(fileList.value[selectedItemIndex.value])) {
+    // The restored selection can be outside the grid viewport; the old request
+    // was cancelled on entering or leaving the temporary view.
+    void getFileListThumb([fileList.value[selectedItemIndex.value]], { viewportBound: false });
+  }
 
   // 2. Reset Mode
   tempViewMode.value = 'none';

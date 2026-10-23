@@ -30,6 +30,10 @@ export function clusterPhotoPoints(points, project, padding = 0, spacing = 48) {
       minLon: point.minLon ?? point.lon - padding, maxLon: point.maxLon ?? point.lon + padding,
     }
     if (nearest) {
+      if ((point.rank ?? Infinity) < (nearest.rank ?? Infinity)) {
+        nearest.rank = point.rank
+        nearest.file_id = point.file_id
+      }
       nearest.count += point.count
       if (nearest.fileIds && point.fileIds) nearest.fileIds.push(...point.fileIds)
       if (nearest.pointIds && point.pointIds) nearest.pointIds.push(...point.pointIds)
