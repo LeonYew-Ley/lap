@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Verwijderen ongedaan gemaakt",
+  "trashUndoEmpty": "Niets om ongedaan te maken in deze sessie",
+  "trashUndoFailed": "Verwijderen kon niet ongedaan worden gemaakt",
   "sidebar": {
     "home": "Start",
     "library": "Bibliotheek",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadata"
       },
       "actions": {
+        "undo_trash": "Verwijderen ongedaan maken",
         "toggle_sidebar": "Zijbalk tonen/verbergen",
         "open_settings": "Instellingen openen",
         "font_increase": "Lettergrootte vergroten",

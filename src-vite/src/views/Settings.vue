@@ -1239,6 +1239,7 @@ const shortcutDisplaySections: Array<{ key: string; items: ShortcutDisplayItem[]
       { actionId: 'file.paste', labelKey: 'paste_file' },
       { actionId: 'file.reveal', labelKey: 'reveal_in_file_manager' },
       { actionId: 'file.trash', labelKey: 'move_to_trash' },
+      { actionId: 'file.undoTrash', labelKey: 'undo_trash' },
     ],
   },
   {

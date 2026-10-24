@@ -70,6 +70,8 @@ When you open Lap for the first time:
 - **Delete / Move to Trash** moves files or folders to the system Trash or Recycle Bin. The confirmation dialog does not offer permanent deletion.
 - Confirmation is enabled by default. Check **Do not ask again** and confirm to skip future trash confirmations, including after restarting Lap. Canceling the dialog leaves the preference unchanged.
 - To restore confirmation, enable **Confirm before moving files or folders to Trash** in **Settings → General**.
+- On Windows and Linux, press **Ctrl+Z** outside text fields and dialogs to undo the most recent trash operation, including a multi-file batch or folder. Lap restores the originals and their catalog metadata (including ratings, tags and collection membership). Up to 20 operations are retained for the current app session, scoped to each library. Restarting Lap clears this undo history; files remain recoverable through the system trash. macOS trash undo is not implemented yet.
+- Undo refuses to overwrite an existing path. If a name conflict or restore error occurs, resolve the conflict and retry; Lap keeps the operation available until it completes. Items removed from the system trash cannot be recovered by Lap.
 - If a location does not support the system trash, Lap reports a failure and leaves the affected files in place. Restore trashed files or empty the trash using your operating system.
 
 ## Updating Lap

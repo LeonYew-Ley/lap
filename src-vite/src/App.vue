@@ -21,6 +21,9 @@ import { isMac, SCALE_VALUES } from '@/common/utils';
 import { useAppTheme } from '@/composables/useAppearance';
 import { matchesShortcut } from '@/common/shortcuts';
 import ToastContainer from '@/components/ToastContainer.vue';
+import { isTrashUndoShortcut } from '@/common/trashUndo';
+import { useToast } from '@/common/toast';
+import { useI18n } from 'vue-i18n';
 
 const libConfig = useLibraryStore();
 const isReady = ref(false);
@@ -30,6 +33,9 @@ const uiStore = useUIStore();
 const isMainWindow = getCurrentWebviewWindow().label === 'main';
 let unlistenMainCloseRequested = null;
 let isHandlingMainClose = false;
+let isUndoingTrash = false;
+const toast = useToast();
+const { t } = useI18n();
 
 // Auto-save library state when any config changes
 watch(() => libConfig.$state, () => {
@@ -151,6 +157,12 @@ onUnmounted(async () => {
 });
 
 const handleKeyDown = (event) => {
+  if (!isMac && isTrashUndoShortcut(event, isMac, uiStore.inputStack.length > 0)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void undoLastTrash();
+    return;
+  }
   if (handleMainWindowScaleShortcut(event)) {
     return;
   }
@@ -186,6 +198,31 @@ const handleKeyDown = (event) => {
     shiftKey: event.shiftKey,
   });
 };
+
+async function undoLastTrash() {
+  if (isUndoingTrash || !libConfig._libraryId) return;
+  isUndoingTrash = true;
+  const libraryId = libConfig._libraryId;
+  try {
+    const restored = await invoke('undo_trash', { libraryId });
+    if (!restored) {
+      toast.info(t('trashUndoEmpty'));
+      return;
+    }
+    toast.success(t('trashUndoSuccess'));
+    if (libConfig._libraryId !== libraryId) return;
+    const albums = await invoke('get_all_albums', { refreshAccessibility: false });
+    const recounted = await Promise.all(albums.map(album => invoke('recount_album', { albumId: album.id })));
+    if (libConfig._libraryId !== libraryId) return;
+    await emit('albums-refreshed', { libraryId, albums: recounted.filter(Boolean), refreshFolders: true, refreshCounts: true });
+    await emit('library-total-refreshed', { source: 'trash-undo', libraryId });
+    await emit('refresh-content');
+  } catch (error) {
+    toast.error(t('trashUndoFailed') + ': ' + error, { duration: 7000 });
+  } finally {
+    isUndoingTrash = false;
+  }
+}
 
 function normalizeScale(value) {
   return SCALE_VALUES.find((item) => item === Number(value)) ?? 1;

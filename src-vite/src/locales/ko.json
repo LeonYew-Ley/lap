@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "삭제를 취소했습니다",
+  "trashUndoEmpty": "이번 세션에서 취소할 삭제가 없습니다",
+  "trashUndoFailed": "삭제를 취소할 수 없습니다",
   "sidebar": {
     "home": "홈",
     "library": "라이브러리",
@@ -1550,6 +1553,7 @@
         "metadata": "메타데이터"
       },
       "actions": {
+        "undo_trash": "삭제 취소",
         "toggle_sidebar": "사이드바 전환",
         "open_settings": "설정 열기",
         "font_increase": "글꼴 크기 키우기",

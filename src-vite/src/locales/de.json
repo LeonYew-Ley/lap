@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Löschen rückgängig gemacht",
+  "trashUndoEmpty": "In dieser Sitzung gibt es nichts rückgängig zu machen",
+  "trashUndoFailed": "Löschen konnte nicht rückgängig gemacht werden",
   "sidebar": {
     "home": "Startseite",
     "library": "Bibliothek",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadaten"
       },
       "actions": {
+        "undo_trash": "Löschen rückgängig machen",
         "toggle_sidebar": "Seitenleiste umschalten",
         "open_settings": "Einstellungen öffnen",
         "font_increase": "Schrift vergrößern",

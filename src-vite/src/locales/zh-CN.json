@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "已撤销删除",
+  "trashUndoEmpty": "本次会话没有可撤销的删除",
+  "trashUndoFailed": "无法撤销删除",
   "sidebar": {
     "home": "主页",
     "library": "资料库",
@@ -1550,6 +1553,7 @@
         "metadata": "元数据"
       },
       "actions": {
+        "undo_trash": "撤销删除",
         "toggle_sidebar": "切换侧栏",
         "open_settings": "打开设置",
         "font_increase": "增大字体大小",

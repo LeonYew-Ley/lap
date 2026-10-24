@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "削除を元に戻しました",
+  "trashUndoEmpty": "このセッションで元に戻せる削除はありません",
+  "trashUndoFailed": "削除を元に戻せませんでした",
   "sidebar": {
     "home": "ホーム",
     "library": "ライブラリ",
@@ -1550,6 +1553,7 @@
         "metadata": "メタデータ"
       },
       "actions": {
+        "undo_trash": "削除を元に戻す",
         "toggle_sidebar": "サイドバーの切り替え",
         "open_settings": "設定を開く",
         "font_increase": "文字サイズを大きく",

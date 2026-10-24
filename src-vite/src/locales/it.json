@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Eliminazione annullata",
+  "trashUndoEmpty": "Nulla da annullare in questa sessione",
+  "trashUndoFailed": "Impossibile annullare l’eliminazione",
   "sidebar": {
     "home": "Home",
     "library": "Libreria",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadati"
       },
       "actions": {
+        "undo_trash": "Annulla eliminazione",
         "toggle_sidebar": "Mostra/nascondi barra laterale",
         "open_settings": "Apri impostazioni",
         "font_increase": "Aumenta dimensione del testo",

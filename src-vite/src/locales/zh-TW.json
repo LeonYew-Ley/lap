@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "已復原刪除",
+  "trashUndoEmpty": "本次工作階段沒有可復原的刪除",
+  "trashUndoFailed": "無法復原刪除",
   "sidebar": {
     "home": "首頁",
     "library": "媒體庫",
@@ -1550,6 +1553,7 @@
         "metadata": "中繼資料"
       },
       "actions": {
+        "undo_trash": "復原刪除",
         "toggle_sidebar": "切換側邊欄",
         "open_settings": "開啟設定",
         "font_increase": "增大字型",

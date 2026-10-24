@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Suppression annulée",
+  "trashUndoEmpty": "Rien à annuler dans cette session",
+  "trashUndoFailed": "Impossible d’annuler la suppression",
   "sidebar": {
     "home": "Accueil",
     "library": "Bibliothèque",
@@ -1550,6 +1553,7 @@
         "metadata": "Métadonnées"
       },
       "actions": {
+        "undo_trash": "Annuler la suppression",
         "toggle_sidebar": "Afficher/masquer la barre latérale",
         "open_settings": "Ouvrir les paramètres",
         "font_increase": "Augmenter la taille de la police",

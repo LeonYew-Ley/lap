@@ -30,6 +30,7 @@ export type ShortcutActionId =
   | 'file.moveTo'
   | 'file.moveToFolder'
   | 'file.trash'
+  | 'file.undoTrash'
   | 'file.reveal'
   | 'file.searchSimilar'
   | 'meta.favorite'
@@ -245,6 +246,11 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
       { key: 'Backspace', modifiers: ['meta'], platforms: ['mac'], allowShift: true, label: { mac: '⌘⌫' } },
       { key: 'Delete', platforms: ['windows', 'linux'], allowShift: true, label: { windows: 'Del', linux: 'Del' } },
     ],
+  },
+  {
+    id: 'file.undoTrash',
+    contexts: ['global'],
+    defaultBindings: [{ code: 'KeyZ', modifiers: ['ctrl'], platforms: ['windows', 'linux'], label: 'Ctrl+Z' }],
   },
   {
     id: 'file.reveal',

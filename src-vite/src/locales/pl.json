@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Cofnięto usunięcie",
+  "trashUndoEmpty": "W tej sesji nie ma nic do cofnięcia",
+  "trashUndoFailed": "Nie można cofnąć usunięcia",
   "sidebar": {
     "home": "Strona główna",
     "library": "Biblioteka",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadane"
       },
       "actions": {
+        "undo_trash": "Cofnij usunięcie",
         "toggle_sidebar": "Przełącz panel boczny",
         "open_settings": "Otwórz ustawienia",
         "font_increase": "Zwiększ rozmiar czcionki",

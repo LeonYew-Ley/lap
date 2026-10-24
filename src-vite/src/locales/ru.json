@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Удаление отменено",
+  "trashUndoEmpty": "В этом сеансе нечего отменять",
+  "trashUndoFailed": "Не удалось отменить удаление",
   "sidebar": {
     "home": "Главная",
     "library": "Библиотека",
@@ -1550,6 +1553,7 @@
         "metadata": "Метаданные"
       },
       "actions": {
+        "undo_trash": "Отменить удаление",
         "toggle_sidebar": "Вкл./выкл. боковую панель",
         "open_settings": "Открыть настройки",
         "font_increase": "Увеличить размер шрифта",

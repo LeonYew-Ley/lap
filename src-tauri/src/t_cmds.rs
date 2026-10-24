@@ -963,14 +963,20 @@ pub fn copy_folder(
 /// delete a folder (move to trash)
 #[tauri::command]
 pub fn delete_folder(folder_path: &str) -> Result<usize, String> {
-    // trash the folder
-    if t_utils::trash_path(folder_path).is_err() {
-        return Ok(0);
-    }
-
-    // delete the folder and all children from db
-    AFolder::delete_folder(folder_path)
-        .map_err(|e| format!("Error while deleting folder from DB: {}", e))
+    let library = t_config::current_library_id()?;
+    crate::t_trash_undo::record(
+        &library,
+        HashSet::new(),
+        Some(folder_path),
+        vec![PathBuf::from(folder_path)],
+        || {
+            if t_utils::trash_path(folder_path).is_err() {
+                return Ok(0);
+            }
+            AFolder::delete_folder(folder_path)
+                .map_err(|e| format!("Error while deleting folder from DB: {}", e))
+        },
+    )
 }
 
 /// permanently delete a folder (skip trash)
@@ -2324,7 +2330,17 @@ pub async fn import_clipboard(
 /// delete a file
 #[tauri::command]
 pub fn delete_file(file_id: i64, file_path: &str) -> Result<BatchDeleteResult, String> {
-    delete_file_group(file_id, file_path, false)
+    delete_files_grouped(
+        vec![BatchDeleteFile { file_id, file_path: file_path.into() }],
+        false,
+    )
+}
+
+#[tauri::command]
+pub async fn undo_trash(library_id: String) -> Result<bool, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::t_trash_undo::undo(&library_id))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 /// delete a file permanently
@@ -2436,6 +2452,30 @@ pub async fn batch_delete_files(
 /// Delete files together with their Live Photo and Apple sidecar components.
 /// Kept synchronous so other backend workflows can share the same semantics.
 pub(crate) fn delete_files_grouped(
+    files: Vec<BatchDeleteFile>,
+    permanently: bool,
+) -> Result<BatchDeleteResult, String> {
+    if permanently {
+        return delete_files_grouped_inner(files, true);
+    }
+    let library = t_config::current_library_id()?;
+    let mut ids = HashSet::new();
+    let mut paths = Vec::new();
+    for file in &files {
+        ids.insert(file.file_id);
+        paths.push(PathBuf::from(&file.file_path));
+        paths.extend(apple_aae_sidecar_paths(&file.file_path));
+        for component in AFile::live_photo_component_files(file.file_id)? {
+            if let (Some(id), Some(path)) = (component.id, component.file_path) {
+                ids.insert(id);
+                paths.push(PathBuf::from(path));
+            }
+        }
+    }
+    crate::t_trash_undo::record(&library, ids, None, paths, || delete_files_grouped_inner(files, false))
+}
+
+fn delete_files_grouped_inner(
     files: Vec<BatchDeleteFile>,
     permanently: bool,
 ) -> Result<BatchDeleteResult, String> {

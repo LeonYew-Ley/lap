@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Deletion undone",
+  "trashUndoEmpty": "Nothing to undo in this session",
+  "trashUndoFailed": "Could not undo deletion",
   "sidebar": {
     "home": "Home",
     "library": "Library",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadata"
       },
       "actions": {
+        "undo_trash": "Undo deletion",
         "toggle_sidebar": "Toggle sidebar",
         "open_settings": "Open settings",
         "font_increase": "Increase font size",

@@ -46,6 +46,7 @@ mod t_storage;
 mod t_cache_storage;
 mod t_startup;
 mod t_utils;
+mod t_trash_undo;
 mod t_video;
 mod t_xmp;
 
@@ -335,6 +336,7 @@ async fn main() {
             t_cmds::has_importable_clipboard,
             t_cmds::import_clipboard,
             t_cmds::delete_file,
+            t_cmds::undo_trash,
             t_cmds::delete_file_permanently,
             t_cmds::delete_db_file,
             t_cmds::batch_delete_files,

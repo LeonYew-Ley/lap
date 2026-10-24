@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Törlés visszavonva",
+  "trashUndoEmpty": "Nincs visszavonható törlés ebben a munkamenetben",
+  "trashUndoFailed": "A törlés nem vonható vissza",
   "sidebar": {
     "home": "Kezdőlap",
     "library": "Könyvtár",
@@ -1550,6 +1553,7 @@
         "metadata": "Metaadatok"
       },
       "actions": {
+        "undo_trash": "Törlés visszavonása",
         "toggle_sidebar": "Oldalsáv be-/kikapcsolása",
         "open_settings": "Beállítások megnyitása",
         "font_increase": "Betűméret növelése",

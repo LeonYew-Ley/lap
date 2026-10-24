@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Eliminación deshecha",
+  "trashUndoEmpty": "No hay nada que deshacer en esta sesión",
+  "trashUndoFailed": "No se pudo deshacer la eliminación",
   "sidebar": {
     "home": "Inicio",
     "library": "Biblioteca",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadatos"
       },
       "actions": {
+        "undo_trash": "Deshacer eliminación",
         "toggle_sidebar": "Alternar barra lateral",
         "open_settings": "Abrir configuración",
         "font_increase": "Aumentar tamaño de fuente",

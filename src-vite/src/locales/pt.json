@@ -1,4 +1,7 @@
 {
+  "trashUndoSuccess": "Eliminação desfeita",
+  "trashUndoEmpty": "Nada a desfazer nesta sessão",
+  "trashUndoFailed": "Não foi possível desfazer a eliminação",
   "sidebar": {
     "home": "Início",
     "library": "Biblioteca",
@@ -1550,6 +1553,7 @@
         "metadata": "Metadados"
       },
       "actions": {
+        "undo_trash": "Desfazer eliminação",
         "toggle_sidebar": "Alternar barra lateral",
         "open_settings": "Abrir configurações",
         "font_increase": "Aumentar tamanho da fonte",
