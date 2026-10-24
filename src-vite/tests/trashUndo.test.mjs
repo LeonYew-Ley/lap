@@ -32,6 +32,67 @@ test('typing, editable elements, dialogs, repeats and redo are not intercepted',
   assert.equal(matches({}, false, true), false);
 });
 
+async function keydownFixture(inputStack = []) {
+  const app = await readFile(new URL('../src/App.vue', import.meta.url), 'utf8');
+  const code = app.slice(app.indexOf('const handleKeyDown ='), app.indexOf('async function undoLastTrash()'));
+  const calls = [];
+  const uiStore = { inputStack, isInputActive: name => inputStack.at(-1) === name };
+  const handleKeyDown = new Function(
+    'Element', 'uiStore', 'useUIStore', 'isMac', 'isTrashUndoShortcut',
+    'handleMainWindowScaleShortcut', 'matchesShortcut', 'undoLastTrash', 'emit',
+    code + '; return handleKeyDown;',
+  )(
+    Element, uiStore, () => uiStore, false, context.isTrashUndoShortcut,
+    () => false, () => false, () => calls.push(['undo']),
+    (...args) => calls.push(args),
+  );
+  const dispatch = (overrides = {}) => handleKeyDown({
+    key: 'Delete', code: 'Delete', ctrlKey: false, metaKey: false,
+    shiftKey: false, altKey: false, target: new Element(),
+    preventDefault: () => calls.push(['preventDefault']),
+    stopImmediatePropagation: () => calls.push(['stopImmediatePropagation']),
+    ...overrides,
+  });
+  return { dispatch, calls };
+}
+
+test('the actual App capture handler forwards Delete without a store initialization error', async () => {
+  const fixture = await keydownFixture();
+  assert.doesNotThrow(() => fixture.dispatch());
+  assert.deepEqual(fixture.calls, [['global-keydown', {
+    key: 'Delete', code: 'Delete', altKey: false, ctrlKey: false, metaKey: false, shiftKey: false,
+  }]]);
+});
+
+test('the actual App capture handler preserves navigation and copy shortcuts', async () => {
+  for (const event of [
+    { key: 'ArrowRight', code: 'ArrowRight' },
+    { key: 'c', code: 'KeyC', ctrlKey: true },
+  ]) {
+    const fixture = await keydownFixture();
+    fixture.dispatch(event);
+    assert.equal(fixture.calls[0][0], 'global-keydown');
+    assert.equal(fixture.calls[0][1].code, event.code);
+    assert.equal(fixture.calls.length, 1);
+  }
+});
+
+test('the actual App capture handler intercepts Ctrl+Z only, not Delete', async () => {
+  const fixture = await keydownFixture();
+  fixture.dispatch({ key: 'z', code: 'KeyZ', ctrlKey: true });
+  assert.deepEqual(fixture.calls, [['preventDefault'], ['stopImmediatePropagation'], ['undo']]);
+});
+
+test('the actual App capture handler leaves dialog keys and text undo alone', async () => {
+  const dialog = await keydownFixture(['MessageBox']);
+  dialog.dispatch();
+  dialog.dispatch({ key: 'z', code: 'KeyZ', ctrlKey: true });
+  assert.deepEqual(dialog.calls, []);
+  const editing = await keydownFixture();
+  editing.dispatch({ key: 'z', code: 'KeyZ', ctrlKey: true, target: new Element(true) });
+  assert.equal(editing.calls.some(call => call[0] === 'undo'), false);
+});
+
 test('undo refreshes folders, counts and content after the native operation', async () => {
   const app = await readFile(new URL('../src/App.vue', import.meta.url), 'utf8');
   assert.ok(app.includes("invoke('undo_trash', { libraryId })"));

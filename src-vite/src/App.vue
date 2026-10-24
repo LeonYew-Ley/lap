@@ -176,7 +176,6 @@ const handleKeyDown = (event) => {
 
   // Inputs that handle their own keys must not trigger global shortcuts (Enter is file.rename on
   // macOS). SearchBox/MoveTo/ImportOrganize are deliberately excluded — they rely on this channel.
-  const uiStore = useUIStore();
   // MoveTo buttons activate locally; forwarding Enter would also confirm the move.
   if (
     event.key === 'Enter' && uiStore.isInputActive('MoveTo') &&
