@@ -945,6 +945,7 @@
       "success": "{count} items hernoemd."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Niet opnieuw vragen (wijzigen in Instellingen)",
       "title": "Naar prullenbak",
       "file_content": "Het bestand '{file}' wordt naar de prullenbak verplaatst.",
       "files_content": "{count} geselecteerde bestanden worden naar de prullenbak verplaatst.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Bevestigen voordat bestanden of mappen naar de prullenbak worden verplaatst",
       "title": "Algemeen",
       "section_language": "Taal en regio",
       "section_appearance": "Weergave",

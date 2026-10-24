@@ -945,6 +945,7 @@
       "success": "Zmieniono nazwy {count} elementów."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Nie pytaj ponownie (można zmienić w ustawieniach)",
       "title": "Przenieś do kosza",
       "file_content": "Plik „{file}” zostanie przeniesiony do kosza.",
       "files_content": "{count} zaznaczonych plików zostanie przeniesionych do kosza.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Potwierdzaj przenoszenie plików lub folderów do kosza",
       "title": "Ogólne",
       "section_language": "Język i region",
       "section_appearance": "Wygląd",

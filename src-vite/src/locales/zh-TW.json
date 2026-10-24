@@ -945,6 +945,7 @@
       "success": "已重新命名 {count} 個項目。"
     },
     "move_to_trash": {
+      "do_not_ask_again": "不再提示（可在設定中重新開啟）",
       "title": "移到垃圾桶",
       "file_content": "檔案「{file}」將被移到垃圾桶。",
       "files_content": "已選的 {count} 個檔案將被移到垃圾桶。",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "移到垃圾桶前確認",
       "title": "一般",
       "section_language": "語言與地區",
       "section_appearance": "外觀",

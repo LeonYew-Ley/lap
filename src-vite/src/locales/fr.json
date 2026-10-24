@@ -945,6 +945,7 @@
       "success": "{count} éléments renommés."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Ne plus demander (modifiable dans les paramètres)",
       "title": "Mettre à la corbeille",
       "file_content": "Le fichier '{file}' sera mis à la corbeille.",
       "files_content": "{count} fichiers sélectionnés seront mis à la corbeille.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Confirmer avant de déplacer des fichiers ou dossiers dans la corbeille",
       "title": "Général",
       "section_language": "Langue et région",
       "section_appearance": "Apparence",

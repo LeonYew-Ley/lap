@@ -945,6 +945,7 @@
       "success": "{count} itens renomeados."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Não perguntar novamente (alterar nas Configurações)",
       "title": "Mover para o lixo",
       "file_content": "O arquivo '{file}' será movido para o lixo.",
       "files_content": "{count} arquivos selecionados serão movidos para o lixo.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Confirmar antes de mover arquivos ou pastas para a lixeira",
       "title": "Geral",
       "section_language": "Idioma e região",
       "section_appearance": "Aparência",

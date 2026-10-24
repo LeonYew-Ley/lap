@@ -945,6 +945,7 @@
       "success": "Renamed {count} items."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Do not ask again (change in Settings)",
       "title": "Move to trash",
       "file_content": "The file '{file}' will be trashed.",
       "files_content": "{count} selected files will be trashed.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Confirm before moving files or folders to Trash",
       "title": "General",
       "section_language": "Language & region",
       "section_appearance": "Appearance",

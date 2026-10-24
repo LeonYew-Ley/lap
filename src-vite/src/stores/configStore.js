@@ -138,6 +138,7 @@ export const useConfigStore = defineStore('configStore', {
       scale: 1,                   // root font-size scale
       showToolTip: true,          // show button tooltip
       showStatusBar: true,        // show status bar
+      confirmBeforeTrash: true,
       autoCheckUpdates: true,      // automatically check for updates
       debugMode: false,           // debug mode
 
@@ -310,6 +311,9 @@ export const useConfigStore = defineStore('configStore', {
     setShowStatusBar(showStatusBar) {
       this.settings.showStatusBar = showStatusBar;
     },
+    setConfirmBeforeTrash(confirmBeforeTrash) {
+      this.settings.confirmBeforeTrash = confirmBeforeTrash !== false;
+    },
     setAutoCheckUpdates(autoCheckUpdates) {
       this.settings.autoCheckUpdates = autoCheckUpdates;
     },
@@ -447,6 +451,7 @@ export const useConfigStore = defineStore('configStore', {
         const state = JSON.parse(value);
         const settings = state?.settings;
         if (settings) {
+          settings.confirmBeforeTrash = settings.confirmBeforeTrash !== false;
           // Existing installations already have a language choice; do not replace it.
           if (typeof settings.languageInitialized !== 'boolean' && typeof settings.language === 'string' && settings.language) {
             settings.languageInitialized = true;

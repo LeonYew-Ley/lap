@@ -53,6 +53,7 @@ if (isMainWindow) {
   listen('config-settings-synced', async (event) => {
     const request = ++settingsSyncRequest
     if (isSettingsWindow) {
+      config.setConfirmBeforeTrash(event.payload.confirmBeforeTrash)
       // Settings receives application language updates without replacing unsaved fields.
       config.setLanguage(event.payload.language)
     } else {
@@ -116,6 +117,9 @@ if (isMainWindow) {
   })
   listen('settings-showStatusBar-changed', (event) => {
     config.setShowStatusBar(event.payload)
+  })
+  listen('settings-confirmBeforeTrash-changed', (event) => {
+    config.setConfirmBeforeTrash(event.payload)
   })
   listen('settings-autoCheckUpdates-changed', (event) => {
     config.setAutoCheckUpdates(event.payload)

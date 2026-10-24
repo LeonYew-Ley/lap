@@ -65,6 +65,13 @@ When you open Lap for the first time:
 - Browse cached thumbnails and metadata for offline albums; reconnect the storage for actions that need the original files.
 - Use RAW preview badges to switch modes or select the paired JPEG/HEIC.
 
+## Deleting Files
+
+- **Delete / Move to Trash** moves files or folders to the system Trash or Recycle Bin. The confirmation dialog does not offer permanent deletion.
+- Confirmation is enabled by default. Check **Do not ask again** and confirm to skip future trash confirmations, including after restarting Lap. Canceling the dialog leaves the preference unchanged.
+- To restore confirmation, enable **Confirm before moving files or folders to Trash** in **Settings → General**.
+- If a location does not support the system trash, Lap reports a failure and leaves the affected files in place. Restore trashed files or empty the trash using your operating system.
+
 ## Updating Lap
 
 On macOS and Windows, use the built-in updater or install the latest package over your existing installation. For Linux DEB installations, install the latest matching DEB package with your package manager.

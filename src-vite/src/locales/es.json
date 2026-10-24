@@ -945,6 +945,7 @@
       "success": "Se renombraron {count} elementos."
     },
     "move_to_trash": {
+      "do_not_ask_again": "No volver a preguntar (cambiar en Ajustes)",
       "title": "Mover a la papelera",
       "file_content": "El archivo '{file}' se moverá a la papelera.",
       "files_content": "{count} archivos seleccionados se moverán a la papelera.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Confirmar antes de mover archivos o carpetas a la papelera",
       "title": "General",
       "section_language": "Idioma y región",
       "section_appearance": "Apariencia",

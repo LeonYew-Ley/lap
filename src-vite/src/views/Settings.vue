@@ -99,6 +99,10 @@
               </div>
               <input type="checkbox" class="toggle toggle-primary toggle-sm" v-model="config.settings.showStatusBar" />
             </div>
+            <label class="flex items-center justify-between gap-4 p-1 rounded-box hover:bg-base-100/10 transition-colors duration-200">
+              <span class="text-sm leading-5">{{ $t('settings.general.confirm_before_trash') }}</span>
+              <input type="checkbox" class="toggle toggle-primary toggle-sm shrink-0" v-model="config.settings.confirmBeforeTrash" />
+            </label>
           </div>
 
           <!-- album folder -->
@@ -1541,6 +1545,9 @@ watch(() => config.settings.showToolTip, (newValue) => {
 });
 watch(() => config.settings.showStatusBar, (newValue) => {
   emit('settings-showStatusBar-changed', newValue);
+});
+watch(() => config.settings.confirmBeforeTrash, (newValue) => {
+  emit('settings-confirmBeforeTrash-changed', newValue);
 });
 watch(() => config.settings.autoCheckUpdates, (newValue) => {
   emit('settings-autoCheckUpdates-changed', newValue);

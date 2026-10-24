@@ -945,6 +945,7 @@
       "success": "{count} Elemente umbenannt."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Nicht erneut fragen (in den Einstellungen ändern)",
       "title": "In Papierkorb verschieben",
       "file_content": "Die Datei '{file}' wird in den Papierkorb verschoben.",
       "files_content": "{count} ausgewählte Dateien werden in den Papierkorb verschoben.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Vor dem Verschieben in den Papierkorb bestätigen",
       "title": "Allgemein",
       "section_language": "Sprache & Region",
       "section_appearance": "Erscheinungsbild",

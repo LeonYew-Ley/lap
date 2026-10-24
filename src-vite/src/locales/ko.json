@@ -945,6 +945,7 @@
       "success": "{count}개 항목의 이름을 변경했습니다."
     },
     "move_to_trash": {
+      "do_not_ask_again": "다시 묻지 않기 (설정에서 변경 가능)",
       "title": "휴지통으로 이동",
       "file_content": "'{file}'을(를) 휴지통으로 이동합니다.",
       "files_content": "{count}개의 파일을 휴지통으로 이동합니다.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "파일이나 폴더를 휴지통으로 이동하기 전에 확인",
       "title": "일반",
       "section_language": "언어 및 지역",
       "section_appearance": "외관",

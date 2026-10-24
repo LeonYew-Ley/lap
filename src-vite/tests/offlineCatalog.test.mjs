@@ -232,7 +232,8 @@ test('dedup delete-all blocks unavailable items and selected deletion is indepen
   const deps = {
     currentOriginalsUnavailable: () => true, selectMode: ref(false), selectedCount: ref(0),
     dedupReclaimBytes: ref(0), dedupTrashGroupKey: ref(''), dedupDeleteFileIds: ref([]),
-    deletePermanently: ref(false), permanentDeleteChecked: ref(false), showTrashMsgbox: ref(false),
+    doNotAskAgain: ref(false), isTrashDeleting: ref(false), showTrashMsgbox: ref(false),
+    config: { settings: { confirmBeforeTrash: true } },
   };
   const open = new Function(...Object.keys(deps),
     extractFunction(contentSource, 'const openTrashMsgbox =', 'const openAllDuplicatesTrashMsgbox') + '; return openTrashMsgbox;'

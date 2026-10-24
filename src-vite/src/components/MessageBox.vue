@@ -11,7 +11,8 @@
       <input
         v-model="checkboxValue"
         type="checkbox"
-        class="checkbox checkbox-xs checkbox-error mt-0.5"
+        class="checkbox checkbox-xs checkbox-primary mt-0.5"
+        :disabled="isLoading"
         @change="emit('checkbox-change', checkboxValue)"
       />
       <span class="leading-5">{{ checkboxText }}</span>
@@ -238,6 +239,7 @@ const clickOk = () => {
 };
 
 const clickCancel = () => {
+  if (props.isLoading) return;
   emit('cancel');
 };
 

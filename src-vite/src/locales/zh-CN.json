@@ -945,6 +945,7 @@
       "success": "已重命名 {count} 个项目。"
     },
     "move_to_trash": {
+      "do_not_ask_again": "不再提示（可在设置中重新开启）",
       "title": "移到废纸篓",
       "file_content": "文件 '{file}' 将被移到废纸篓。",
       "files_content": "{count} 个选择的文件将被移到废纸篓。",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "移到回收站前确认",
       "title": "通用",
       "section_language": "语言与地区",
       "section_appearance": "外观",

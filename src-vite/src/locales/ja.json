@@ -945,6 +945,7 @@
       "success": "{count} 項目の名前を変更しました。"
     },
     "move_to_trash": {
+      "do_not_ask_again": "今後確認しない（設定で変更できます）",
       "title": "ゴミ箱に入れる",
       "file_content": "ファイル '{file}' をゴミ箱に入れます。",
       "files_content": "{count} 個のファイルをゴミ箱に入れます。",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "ファイルやフォルダーをゴミ箱に移動する前に確認する",
       "title": "一般",
       "section_language": "言語と地域",
       "section_appearance": "外観",

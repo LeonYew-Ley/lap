@@ -945,6 +945,7 @@
       "success": "{count} elementi rinominati."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Non chiedere più (modificabile nelle Impostazioni)",
       "title": "Sposta nel cestino",
       "file_content": "Il file '{file}' verrà spostato nel cestino.",
       "files_content": "{count} file selezionati verranno spostati nel cestino.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Conferma prima di spostare file o cartelle nel cestino",
       "title": "Generali",
       "section_language": "Lingua e zona",
       "section_appearance": "Aspetto",

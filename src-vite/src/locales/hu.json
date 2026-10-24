@@ -945,6 +945,7 @@
       "success": "{count} elem átnevezve."
     },
     "move_to_trash": {
+      "do_not_ask_again": "Ne kérdezze újra (a Beállításokban módosítható)",
       "title": "Kukába helyezés",
       "file_content": "A(z) \"{file}\" fájl a kukába kerül.",
       "files_content": "{count} kiválasztott fájl a kukába kerül.",
@@ -1277,6 +1278,7 @@
   },
   "settings": {
     "general": {
+      "confirm_before_trash": "Megerősítés fájlok vagy mappák kukába helyezése előtt",
       "title": "Általános",
       "section_language": "Nyelv és régió",
       "section_appearance": "Megjelenés",
