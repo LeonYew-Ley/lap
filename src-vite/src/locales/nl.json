@@ -1284,7 +1284,8 @@
       "appearance": "Kleurmodus",
       "appearance_options": [
         "Licht",
-        "Donker"
+        "Donker",
+        "Systeem volgen"
       ],
       "theme": "Thema",
       "theme_options_light": [
