@@ -53,3 +53,17 @@ Downloads FFmpeg and FFprobe sidecar binaries for the current platform into `src
 | Linux x86_64 | `ffmpeg-x86_64-unknown-linux-gnu`, `ffprobe-x86_64-unknown-linux-gnu` |
 | Linux aarch64 | `ffmpeg-aarch64-unknown-linux-gnu`, `ffprobe-aarch64-unknown-linux-gnu` |
 | Windows x86_64 | `ffmpeg-x86_64-pc-windows-msvc.exe`, `ffprobe-x86_64-pc-windows-msvc.exe` |
+
+## 3. build_local_windows
+
+Build a Windows x64 MSI from the current local source:
+
+```powershell
+pwsh -File .\scripts\build_local_windows.ps1
+```
+
+Requires Node.js 20+, pnpm, Rust stable (MSVC), Visual Studio 2022 with the C++ desktop workload, CMake, and NASM. The script also detects CMake bundled with another installed Visual Studio version.
+
+The script builds the frontend and native application, then produces an unsigned local MSI in `src-tauri/target/release/bundle/msi/`. The build log is saved to `target/local-windows/build.log`. Local builds do not need the upstream updater signing key.
+
+Install the MSI to create the normal Start menu shortcut; press **Win** and search for **Lap**. Building the executable alone does not register it with Windows Search. Installing this release build uses the existing `com.julyx10.lap` data directory; uninstall only the application when replacing an existing install.
