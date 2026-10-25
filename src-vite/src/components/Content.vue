@@ -776,6 +776,7 @@ import { getAlbum, getAllAlbums, recountAlbum, getQueryCountAndSum, getQueryTime
          listCollections, createCollection, addFilesToCollection, removeFilesFromCollection, getFileCollections, getCollectionCountAndSum, getCollectionFiles, getCollectionGroupedQueryRows, getCollectionGroupFileIds, getCollectionQueryFileIds, fetchFolder, isDirectoryAccessible, checkAlbumAccessibility, addTagToFile, importXmpMetadata } from '@/common/api';
 import { config, libConfig } from '@/common/config';
 import { createThumbnailScheduler } from '@/common/thumbnailScheduler';
+import { captureTrashUndoSnapshot, createTrashUndoCache, prepareTrashUndoRefresh, selectTrashUndoFile } from '@/common/trashUndoRefresh';
 import {
   gridSizeFromPosition,
   gridSizePositionFromGridSize,
@@ -5499,7 +5500,7 @@ onMounted( async() => {
 
   unlistenLibraryTotalRefreshed = await listen('library-total-refreshed', (event: any) => {
     void refreshFolderFileCounts();
-    if (event?.payload?.source === 'content') return;
+    if (event?.payload?.source === 'content' || event?.payload?.source === 'trash-undo') return;
     if (isScanStreamingMode.value) return;
     if (config.main.sidebarIndex === SIDEBAR.ALBUM) {
       pendingInitialSelectedIndex = selectedItemIndex.value;
@@ -5923,7 +5924,13 @@ onMounted( async() => {
   });
 
   // listen for external refresh requests (e.g. from folder context menu)
-  unlistenRefreshContent = await listen('refresh-content', () => {
+  unlistenRefreshContent = await listen('refresh-content', (event: any) => {
+    if (event.payload?.libraryId && event.payload.libraryId !== libConfig._libraryId) return;
+    if (event.payload?.source === 'trash-undo') {
+      void refreshContentAfterTrashUndo(Number(event.payload.focusFileId) || 0, event.payload.fileIds);
+      contentRootRef.value?.focus({ preventScroll: true });
+      return;
+    }
     // A manual folder refresh must bypass the mtime-sync debounce; otherwise
     // revisiting an already selected folder only reloads stale DB rows.
     lastSyncedAlbumFolder = '';
@@ -7205,7 +7212,8 @@ async function getFileList(
   }
 }
 
-async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<string, any>, requestId: number, exactMembers = false) {
+async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<string, any>, requestId: number, exactMembers = false, undoFocusFileId?: number) {
+  const activeFileId = Number(fileList.value[selectedItemIndex.value]?.id || 0);
   currentQuerySource.value = 'search';
   currentSmartQueryParams.value = null;
   currentCollectionId.value = null;
@@ -7233,9 +7241,11 @@ async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<
     clearSelectionForFileListUpdate();
     resetGroupingState();
     fileList.value = preserveLoadedThumbnails(inCluster);
-    selectedItemIndex.value = inCluster.length > 0 ? 0 : -1;
+    selectedItemIndex.value = undoFocusFileId !== undefined
+      ? selectTrashUndoFile(inCluster, undoFocusFileId, activeFileId, selectedItemIndex.value)
+      : (inCluster.length > 0 ? 0 : -1);
     if (inCluster.length > 0) {
-      void getFileListThumb([fileList.value[0]], { viewportBound: false });
+      void getFileListThumb([fileList.value[selectedItemIndex.value]], { viewportBound: false });
     }
     currentSearchFileIds.value = inCluster
       .map((file: any) => Number(file.id))
@@ -7245,7 +7255,7 @@ async function getMapSearchClusterFileList(fileIds: number[], gpsParams: Record<
     timelineData.value = [];
     markDedupSourceUpdated(requestId);
     restoreInitialSelectionIfNeeded();
-    openImageViewer(0, false, true);
+    openImageViewer(undoFocusFileId !== undefined ? selectedItemIndex.value : 0, false, undoFocusFileId === undefined);
     lastVisibleRange = { start: -1, end: -1 };
     visibleRangeSeqId++;
   } catch (error) {
@@ -7447,7 +7457,9 @@ async function getImageSearchFileList(
   fileId: number,
   requestId: number,
   thresholdOverride?: number,
+  undoFocusFileId?: number,
 ) {
+  const activeFileId = Number(fileList.value[selectedItemIndex.value]?.id || 0);
   const thresholdIndex = config.settings.imageSearch.thresholdIndex;
   const threshold = thresholdOverride
     ?? (fileId > 0
@@ -7483,6 +7495,9 @@ async function getImageSearchFileList(
       clearSelectionForFileListUpdate();
       resetGroupingState();
       fileList.value = preserveLoadedThumbnails(result.filter(passesAlbumFilters));
+      if (undoFocusFileId !== undefined) {
+        selectedItemIndex.value = selectTrashUndoFile(fileList.value, undoFocusFileId, activeFileId, selectedItemIndex.value);
+      }
       contentCountIsAuthoritative.value = true;
       currentSearchFileIds.value = fileList.value
         .map(file => Number(file.id))
@@ -7491,7 +7506,7 @@ async function getImageSearchFileList(
       totalFileSize.value = fileList.value.reduce((total, file) => total + file.size, 0);
       markDedupSourceUpdated(requestId);
       restoreInitialSelectionIfNeeded();
-      openImageViewer(0, false, true);
+      openImageViewer(undoFocusFileId !== undefined ? selectedItemIndex.value : 0, false, undoFocusFileId === undefined);
 
       // Reset visible range tracking when changing views
       lastVisibleRange = { start: -1, end: -1 };
@@ -7526,7 +7541,8 @@ async function getImageSearchFileList(
   }
 }
 
-async function getUnifiedSearchFileList(searchText: string, requestId: number) {
+async function getUnifiedSearchFileList(searchText: string, requestId: number, undoFocusFileId?: number) {
+  const activeFileId = Number(fileList.value[selectedItemIndex.value]?.id || 0);
   const textParams = {
     searchFileType: config.search.fileType,
     sortType: 3,
@@ -7672,10 +7688,12 @@ async function getUnifiedSearchFileList(searchText: string, requestId: number) {
 
     groupedModeActive.value = groups.length > 0;
     totalRowCount.value = groupedRows.value.length;
-    selectedItemIndex.value = fileList.value.length > 0 ? 0 : -1;
-    scrollPosition.value = 0;
+    selectedItemIndex.value = undoFocusFileId !== undefined
+      ? selectTrashUndoFile(fileList.value, undoFocusFileId, activeFileId, selectedItemIndex.value)
+      : (fileList.value.length > 0 ? 0 : -1);
+    if (undoFocusFileId === undefined) scrollPosition.value = 0;
     markDedupSourceUpdated(requestId);
-    openImageViewer(0, false, true);
+    openImageViewer(undoFocusFileId !== undefined ? selectedItemIndex.value : 0, false, undoFocusFileId === undefined);
 
     if (fileList.value.length > 0) {
       getFileListThumb(fileList.value);
@@ -7690,6 +7708,203 @@ async function getUnifiedSearchFileList(searchText: string, requestId: number) {
 }
 
 let contentUpdateSeq = 0;
+
+const trashUndoCache = createTrashUndoCache();
+watch(() => libConfig._libraryId, () => trashUndoCache.clear(), { flush: 'sync' });
+
+function getTrashUndoViewKey() {
+  return JSON.stringify([
+    libConfig._libraryId, currentQuerySource.value, currentCollectionId.value,
+    getGroupingQueryParams(), tempViewMode.value,
+    isFilmstripView.value, libConfig.search.searchText, currentImageSearchParams.value,
+  ]);
+}
+
+function captureTrashUndoView() {
+  return captureTrashUndoSnapshot(getTrashUndoViewKey(), fileList.value,
+    groupedModeActive.value ? groupedTimelineGroups.value : null);
+}
+
+async function refreshContentAfterTrashUndo(focusFileId: number, restoredFileIds: number[] = [focusFileId], preserveSelection = false) {
+  pendingFocusedFileId = null;
+  pendingInitialSelectedIndex = -1;
+  hasRestoredInitialSelection = true;
+  pendingRestoreScrollTop.value = null;
+  if (!contentReady.value || isScanStreamingMode.value) {
+    pendingFocusedFileId = focusFileId || null;
+    await updateContent(true, false);
+    return;
+  }
+
+  const libraryId = libConfig._libraryId;
+  const requestId = ++currentContentRequestId;
+  contentUpdateSeq++;
+  const isCurrent = () => requestId === currentContentRequestId && libraryId === libConfig._libraryId;
+  let previousIndex = selectedItemIndex.value;
+  let previousFiles = fileList.value;
+  let previousFileCount = previousFiles.length;
+  invalidateThumbnailRequests();
+  let committed = false;
+  let restoredImmediately = false;
+  const applyDraft = (draft: any, grouped: boolean) => {
+    committed = true;
+    pendingSelectionRestore = null;
+    clearSelectionForFileListUpdate();
+    resetGroupingState();
+    groupedModeActive.value = grouped;
+    fileList.value = draft.files;
+    groupedRows.value = draft.rows;
+    groupedTimelineGroups.value = draft.groups;
+    totalFileCount.value = draft.totalFileCount;
+    totalRowCount.value = draft.totalRowCount;
+    totalFileSize.value = draft.totalFileSize;
+    selectedItemIndex.value = draft.selectedIndex;
+    for (const group of draft.groups) {
+      groupMetaMap.set(group.groupId, { count: group.count, size: group.size });
+    }
+    for (const row of draft.rows) {
+      if (isItemRow(row)) fileIdToGroupId.set(Number(row.file.id), String(row.group_id || ''));
+    }
+    contentCountIsAuthoritative.value = true;
+    hasLoadedInitialResult.value = true;
+    lastVisibleRange = { start: -1, end: -1 };
+    visibleRangeSeqId++;
+    markDedupSourceUpdated(requestId);
+  };
+  const updateLayout = async (reveal: boolean) => {
+    await nextTick();
+    if (!isCurrent()) return;
+    gridViewRef.value?.refreshLayout?.();
+    if (reveal && selectedItemIndex.value >= 0) {
+      if (groupedModeActive.value) await scrollToGroupedFile(selectedItemIndex.value);
+      else gridViewRef.value?.scrollToItem(selectedItemIndex.value);
+    }
+    if (!isCurrent()) return;
+    if (reveal && previousIndex === selectedItemIndex.value) void syncSelectionToImageViewer(selectedItemIndex.value);
+    void updateSelectedImage(selectedItemIndex.value);
+    void fetchMissingVisibleThumbnails(Math.max(0, lastVisibleRange.start), Math.max(0, lastVisibleRange.end));
+  };
+
+  try {
+    const cached = trashUndoCache.restore(getTrashUndoViewKey(), restoredFileIds, previousFiles,
+      groupedModeActive.value ? groupedTimelineGroups.value : null, focusFileId);
+    if (cached) {
+      const grouped = cached.groups.length > 0;
+      for (const file of cached.files) {
+        if (file && !file.thumbnail) file.thumbnail = getCachedThumbnailDataUrl(Number(file.id), config.settings.thumbnailSize);
+      }
+      const rows: any[] = [];
+      if (grouped) {
+        let fileIndex = 0;
+        for (const group of cached.groups) {
+          rows.push(createGroupHeaderRow(group));
+          for (let groupIndex = 0; groupIndex < group.count; groupIndex++, fileIndex++) {
+            const file = cached.files[fileIndex];
+            rows.push(file
+              ? { type: 'item', id: 'item-row-' + file.id, group_id: group.groupId, file_index: fileIndex, file }
+              : { id: 'grouped-ph-' + rows.length, isPlaceholder: true });
+          }
+        }
+      }
+      if (currentQuerySource.value === 'search') {
+        currentSearchFileIds.value = cached.files.filter(isRealFileItem).map(file => Number(file.id));
+      }
+      applyDraft({
+        ...cached, rows, totalFileCount: cached.files.length,
+        totalRowCount: grouped ? rows.length : cached.files.length,
+        totalFileSize: totalFileSize.value + cached.addedSize,
+      }, grouped);
+      restoredImmediately = true;
+      await updateLayout(true);
+      if (!isCurrent()) return;
+      if (currentQuerySource.value === 'search') return;
+      previousIndex = selectedItemIndex.value;
+      previousFiles = fileList.value;
+      previousFileCount = previousFiles.length;
+    }
+    const activeFileId = Number(previousFiles[previousIndex]?.id || 0);
+    if (currentQuerySource.value === 'search') {
+      if (tempViewMode.value === 'map') {
+        await getMapSearchClusterFileList([...currentSearchFileIds.value], currentQueryParams.value, requestId, true, focusFileId);
+      } else if (isSearchGroupingView.value && libConfig.search.searchText) {
+        await getUnifiedSearchFileList(libConfig.search.searchText, requestId, focusFileId);
+      } else {
+        const params = currentImageSearchParams.value;
+        await getImageSearchFileList(params.searchText, params.fileId, requestId, params.threshold, focusFileId);
+      }
+      if (!isCurrent()) return;
+      committed = true;
+    } else {
+      const grouped = isGroupingSupportedForCurrentView();
+      const draft = await prepareTrashUndoRefresh({
+        files: previousFiles,
+        selectedIndex: selectedItemIndex.value,
+        focusFileId: restoredImmediately || preserveSelection ? activeFileId : focusFileId,
+        viewport: { start: Math.max(0, lastVisibleRange.start), end: Math.max(0, lastVisibleRange.end) },
+        pageSize: Math.max(32, Math.min(selectionChunkSize.value, Math.max(32, visibleItemCount.value))),
+        grouped,
+        isCurrent,
+        count: getCurrentQueryCountAndSum,
+        position: async (fileId, groups) => {
+          if (!grouped) return getCurrentQueryFilePosition(fileId);
+          if (currentQuerySource.value === 'query') return getGroupedFilePosition(getGroupingQueryParams(), fileId);
+          let fileOffset = 0;
+          for (const group of groups) {
+            const result = currentQuerySource.value === 'collection' && currentCollectionId.value
+              ? await getCollectionGroupFileIds(currentCollectionId.value, getGroupingQueryParams(), group.groupId)
+              : await getSmartGroupFileIds(getGroupingQueryParams(), group.groupId);
+            if (!isCurrent() || result == null) return null;
+            const ids = Array.isArray(result) ? result : (result.file_ids || result.fileIds);
+            if (!Array.isArray(ids)) return null;
+            const index = ids.findIndex((id: number) => Number(id) === fileId);
+            if (index >= 0) return fileOffset + index;
+            fileOffset += group.count;
+          }
+          return -1;
+        },
+        loadFiles: getCurrentQueryFiles,
+        loadRows: async (offset, limit) => {
+          const result = await getCurrentGroupedQueryRows(offset, limit);
+          if (!result) return null;
+          const normalized = normalizeGroupedRowsResult(result);
+          return { ...normalized, rows: normalized.rows.map((row: any, index: number) => normalizeGridRow(row, offset + index)) };
+        },
+        groupHeader: createGroupHeaderRow,
+        cachedThumbnail: fileId => getCachedThumbnailDataUrl(fileId, config.settings.thumbnailSize),
+      });
+      if (!draft || !isCurrent()) return;
+      const focusedFile = draft.files[draft.selectedIndex];
+      if (focusedFile && !focusedFile.thumbnail) await getFileListThumb([focusedFile], { viewportBound: false });
+      if (!isCurrent()) return;
+      if (fileList.value !== previousFiles || fileList.value.length !== previousFileCount) {
+        const keepSelection = restoredImmediately || preserveSelection;
+        await refreshContentAfterTrashUndo(keepSelection ? Number(fileList.value[selectedItemIndex.value]?.id || 0) : focusFileId, [], keepSelection);
+        return;
+      }
+      const currentActiveId = Number(fileList.value[selectedItemIndex.value]?.id || 0);
+      if (selectedItemIndex.value !== previousIndex || currentActiveId !== activeFileId) {
+        const currentIndex = draft.files.findIndex(file => Number(file?.id) === currentActiveId);
+        if (currentIndex < 0) return;
+        draft.selectedIndex = currentIndex;
+        preserveSelection = true;
+      }
+      applyDraft(draft, grouped);
+      void getCurrentQueryTimeLine().then(data => {
+        if (isCurrent()) timelineData.value = data;
+      }).catch(console.error);
+      if (currentQuerySource.value === 'smart') void refreshDedupSmartFileIds(requestId, currentSmartQueryParams.value);
+    }
+
+    await updateLayout(!restoredImmediately && !preserveSelection);
+  } catch (error) {
+    if (!committed && isCurrent() && currentQuerySource.value !== 'search'
+      && (fileList.value !== previousFiles || fileList.value.length !== previousFileCount)) {
+      await refreshContentAfterTrashUndo(focusFileId, [], preserveSelection);
+      return;
+    }
+    console.error('Failed to refresh content after trash undo:', error);
+  }
+}
 
 async function updateContent(force = false, preserveMultiSelection = selectMode.value) {
   const updateSeq = ++contentUpdateSeq;
@@ -8928,12 +9143,14 @@ const getDeleteFileErrorMessage = () => localeMsg.value.msgbox.move_to_trash.fil
 const getDeleteFilesErrorMessage = () => localeMsg.value.msgbox.move_to_trash.files_error;
 
 const onTrashAllDuplicates = async () => {
+  const undoSnapshot = captureTrashUndoView();
   try {
     const result = await dedupDelete({ deleteAll: true });
     const deletedCount = Number(result?.deletedCount || 0);
     const failedCount = Number(result?.failedCount || 0);
 
     if (deletedCount > 0) {
+      trashUndoCache.remember(undoSnapshot, result.deletedFileIds || []);
       await updateContent(true);
       await dedupPaneRef.value?.refreshGroups();
       toast.success(getDeleteFilesSuccessMessage(deletedCount));
@@ -8969,6 +9186,7 @@ const handleTrashMsgboxOk = async () => {
 };
 
 const onTrashFile = async () => {
+  const undoSnapshot = captureTrashUndoView();
   const deletedFileIds: number[] = [];
   const affectedAlbumIds = new Set<number>();
   let failedDeleteCount = 0;
@@ -9027,6 +9245,7 @@ const onTrashFile = async () => {
       }
 
       const deletedIdSet = new Set(deletedFileIds);
+      trashUndoCache.remember(undoSnapshot, deletedFileIds);
       fileList.value = fileList.value.filter((f) => !deletedIdSet.has(Number(f?.id)));
       totalFileCount.value = fileList.value.length;
       totalFileSize.value = fileList.value.reduce((total, file) => total + Number(file?.size || 0), 0);
@@ -9051,6 +9270,7 @@ const onTrashFile = async () => {
 
       deletedItems.forEach(item => affectedAlbumIds.add(Number(item.album_id || 0)));
       deletedFileIds.push(...deletedItems.map(item => item.id));
+      trashUndoCache.remember(undoSnapshot, Array.from(deletedIdSet));
       const remainingSelectedIds = new Set(
         selectedItems
           .filter(item => !deletedIdSet.has(Number(item.id)))
@@ -9073,12 +9293,13 @@ const onTrashFile = async () => {
       affectedAlbumIds.add(Number(selectedFile.album_id || 0));
       deletedFileIds.push(selectedFile.id);
       failedDeleteCount = Number(result.failedCount || 0);
-      const deletedIndex = fileList.value.findIndex(file => Number(file.id) === Number(selectedFile.id));
+      trashUndoCache.remember(undoSnapshot, Array.from(deletedIdSet));
+      const deletedIndex = fileList.value.findIndex(file => Number(file?.id) === Number(selectedFile.id));
       if (deletedIndex >= 0) {
         const activeFileId = fileList.value[selectedItemIndex.value]?.id;
         removeFromFileList(deletedIndex);
         if (activeFileId !== selectedFile.id) {
-          selectedItemIndex.value = fileList.value.findIndex(file => file.id === activeFileId);
+          selectedItemIndex.value = fileList.value.findIndex(file => file?.id === activeFileId);
         }
       }
       if (failedDeleteCount === 0) {

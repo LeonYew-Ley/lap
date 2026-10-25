@@ -365,7 +365,7 @@
           :imageWidth="file?.width"
           :imageHeight="file?.height"
           :thumbnailSrc="file?.thumbnail || ''"
-          :showThumbnailPlaceholder="showThumbnailPlaceholder"
+          :showThumbnailPlaceholder="showThumbnailPlaceholder || !!file?.trashUndoPreview"
           :showInlineLoading="mode === 2"
           :suppressAutoNavigator="suppressAutoNavigator && !previewFullScreen"
           :nextFilePath="nextFilePath"

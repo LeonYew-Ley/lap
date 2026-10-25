@@ -1042,7 +1042,8 @@ onMounted( async () => {
     const refreshFolders = event.payload?.refreshFolders !== false;
     const selectedAlbumId = selection.albumId.value;
     let selectedFolderPath = selection.folderPath.value;
-    const shouldRestoreSelectedFolder = !selection.selected.value && !!selectedFolderPath;
+    const shouldRestoreSelectedFolder = event.payload?.source !== 'trash-undo'
+      && !selection.selected.value && !!selectedFolderPath;
     const renamedFolder = event.payload?.renamedFolder;
     if (renamedFolder?.albumId === selectedAlbumId &&
       isWithinRootPath(selectedFolderPath, renamedFolder.oldPath)) {

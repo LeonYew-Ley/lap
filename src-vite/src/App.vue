@@ -34,6 +34,7 @@ const isMainWindow = getCurrentWebviewWindow().label === 'main';
 let unlistenMainCloseRequested = null;
 let isHandlingMainClose = false;
 let isUndoingTrash = false;
+let trashUndoRefreshSeq = 0;
 const toast = useToast();
 const { t } = useI18n();
 
@@ -204,18 +205,28 @@ async function undoLastTrash() {
   const libraryId = libConfig._libraryId;
   try {
     const restored = await invoke('undo_trash', { libraryId });
-    if (!restored) {
+    if (!restored?.restored) {
       toast.info(t('trashUndoEmpty'));
       return;
     }
+    if (libConfig._libraryId !== libraryId) return;
+    const refreshSeq = ++trashUndoRefreshSeq;
+    await emit('refresh-content', {
+      source: 'trash-undo', libraryId, focusFileId: restored.fileIds?.[0] || null, fileIds: restored.fileIds || [],
+    });
     toast.success(t('trashUndoSuccess'));
-    if (libConfig._libraryId !== libraryId) return;
-    const albums = await invoke('get_all_albums', { refreshAccessibility: false });
-    const recounted = await Promise.all(albums.map(album => invoke('recount_album', { albumId: album.id })));
-    if (libConfig._libraryId !== libraryId) return;
-    await emit('albums-refreshed', { libraryId, albums: recounted.filter(Boolean), refreshFolders: true, refreshCounts: true });
-    await emit('library-total-refreshed', { source: 'trash-undo', libraryId });
-    await emit('refresh-content');
+    void (async () => {
+      try {
+        const albumIds = [...new Set(restored.albumIds || [])];
+        const recounted = await Promise.all(albumIds.map(albumId => invoke('recount_album', { albumId })));
+        if (libConfig._libraryId !== libraryId || refreshSeq !== trashUndoRefreshSeq) return;
+        await emit('albums-refreshed', { source: 'trash-undo', libraryId, albums: recounted.filter(Boolean), refreshFolders: true, refreshCounts: true });
+        if (libConfig._libraryId !== libraryId || refreshSeq !== trashUndoRefreshSeq) return;
+        await emit('library-total-refreshed', { source: 'trash-undo', libraryId });
+      } catch (error) {
+        console.error('Failed to refresh counts after trash undo:', error);
+      }
+    })();
   } catch (error) {
     toast.error(t('trashUndoFailed') + ': ' + error, { duration: 7000 });
   } finally {

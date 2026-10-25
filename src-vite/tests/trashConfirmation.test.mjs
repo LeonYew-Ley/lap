@@ -12,6 +12,10 @@ const [content, folder, store, main, settings] = await Promise.all([
   read('../src/components/Content.vue'), read('../src/components/AlbumFolder.vue'),
   read('../src/stores/configStore.js'), read('../src/main.js'), read('../src/views/Settings.vue'),
 ]);
+const undoHelpers = {};
+new Function('exports', ts.transpile(await read('../src/common/trashUndoRefresh.ts'), {
+  module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
+}))(undoHelpers);
 
 function section(source, start, end) {
   const from = source.indexOf(start);
@@ -53,6 +57,8 @@ function contentFixture(config = configFixture(), resultOverride) {
     dedupReclaimBytes: ref(0), dedupTrashGroupKey: ref(''), dedupDeleteFileIds: ref([]), dedupBulkFileCount: ref(0),
     doNotAskAgain: ref(false), showTrashMsgbox: ref(false), isTrashDeleting: ref(false),
     fileList: ref(files), selectedItemIndex: ref(0), totalFileCount: ref(2), totalFileSize: ref(20),
+    captureTrashUndoView: () => undoHelpers.captureTrashUndoSnapshot('view', deps.fileList.value, null),
+    trashUndoCache: undoHelpers.createTrashUndoCache(),
     isDedupPanelOpen: ref(false), dedupPaneRef: ref({ refreshGroups: async () => {} }),
     localeMsg: ref({ msgbox: { move_to_trash: {
       file_success: 'Trashed {file}', files_success: 'Trashed {count}', file_error: 'Trash failed', files_error: 'Batch trash failed',
@@ -177,6 +183,36 @@ test('browsing to another photo during trash does not remove that photo from the
   assert.equal(fixture.deps.selectedItemIndex.value, 0);
 });
 
+test('Delete still works after an atomic undo refresh leaves unloaded virtual slots before the current photo', async () => {
+  const fixture = contentFixture();
+  fixture.deps.fileList.value.unshift(null);
+  fixture.deps.selectedItemIndex.value = 1;
+  fixture.openTrashMsgbox();
+  await fixture.handleTrashMsgboxOk();
+  assert.deepEqual(fixture.calls.trash, [[1, '/photos/1.jpg']]);
+  assert.deepEqual(fixture.deps.fileList.value.map(file => file?.id ?? null), [null, 2]);
+  assert.equal(fixture.deps.selectedItemIndex.value, 1);
+  assert.deepEqual(fixture.calls.errors, []);
+});
+
+test('the actual deletion path caches metadata only for successfully recycled photos', async () => {
+  for (const batch of [false, true]) {
+    const fixture = contentFixture(undefined, { deletedFileIds: [1], deletedCount: 1, failedCount: batch ? 1 : 0 });
+    fixture.deps.selectMode.value = batch;
+    fixture.openTrashMsgbox();
+    await fixture.handleTrashMsgboxOk();
+    const draft = fixture.deps.trashUndoCache.restore('view', [1], fixture.deps.fileList.value, null, 1);
+    assert.deepEqual(draft.files.map(file => file.id), [1, 2]);
+    assert.equal(draft.selectedIndex, 0);
+    assert.equal(draft.files[0].file_path, '/photos/1.jpg');
+    assert.equal(fixture.deps.trashUndoCache.restore('view', [2], [], null, 2), null);
+  }
+  const failed = contentFixture(undefined, { deletedFileIds: [], deletedCount: 0, failedCount: 1 });
+  failed.openTrashMsgbox();
+  await failed.handleTrashMsgboxOk();
+  assert.equal(failed.deps.trashUndoCache.restore('view', [1], [failed.deps.fileList.value[1]], null, 1), null);
+});
+
 test('selected duplicates, similar photos and delete-all obey the preference and use trash only', async () => {
   for (const group of ['12', 'similar:12', 'all']) {
     const fixture = contentFixture();
@@ -246,7 +282,8 @@ test('an already-open Settings window receives the opt-out and re-enables it in 
   const mainListener = section(main, "  listen('settings-confirmBeforeTrash-changed'", "  listen('settings-autoCheckUpdates-changed'");
   new Function('config', 'listen', mainListener)(mainConfig, listen);
   const watcher = section(settings, 'watch(() => config.settings.confirmBeforeTrash,', 'watch(() => config.settings.autoCheckUpdates,');
-  const stop = vm.runInNewContext(watcher, { config: settingsConfig, watch, emit });
+  const stops = [];
+  vm.runInNewContext(watcher, { config: settingsConfig, watch: (...args) => { const stop = watch(...args); stops.push(stop); return stop; }, emit });
   try {
     mainConfig.setConfirmBeforeTrash(false);
     await nextTick();
@@ -255,6 +292,6 @@ test('an already-open Settings window receives the opt-out and re-enables it in 
     await nextTick();
     assert.equal(mainConfig.settings.confirmBeforeTrash, true);
   } finally {
-    stop();
+    stops.forEach(stop => stop());
   }
 });

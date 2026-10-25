@@ -60,7 +60,7 @@ fn recycle_and_restore_catalog_safely() {
     std::fs::create_dir_all(&root).unwrap();
     DATABASE.set(root.join("catalog.db")).unwrap();
     let conn = t_sqlite::open_conn().unwrap();
-    conn.execute_batch("CREATE TABLE afolders(id INTEGER PRIMARY KEY, path TEXT);
+    conn.execute_batch("CREATE TABLE afolders(id INTEGER PRIMARY KEY, path TEXT, album_id INTEGER DEFAULT 1);
         CREATE TABLE afiles(id INTEGER PRIMARY KEY, folder_id INTEGER REFERENCES afolders(id) ON DELETE CASCADE, name TEXT, rating INTEGER, comments TEXT);
         CREATE TABLE atags(id INTEGER PRIMARY KEY, name TEXT);
         CREATE TABLE afile_tags(file_id INTEGER REFERENCES afiles(id) ON DELETE CASCADE, tag_id INTEGER REFERENCES atags(id), PRIMARY KEY(file_id,tag_id));
@@ -107,7 +107,7 @@ fn recycle_and_restore_catalog_safely() {
     .unwrap();
     assert!(!first.exists() && !second.exists() && failed.exists());
     *LIBRARY.lock().unwrap() = "other-library";
-    assert!(!t_trash_undo::undo("other-library").unwrap());
+    assert!(!t_trash_undo::undo("other-library").unwrap().restored);
     assert!(t_trash_undo::undo("undo-test").is_err());
     *LIBRARY.lock().unwrap() = "undo-test";
     std::fs::write(&first, b"do not overwrite").unwrap();
@@ -122,7 +122,9 @@ fn recycle_and_restore_catalog_safely() {
     let undo_started = std::time::Instant::now();
     let restored = t_trash_undo::undo("undo-test").unwrap();
     eprintln!("two-file undo: {} ms", undo_started.elapsed().as_millis());
-    assert!(restored);
+    assert!(restored.restored);
+    assert_eq!(restored.file_ids, vec![1, 2]);
+    assert_eq!(restored.album_ids, vec![1]);
     assert_eq!(std::fs::read(&first).unwrap(), b"first.jpg");
     assert_eq!(std::fs::read(&second).unwrap(), b"second.mov");
     assert_eq!(
@@ -146,7 +148,7 @@ fn recycle_and_restore_catalog_safely() {
             .unwrap(),
         3
     );
-    assert!(!t_trash_undo::undo("undo-test").unwrap());
+    assert!(!t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(
         conn.query_row("SELECT hash FROM duplicate_groups WHERE id=9", [], |row| {
             row.get::<_, String>(0)
@@ -187,7 +189,7 @@ fn recycle_and_restore_catalog_safely() {
         },
     )
     .unwrap();
-    assert!(t_trash_undo::undo("undo-test").unwrap());
+    assert!(t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(std::fs::read(folder.join("nested.jpg")).unwrap(), b"nested");
     assert_eq!(
         std::fs::read(folder.join("uncataloged/extra.txt")).unwrap(),
@@ -212,7 +214,7 @@ fn recycle_and_restore_catalog_safely() {
     );
     assert!(partial.is_err());
     assert!(folder.exists());
-    assert!(t_trash_undo::undo("undo-test").unwrap());
+    assert!(t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(std::fs::read(folder.join("nested.jpg")).unwrap(), b"nested");
     t_trash_undo::record("undo-test", [1].into(), None, vec![first.clone()], || {
         recycle(&first)?;
@@ -240,7 +242,7 @@ fn recycle_and_restore_catalog_safely() {
         "unrelated"
     );
     conn.execute("DELETE FROM afiles WHERE id=1", []).unwrap();
-    assert!(t_trash_undo::undo("undo-test").unwrap());
+    assert!(t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(
         conn.query_row("SELECT rating FROM afiles WHERE id=1", [], |row| row
             .get::<_, i64>(0))
@@ -262,7 +264,7 @@ fn recycle_and_restore_catalog_safely() {
         "single-file recycle with undo: {} ms",
         started.elapsed().as_millis()
     );
-    assert!(t_trash_undo::undo("undo-test").unwrap());
+    assert!(t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(std::fs::read(&first).unwrap(), b"newer original");
     assert_eq!(
         conn.query_row("SELECT rating FROM afiles WHERE id=1", [], |row| row
@@ -270,13 +272,13 @@ fn recycle_and_restore_catalog_safely() {
             .unwrap(),
         4
     );
-    assert!(!t_trash_undo::undo("undo-test").unwrap());
+    assert!(!t_trash_undo::undo("undo-test").unwrap().restored);
     let failed: Result<(), String> =
         t_trash_undo::record("undo-test", [1].into(), None, vec![first.clone()], || {
             Err("simulated failure before recycling".into())
         });
     assert!(failed.is_err());
-    assert!(!t_trash_undo::undo("undo-test").unwrap());
+    assert!(!t_trash_undo::undo("undo-test").unwrap().restored);
     assert_eq!(std::fs::read(&first).unwrap(), b"newer original");
     let leftovers = trash::os_limited::list()
         .unwrap()

@@ -3,6 +3,14 @@ use std::collections::{HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+#[derive(Debug, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct UndoResult {
+    pub restored: bool,
+    pub file_ids: Vec<i64>,
+    pub album_ids: Vec<i64>,
+}
+
 #[cfg(target_os = "windows")]
 #[path = "t_trash_windows.rs"]
 mod windows;
@@ -110,6 +118,27 @@ struct Snapshot {
 }
 
 impl Snapshot {
+    fn ids(&self, table: &str) -> Vec<i64> {
+        self.tables
+            .iter()
+            .find(|rows| rows.table == table)
+            .map(|rows| {
+                let index = rows
+                    .columns
+                    .iter()
+                    .position(|column| column == "id")
+                    .unwrap();
+                rows.values
+                    .iter()
+                    .filter_map(|row| match row[index] {
+                        Value::Integer(id) => Some(id),
+                        _ => None,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     fn capture(
         conn: &Connection,
         files: &HashSet<i64>,
@@ -375,7 +404,7 @@ mod supported {
         })
     }
 
-    pub(super) fn undo(library: &str) -> Result<bool, String> {
+    pub(super) fn undo(library: &str) -> Result<UndoResult, String> {
         crate::t_cmds::with_current_library(library, || {
             let mut history = HISTORY.lock().map_err(|error| error.to_string())?;
             let database = PathBuf::from(crate::t_storage::get_current_db_path()?);
@@ -383,7 +412,7 @@ mod supported {
                 .iter()
                 .rposition(|batch| batch.library == library && batch.database == database)
             else {
-                return Ok(false);
+                return Ok(UndoResult::default());
             };
             let batch = &mut history[index];
             let mut conn = crate::t_sqlite::open_conn()?;
@@ -445,8 +474,23 @@ mod supported {
                 ));
             }
             batch.snapshot.restore(&mut conn)?;
+            let file_ids = batch.snapshot.ids("afiles");
+            let folder_ids = batch.snapshot.ids("afolders");
+            let mut statement = conn.prepare(&format!(
+                "SELECT DISTINCT album_id FROM afolders WHERE id IN ({}) OR id IN (SELECT folder_id FROM afiles WHERE id IN ({}))",
+                id_list(&folder_ids.into_iter().collect()), id_list(&file_ids.iter().copied().collect())
+            )).map_err(|error| error.to_string())?;
+            let album_ids = statement
+                .query_map([], |row| row.get::<_, i64>(0))
+                .map_err(|error| error.to_string())?
+                .collect::<rusqlite::Result<Vec<_>>>()
+                .map_err(|error| error.to_string())?;
             history.remove(index);
-            Ok(true)
+            Ok(UndoResult {
+                restored: true,
+                file_ids,
+                album_ids,
+            })
         })
     }
 }
@@ -469,7 +513,7 @@ pub(crate) fn record<T>(
     }
 }
 
-pub(crate) fn undo(library: &str) -> Result<bool, String> {
+pub(crate) fn undo(library: &str) -> Result<UndoResult, String> {
     #[cfg(any(target_os = "windows", target_os = "linux"))]
     {
         supported::undo(library)

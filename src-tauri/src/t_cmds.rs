@@ -2338,7 +2338,7 @@ pub async fn delete_file(file_id: i64, file_path: String) -> Result<BatchDeleteR
 }
 
 #[tauri::command]
-pub async fn undo_trash(library_id: String) -> Result<bool, String> {
+pub async fn undo_trash(library_id: String) -> Result<crate::t_trash_undo::UndoResult, String> {
     tauri::async_runtime::spawn_blocking(move || crate::t_trash_undo::undo(&library_id))
         .await
         .map_err(|error| error.to_string())?
