@@ -795,7 +795,7 @@ import {
 } from '@/common/thumbnailProfiles';
 import { getShortcutLabel, matchesShortcut, ShortcutActionId, ShortcutPlatform, VIEW_BACKGROUND_SHORTCUTS } from '@/common/shortcuts';
 import { getSmartTagById } from '@/common/smartTags';
-import { clearFolderFileCounts, setFolderFileCount } from '@/composables/useAlbumSelection';
+import { clearFolderFileCounts, setFolderFileCount, refreshFolderFileCounts } from '@/composables/useAlbumSelection';
 import { createEmptyLibraryCounts } from '@/stores/libraryStore';
 import { getAlbumScanState, getAlbumScanIcon, shouldAnimateAlbumScanIcon } from '@/common/scanStatus';
 import { CULLING, DATE_SORT, GROUP, LIB_ITEM, RATE, SIDEBAR, SELECTED_THUMBNAIL_LIMIT, RIGHT_PANEL_MIN_WIDTH, PANEL_ANIMATION_MS, MONTAGE_MAX_PHOTOS, LARGE_BATCH_CONFIRM_THRESHOLD, EXTERNAL_OPEN_WARNING_THRESHOLD } from '@/common/constants';
@@ -2814,15 +2814,16 @@ async function importFilesToFolder(target: { albumId: number; folderPath: string
     clearTimeout(progressTimer);
     if (!isCurrent()) return;
     if (fileImportSuccess.value > 0) {
-      const folderCounts = await getQueryCountAndSum({
+      const folderCountParams = {
         searchFileName: '', searchFileType: config.search.fileType,
         sortType: 0, sortOrder: 0, searchAllSubfolders: config.settings.showSubfolderFiles ? destination.folderPath : '',
         searchFolder: config.settings.showSubfolderFiles ? '' : destination.folderPath,
         startDate: 0, endDate: 0, calendarSort: 0, make: '', model: '', lensMake: '', lensModel: '',
         locationAdmin1: '', locationName: '', isFavorite: false, rating: -1, cullingFlag: -1, tagId: 0, personId: 0,
-      });
+      };
+      const folderCounts = await getQueryCountAndSum(folderCountParams);
       if (!isCurrent()) return;
-      if (folderCounts) setFolderFileCount(destination.folderPath, Number(folderCounts[0] || 0));
+      if (folderCounts) setFolderFileCount(destination.folderPath, Number(folderCounts[0] || 0), folderCountParams);
       await refreshAffectedAlbums([destination.albumId], true);
       if (!isCurrent()) return;
       await refreshLibraryTotalCount();
@@ -3443,10 +3444,18 @@ watch(() => props.libraryEmpty, () => {
   libraryChecked.value = true;
 }, { immediate: true });
 
-watch(contentReady, (ready) => {
-  if (!ready) return;
+watch([contentReady, isLoading], ([ready, loading]) => {
+  if (!ready || loading) return;
   contentQueryRefreshPending = false;
   if (!contentCountIsAuthoritative.value || tempViewMode.value !== 'none') return;
+  const path = libConfig.album.folderPath;
+  const params = currentQueryParams.value;
+  if (config.main.sidebarIndex === SIDEBAR.ALBUM && libConfig.activePane === 'main'
+    && !libConfig.album.selected && path && currentQuerySource.value === 'query'
+    && (params.searchFolder === path || params.searchAllSubfolders === path)) {
+    // A sync can reload the same query after the selection request was consumed.
+    setFolderFileCount(path, totalFileCount.value, params);
+  }
   commitRequestedSidebarCount(totalFileCount.value);
 });
 
@@ -3534,7 +3543,7 @@ function commitRequestedSidebarCount(count: number, request = uiStore.countUpdat
       updateCount(libConfig.album, request.id, count);
       break;
     case 'album-folder':
-      setFolderFileCount(request.path, Math.max(0, Number(count || 0)));
+      setFolderFileCount(request.path, Math.max(0, Number(count || 0)), currentQueryParams.value);
       break;
     case 'collection':
       updateCount(libConfig.collection, request.id, count);
@@ -5563,6 +5572,7 @@ onMounted( async() => {
   unlistenKeydown = await listen('global-keydown', handleKeyDown);
 
   unlistenLibraryTotalRefreshed = await listen('library-total-refreshed', (event: any) => {
+    void refreshFolderFileCounts();
     if (event?.payload?.source === 'content') return;
     if (isScanStreamingMode.value) return;
     if (config.main.sidebarIndex === SIDEBAR.ALBUM) {
@@ -7965,6 +7975,7 @@ async function updateContent(force = false, preserveMultiSelection = selectMode.
               : { searchFolder: folderPath };
             const syncKey = `${album.id}:${folderId}:${folderPath}`;
             if (folderId > 0 && folderPath && lastSyncedAlbumFolder !== syncKey) {
+              const libraryId = libConfig._libraryId;
               lastSyncedAlbumFolder = syncKey;
               // Debounce: if a sync is already in-flight for this folder, reuse it.
               const existing = pendingFolderSyncs.get(folderId);
@@ -7973,6 +7984,9 @@ async function updateContent(force = false, preserveMultiSelection = selectMode.
               syncPromise.then(syncResult => {
                 if (pendingFolderSyncs.get(folderId) === syncPromise) {
                   pendingFolderSyncs.delete(folderId);
+                }
+                if (syncResult?.current_folder_synced && libraryId === libConfig._libraryId) {
+                  void refreshFolderFileCounts();
                 }
                 if (
                   requestId !== currentContentRequestId ||

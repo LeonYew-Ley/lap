@@ -1,22 +1,46 @@
 import { provide, inject, computed, reactive, Ref } from 'vue';
 import { libConfig } from '@/common/config';
 import { useUIStore } from '@/stores/uiStore';
-import { selectFolder as apiSelectFolder } from '@/common/api';
+import { selectFolder as apiSelectFolder, getQueryCountAndSum } from '@/common/api';
 import { Album, Folder, AlbumSelectionContext, ALBUM_SELECTION_KEY } from '@/common/types';
 
 export type SelectionSource = 'album' | 'destFolder';
 
 const folderFileCounts = reactive(new Map<string, number>());
+const folderCountQueries = new Map<string, Record<string, unknown>>();
+let folderCountRefreshId = 0;
 
-export const setFolderFileCount = (path: string, count: number) => {
-    folderFileCounts.set(path, count);
+export const setFolderFileCount = (path: string, count: number, params: Record<string, unknown>) => {
+    folderFileCounts.set(path, Math.max(0, Number(count || 0)));
+    // Keep the query that produced the badge, including recursive/file-type filters.
+    // Replacing its identity also invalidates any older refresh for this path.
+    folderCountQueries.set(path, { ...params });
 };
 
 export const clearFolderFileCounts = () => {
+    folderCountRefreshId++;
     folderFileCounts.clear();
+    folderCountQueries.clear();
 };
 
 export const getFolderFileCount = (path: string) => folderFileCounts.get(path) || 0;
+
+export const refreshFolderFileCounts = async () => {
+    const requestId = ++folderCountRefreshId;
+    const libraryId = libConfig._libraryId;
+    // Only refresh badges that have already been shown; never scan the folder tree.
+    await Promise.all([...folderCountQueries].map(async ([path, params]) => {
+        try {
+            const result = await getQueryCountAndSum(params);
+            if (result && requestId === folderCountRefreshId && libraryId === libConfig._libraryId
+                && folderCountQueries.get(path) === params) {
+                folderFileCounts.set(path, Math.max(0, Number(result[0] || 0)));
+            }
+        } catch (error) {
+            console.error('Failed to refresh folder count:', error);
+        }
+    }));
+};
 
 /**
  * Creates and provides an album selection context.
