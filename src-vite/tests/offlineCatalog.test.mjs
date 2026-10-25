@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { readSource } from './helpers/source.mjs';
 import ts from 'typescript';
 import { computed, markRaw, reactive, ref } from 'vue';
 
 function moduleBody(path) {
-  const source = fs.readFileSync(new URL(path, import.meta.url), 'utf8');
+  const source = readSource(new URL(path, import.meta.url));
   return ts.transpile(source.replace(/^import[\s\S]*?from ['"][^'"]+['"];?\n/gm, '').replace(/export /g, ''), { target: ts.ScriptTarget.ES2022 });
 }
 const libConfig = { _libraryId: 'offline-test', album: { id: 1 }, activePane: 'album' };
@@ -32,7 +32,7 @@ test('offline state does not remove catalog data and follows reconnection, indiv
   assert.equal(isOriginalUnavailable(file), false);
 });
 
-const source = fs.readFileSync(new URL('../src/common/fileMenu.ts', import.meta.url), 'utf8');
+const source = readSource(new URL('../src/common/fileMenu.ts', import.meta.url));
 const iconNames = source.match(/import \{([^}]+)\} from '@\/common\/icons'/)[1].split(',').map(s => s.trim()).filter(Boolean);
 const config = { main: { sidebarIndex: 1 }, settings: { face: { enabled: true } }, externalAppsFor: () => [{ id: 'editor', name: 'Editor' }], defaultExternalApp: () => null };
 const useFileMenuItems = new Function('computed', 'markRaw', 'config', 'libConfig', 'SIDEBAR', 'DEFAULT_PLATFORM', 'getShortcutLabel', 'isOriginalUnavailable', 'requiresOriginalAction', 'isWin', ...iconNames, moduleBody('../src/common/fileMenu.ts') + '; return useFileMenuItems;')(
@@ -77,7 +77,7 @@ test('mixed availability blocks the entire selection rather than silently skippi
   assert.equal(action(menu.value, 'refresh-file-info').disabled, false);
 });
 
-const imageSource = fs.readFileSync(new URL('../src/components/Image.vue', import.meta.url), 'utf8');
+const imageSource = readSource(new URL('../src/components/Image.vue', import.meta.url));
 const fallbackBody = ts.transpile(imageSource.slice(imageSource.indexOf('async function showOfflinePreview'), imageSource.indexOf('// Watch file changes and the selected RAW preview source.')), { target: ts.ScriptTarget.ES2022 });
 function previewFixture({ backend = false, thumbnail = true } = {}) {
   const deps = {
@@ -136,7 +136,7 @@ test('a delayed offline preview cannot replace a more recently selected file', a
   assert.equal(fixture.deps.offlinePreview.value, false);
 });
 
-const contentSource = fs.readFileSync(new URL('../src/components/Content.vue', import.meta.url), 'utf8');
+const contentSource = readSource(new URL('../src/components/Content.vue', import.meta.url));
 const dragBody = ts.transpile(contentSource.slice(contentSource.indexOf('function markContentInternalDrag('), contentSource.indexOf('const isProcessing = ref(false);')), { target: ts.ScriptTarget.ES2022 });
 function dragFixture(collection = false) {
   const files = [
@@ -186,7 +186,7 @@ test('offline files can still be dragged into a collection without original-file
   assert.deepEqual(fixture.calls.preflight, []);
 });
 
-const dedupSource = fs.readFileSync(new URL('../src/components/DedupPane.vue', import.meta.url), 'utf8');
+const dedupSource = readSource(new URL('../src/components/DedupPane.vue', import.meta.url));
 function extractFunction(source, name, next) {
   return ts.transpile(source.slice(source.indexOf(name), source.indexOf(next, source.indexOf(name))), { target: ts.ScriptTarget.ES2022 });
 }
@@ -246,7 +246,7 @@ test('dedup delete-all blocks unavailable items and selected deletion is indepen
 });
 
 test('independent preview updates all visible panes on album recovery and ignores another library', async () => {
-  const viewer = fs.readFileSync(new URL('../src/views/ImageViewer.vue', import.meta.url), 'utf8');
+  const viewer = readSource(new URL('../src/views/ImageViewer.vue', import.meta.url));
   const start = viewer.indexOf("async (event: any) => {", viewer.indexOf("listen('album-accessibility-changed'"));
   const handler = viewer.slice(start, viewer.indexOf('\n  });', start));
   const left = ref({ id: 1, album_id: 1, album_accessible: false });
@@ -278,7 +278,7 @@ test('library reload clears stale album, folder and file availability when retur
   setFileAccessibility(file.file_path, false);
   setFolderAccessibility('/returning/sub', false);
   assert.equal(isOriginalUnavailable(file), true);
-  const store = fs.readFileSync(new URL('../src/stores/libraryStore.js', import.meta.url), 'utf8');
+  const store = readSource(new URL('../src/stores/libraryStore.js', import.meta.url));
   const start = store.indexOf('async reload() {');
   const reload = new Function('resetLibraryAccessibility', 'return ({' +
     store.slice(start, store.indexOf('\n    },', start) + 6) + '}).reload;')(resetLibraryAccessibility);

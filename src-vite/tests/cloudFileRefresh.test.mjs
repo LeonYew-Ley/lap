@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { readSource } from './helpers/source.mjs';
 import ts from 'typescript';
 import { ref } from 'vue';
 
-const source = fs.readFileSync(new URL('../src/components/RefreshFileInfoDialog.vue', import.meta.url), 'utf8');
+const source = readSource(new URL('../src/components/RefreshFileInfoDialog.vue', import.meta.url));
 const body = ts.transpile(source.split('<script setup lang="ts">')[1].split('</script>')[0]
   .replace(/^import .*;\n/gm, ''), { target: ts.ScriptTarget.ES2022 });
 function fixture(responses) {
