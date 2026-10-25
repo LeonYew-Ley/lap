@@ -3,6 +3,15 @@ use std::collections::{HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+#[cfg(target_os = "windows")]
+#[path = "t_trash_windows.rs"]
+mod windows;
+
+#[cfg(target_os = "windows")]
+pub(crate) fn recycle(path: &str) -> Result<(), String> {
+    windows::recycle(path)
+}
+
 #[derive(Clone)]
 struct Rows {
     table: String,
@@ -279,6 +288,9 @@ mod supported {
                     .collect::<rusqlite::Result<Vec<_>>>()
                     .map_err(|error| error.to_string())?
             };
+            #[cfg(target_os = "windows")]
+            let capture = windows::Capture::start()?;
+            #[cfg(target_os = "linux")]
             let before = trash::os_limited::list()
                 .map_err(|error| format!("Cannot prepare trash undo: {error}"))?
                 .into_iter()
@@ -293,11 +305,18 @@ mod supported {
                 .into_iter()
                 .filter(|path| !path.exists())
                 .collect::<HashSet<_>>();
-            let entries = trash::os_limited::list().unwrap_or_default();
+            #[cfg(target_os = "windows")]
+            let entries = capture.finish();
+            #[cfg(target_os = "linux")]
+            let entries = trash::os_limited::list()
+                .unwrap_or_default()
+                .into_iter()
+                .filter(|item| !before.contains(&item.id))
+                .collect::<Vec<_>>();
             if let Some(folder) = folder {
                 for item in &entries {
                     let path = item.original_path();
-                    if !before.contains(&item.id) && path.starts_with(folder) && !path.exists() {
+                    if path.starts_with(folder) && !path.exists() {
                         removed.insert(path);
                     }
                 }
@@ -320,9 +339,7 @@ mod supported {
                     .map(|path| {
                         let matches = entries
                             .iter()
-                            .filter(|item| {
-                                !before.contains(&item.id) && item.original_path() == path
-                            })
+                            .filter(|item| item.original_path() == path)
                             .collect::<Vec<_>>();
                         let item = if matches.len() == 1 {
                             Some(matches[0].clone())
@@ -370,6 +387,7 @@ mod supported {
             };
             let batch = &mut history[index];
             let mut conn = crate::t_sqlite::open_conn()?;
+            #[cfg(target_os = "linux")]
             let entries = trash::os_limited::list().map_err(|error| error.to_string())?;
             for target in &batch.paths {
                 if target.restored {
@@ -388,6 +406,14 @@ mod supported {
                     ));
                 }
                 let item = target.item.as_ref().ok_or_else(|| format!("Cannot identify the exact recycled item: {}. Restore it from the system Recycle Bin.", target.path.display()))?;
+                #[cfg(target_os = "windows")]
+                windows::validate(item).map_err(|error| {
+                    format!(
+                        "Cannot access the cached Recycle Bin item for {}: {error}",
+                        target.path.display()
+                    )
+                })?;
+                #[cfg(target_os = "linux")]
                 if !entries
                     .iter()
                     .any(|entry| entry.id == item.id && entry.original_path() == target.path)

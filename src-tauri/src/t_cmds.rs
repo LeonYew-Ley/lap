@@ -2329,11 +2329,12 @@ pub async fn import_clipboard(
 
 /// delete a file
 #[tauri::command]
-pub fn delete_file(file_id: i64, file_path: &str) -> Result<BatchDeleteResult, String> {
-    delete_files_grouped(
-        vec![BatchDeleteFile { file_id, file_path: file_path.into() }],
-        false,
-    )
+pub async fn delete_file(file_id: i64, file_path: String) -> Result<BatchDeleteResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        delete_files_grouped(vec![BatchDeleteFile { file_id, file_path }], false)
+    })
+    .await
+    .map_err(|error| format!("Failed to run file delete: {error}"))?
 }
 
 #[tauri::command]

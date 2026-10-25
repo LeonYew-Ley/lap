@@ -42,6 +42,17 @@ mod t_cmds {
 #[path = "../src/t_trash_undo.rs"]
 mod t_trash_undo;
 
+fn recycle(path: &std::path::Path) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        t_trash_undo::recycle(path.to_str().unwrap())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        trash::delete(path).map_err(|error| error.to_string())
+    }
+}
+
 #[test]
 #[ignore = "Moves only disposable test files through the real OS Recycle Bin"]
 fn recycle_and_restore_catalog_safely() {
@@ -58,7 +69,7 @@ fn recycle_and_restore_catalog_safely() {
         CREATE TABLE duplicate_group_items(group_id INTEGER REFERENCES duplicate_groups(id) ON DELETE CASCADE, file_id INTEGER REFERENCES afiles(id) ON DELETE CASCADE, PRIMARY KEY(group_id,file_id));
         INSERT INTO atags VALUES(1,'keep-tag');").unwrap();
     conn.execute(
-        "INSERT INTO afolders VALUES(1,?1)",
+        "INSERT INTO afolders(id,path) VALUES(1,?1)",
         [root.to_str().unwrap()],
     )
     .unwrap();
@@ -84,8 +95,8 @@ fn recycle_and_restore_catalog_safely() {
         None,
         vec![first.clone(), second.clone(), failed.clone()],
         || {
-            trash::delete(&first).map_err(|error| error.to_string())?;
-            trash::delete(&second).map_err(|error| error.to_string())?;
+            recycle(&first)?;
+            recycle(&second)?;
             conn.execute("DELETE FROM afiles WHERE id IN (1,2)", [])
                 .unwrap();
             conn.execute("DELETE FROM duplicate_groups WHERE id=9", [])
@@ -108,7 +119,10 @@ fn recycle_and_restore_catalog_safely() {
     assert!(!second.exists());
     assert_eq!(std::fs::read(&first).unwrap(), b"do not overwrite");
     std::fs::remove_file(&first).unwrap();
-    assert!(t_trash_undo::undo("undo-test").unwrap());
+    let undo_started = std::time::Instant::now();
+    let restored = t_trash_undo::undo("undo-test").unwrap();
+    eprintln!("two-file undo: {} ms", undo_started.elapsed().as_millis());
+    assert!(restored);
     assert_eq!(std::fs::read(&first).unwrap(), b"first.jpg");
     assert_eq!(std::fs::read(&second).unwrap(), b"second.mov");
     assert_eq!(
@@ -155,7 +169,7 @@ fn recycle_and_restore_catalog_safely() {
     std::fs::create_dir(folder.join("uncataloged")).unwrap();
     std::fs::write(folder.join("uncataloged/extra.txt"), b"extra").unwrap();
     conn.execute(
-        "INSERT INTO afolders VALUES(2,?1)",
+        "INSERT INTO afolders(id,path) VALUES(2,?1)",
         [folder.to_str().unwrap()],
     )
     .unwrap();
@@ -167,7 +181,7 @@ fn recycle_and_restore_catalog_safely() {
         Some(folder.to_str().unwrap()),
         vec![folder.clone()],
         || {
-            trash::delete(&folder).map_err(|error| error.to_string())?;
+            recycle(&folder)?;
             conn.execute("DELETE FROM afolders WHERE id=2", []).unwrap();
             Ok(())
         },
@@ -191,7 +205,7 @@ fn recycle_and_restore_catalog_safely() {
         Some(folder.to_str().unwrap()),
         vec![folder.clone()],
         || {
-            trash::delete(folder.join("nested.jpg")).map_err(|error| error.to_string())?;
+            recycle(&folder.join("nested.jpg"))?;
             conn.execute("DELETE FROM afiles WHERE id=4", []).unwrap();
             Err("simulated partial folder failure".into())
         },
@@ -201,7 +215,7 @@ fn recycle_and_restore_catalog_safely() {
     assert!(t_trash_undo::undo("undo-test").unwrap());
     assert_eq!(std::fs::read(folder.join("nested.jpg")).unwrap(), b"nested");
     t_trash_undo::record("undo-test", [1].into(), None, vec![first.clone()], || {
-        trash::delete(&first).map_err(|error| error.to_string())?;
+        recycle(&first)?;
         conn.execute("DELETE FROM afiles WHERE id=1", []).unwrap();
         Ok(())
     })
@@ -233,6 +247,46 @@ fn recycle_and_restore_catalog_safely() {
             .unwrap(),
         5
     );
+    recycle(&first).unwrap();
+    std::fs::write(&first, b"newer original").unwrap();
+    conn.execute("UPDATE afiles SET rating=4 WHERE id=1", [])
+        .unwrap();
+    let started = std::time::Instant::now();
+    t_trash_undo::record("undo-test", [1].into(), None, vec![first.clone()], || {
+        recycle(&first)?;
+        conn.execute("DELETE FROM afiles WHERE id=1", []).unwrap();
+        Ok(())
+    })
+    .unwrap();
+    eprintln!(
+        "single-file recycle with undo: {} ms",
+        started.elapsed().as_millis()
+    );
+    assert!(t_trash_undo::undo("undo-test").unwrap());
+    assert_eq!(std::fs::read(&first).unwrap(), b"newer original");
+    assert_eq!(
+        conn.query_row("SELECT rating FROM afiles WHERE id=1", [], |row| row
+            .get::<_, i64>(0))
+            .unwrap(),
+        4
+    );
+    assert!(!t_trash_undo::undo("undo-test").unwrap());
+    let failed: Result<(), String> =
+        t_trash_undo::record("undo-test", [1].into(), None, vec![first.clone()], || {
+            Err("simulated failure before recycling".into())
+        });
+    assert!(failed.is_err());
+    assert!(!t_trash_undo::undo("undo-test").unwrap());
+    assert_eq!(std::fs::read(&first).unwrap(), b"newer original");
+    let leftovers = trash::os_limited::list()
+        .unwrap()
+        .into_iter()
+        .filter(|item| item.original_path() == first)
+        .collect::<Vec<_>>();
+    assert_eq!(leftovers.len(), 1);
+    std::fs::remove_file(&first).unwrap();
+    trash::os_limited::restore_all(leftovers).unwrap();
+    assert_eq!(std::fs::read(&first).unwrap(), b"first.jpg");
     drop(conn);
     std::fs::remove_dir_all(&root).unwrap();
 }

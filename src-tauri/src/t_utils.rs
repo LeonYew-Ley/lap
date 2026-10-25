@@ -84,7 +84,12 @@ fn move_to_trash(path: &str) -> Result<(), String> {
     }
 }
 
-#[cfg(all(not(target_os = "macos")))]
+#[cfg(target_os = "windows")]
+fn move_to_trash(path: &str) -> Result<(), String> {
+    crate::t_trash_undo::recycle(path)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn move_to_trash(path: &str) -> Result<(), String> {
     trash::delete(path).map_err(|error| error.to_string())
 }
