@@ -1282,6 +1282,8 @@
   "settings": {
     "general": {
       "confirm_before_trash": "Confirm before moving files or folders to Trash",
+      "trash_undo_limit": "Quick undo cache size",
+      "trash_undo_limit_hint": "1–100 deletions per session; a batch counts as one. Older items remain in the system Trash.",
       "title": "General",
       "section_language": "Language & region",
       "section_appearance": "Appearance",

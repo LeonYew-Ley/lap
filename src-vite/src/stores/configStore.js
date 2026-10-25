@@ -139,6 +139,7 @@ export const useConfigStore = defineStore('configStore', {
       showToolTip: true,          // show button tooltip
       showStatusBar: true,        // show status bar
       confirmBeforeTrash: true,
+      trashUndoLimit: 5,
       autoCheckUpdates: true,      // automatically check for updates
       debugMode: false,           // debug mode
 
@@ -314,6 +315,11 @@ export const useConfigStore = defineStore('configStore', {
     setConfirmBeforeTrash(confirmBeforeTrash) {
       this.settings.confirmBeforeTrash = confirmBeforeTrash !== false;
     },
+    setTrashUndoLimit(limit) {
+      const value = Number(limit);
+      this.settings.trashUndoLimit = Number.isFinite(value) && value >= 1
+        ? Math.min(100, Math.floor(value)) : 5;
+    },
     setAutoCheckUpdates(autoCheckUpdates) {
       this.settings.autoCheckUpdates = autoCheckUpdates;
     },
@@ -452,6 +458,9 @@ export const useConfigStore = defineStore('configStore', {
         const settings = state?.settings;
         if (settings) {
           settings.confirmBeforeTrash = settings.confirmBeforeTrash !== false;
+          const trashUndoLimit = Number(settings.trashUndoLimit);
+          settings.trashUndoLimit = Number.isFinite(trashUndoLimit) && trashUndoLimit >= 1
+            ? Math.min(100, Math.floor(trashUndoLimit)) : 5;
           // Existing installations already have a language choice; do not replace it.
           if (typeof settings.languageInitialized !== 'boolean' && typeof settings.language === 'string' && settings.language) {
             settings.languageInitialized = true;

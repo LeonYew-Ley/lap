@@ -1282,6 +1282,8 @@
   "settings": {
     "general": {
       "confirm_before_trash": "移到回收站前确认",
+      "trash_undo_limit": "快速撤销缓存数量",
+      "trash_undo_limit_hint": "本次会话保留 1–100 次删除，批量算一次；超出上限仍可从系统回收站恢复。",
       "title": "通用",
       "section_language": "语言与地区",
       "section_appearance": "外观",

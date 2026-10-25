@@ -337,6 +337,7 @@ async fn main() {
             t_cmds::import_clipboard,
             t_cmds::delete_file,
             t_cmds::undo_trash,
+            t_cmds::set_trash_undo_limit,
             t_cmds::delete_file_permanently,
             t_cmds::delete_db_file,
             t_cmds::batch_delete_files,

@@ -261,6 +261,23 @@ test('an album count refresh failure cannot turn an already successful restore i
   assert.equal(fixture.calls.filter(call => call[0] === 'undo_trash').length, 2);
 });
 
+test('only the main window applies the saved undo cache limit to the native history', async () => {
+  const app = await readFile(new URL('../src/App.vue', import.meta.url), 'utf8');
+  const start = app.indexOf('watch(() => config.settings.trashUndoLimit,');
+  const code = app.slice(start, app.indexOf('// Auto-save library state', start));
+  for (const isMainWindow of [true, false]) {
+    const calls = [];
+    const watch = (read, callback, options) => {
+      assert.equal(options.immediate, true);
+      callback(read());
+    };
+    new Function('watch', 'config', 'isMainWindow', 'invoke', code)(watch,
+      { settings: { trashUndoLimit: 12 } }, isMainWindow,
+      async (...args) => calls.push(args));
+    assert.deepEqual(calls, isMainWindow ? [['set_trash_undo_limit', { limit: 12 }]] : []);
+  }
+});
+
 test('empty history and native failures do not emit misleading refresh events', async () => {
   for (const result of [false, () => { throw new Error('collision'); }]) {
     const fixture = await undoFixture(result);

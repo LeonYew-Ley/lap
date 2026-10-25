@@ -103,6 +103,15 @@
               <span class="text-sm leading-5">{{ $t('settings.general.confirm_before_trash') }}</span>
               <input type="checkbox" class="toggle toggle-primary toggle-sm shrink-0" v-model="config.settings.confirmBeforeTrash" />
             </label>
+            <div class="flex items-center justify-between gap-4 p-1 rounded-box">
+              <div class="flex flex-col gap-0.5 text-sm leading-5">
+                <label for="trash-undo-limit">{{ $t('settings.general.trash_undo_limit') }}</label>
+                <p id="trash-undo-limit-hint" class="text-xs text-base-content/70">{{ $t('settings.general.trash_undo_limit_hint') }}</p>
+              </div>
+              <input id="trash-undo-limit" type="number" min="1" max="100" step="1"
+                class="input input-bordered input-sm w-20 shrink-0" aria-describedby="trash-undo-limit-hint"
+                :value="config.settings.trashUndoLimit" @change="changeTrashUndoLimit" />
+            </div>
           </div>
 
           <!-- album folder -->
@@ -1549,6 +1558,14 @@ watch(() => config.settings.showStatusBar, (newValue) => {
 });
 watch(() => config.settings.confirmBeforeTrash, (newValue) => {
   emit('settings-confirmBeforeTrash-changed', newValue);
+});
+function changeTrashUndoLimit(event: Event) {
+  const input = event.target as HTMLInputElement;
+  config.setTrashUndoLimit(input.value);
+  input.value = String(config.settings.trashUndoLimit);
+}
+watch(() => config.settings.trashUndoLimit, (newValue) => {
+  emit('settings-trashUndoLimit-changed', newValue);
 });
 watch(() => config.settings.autoCheckUpdates, (newValue) => {
   emit('settings-autoCheckUpdates-changed', newValue);

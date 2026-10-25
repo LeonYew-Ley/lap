@@ -1282,6 +1282,8 @@
   "settings": {
     "general": {
       "confirm_before_trash": "移到垃圾桶前確認",
+      "trash_undo_limit": "快速復原快取數量",
+      "trash_undo_limit_hint": "本次工作階段保留 1–100 次刪除，批次算一次；超出上限仍可從系統垃圾桶復原。",
       "title": "一般",
       "section_language": "語言與地區",
       "section_appearance": "外觀",

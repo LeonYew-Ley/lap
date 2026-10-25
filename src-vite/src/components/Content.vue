@@ -7710,6 +7710,7 @@ async function getUnifiedSearchFileList(searchText: string, requestId: number, u
 let contentUpdateSeq = 0;
 
 const trashUndoCache = createTrashUndoCache();
+watch(() => config.settings.trashUndoLimit, limit => trashUndoCache.setLimit(limit), { immediate: true });
 watch(() => libConfig._libraryId, () => trashUndoCache.clear(), { flush: 'sync' });
 
 function getTrashUndoViewKey() {

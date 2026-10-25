@@ -289,6 +289,59 @@ fn recycle_and_restore_catalog_safely() {
     std::fs::remove_file(&first).unwrap();
     trash::os_limited::restore_all(leftovers).unwrap();
     assert_eq!(std::fs::read(&first).unwrap(), b"first.jpg");
+    assert_eq!(t_trash_undo::set_limit(0).unwrap(), 5);
+    let record_cached = |id: i64| {
+        let name = format!("cached-{id}.jpg");
+        let file = root.join(&name);
+        std::fs::write(&file, name.as_bytes()).unwrap();
+        conn.execute(
+            "INSERT INTO afiles VALUES(?1,1,?2,3,'cached')",
+            rusqlite::params![id, name],
+        )
+        .unwrap();
+        t_trash_undo::record("undo-test", [id].into(), None, vec![file.clone()], || {
+            recycle(&file)?;
+            conn.execute("DELETE FROM afiles WHERE id=?1", [id])
+                .unwrap();
+            Ok(())
+        })
+        .unwrap();
+    };
+    for id in 101..=106 {
+        record_cached(id);
+    }
+    for expected in (102..=106).rev() {
+        let restored = t_trash_undo::undo("undo-test").unwrap();
+        assert_eq!(restored.file_ids, vec![expected]);
+        assert_eq!(
+            std::fs::read(root.join(format!("cached-{expected}.jpg"))).unwrap(),
+            format!("cached-{expected}.jpg").as_bytes()
+        );
+    }
+    assert!(!t_trash_undo::undo("undo-test").unwrap().restored);
+    assert!(!root.join("cached-101.jpg").exists());
+    assert_eq!(t_trash_undo::set_limit(2).unwrap(), 2);
+    for id in 201..=203 {
+        record_cached(id);
+    }
+    assert_eq!(t_trash_undo::set_limit(1).unwrap(), 1);
+    assert_eq!(t_trash_undo::undo("undo-test").unwrap().file_ids, vec![203]);
+    assert!(!t_trash_undo::undo("undo-test").unwrap().restored);
+    assert_eq!(t_trash_undo::set_limit(1000).unwrap(), 100);
+    assert_eq!(t_trash_undo::set_limit(0).unwrap(), 5);
+    let evicted = trash::os_limited::list()
+        .unwrap()
+        .into_iter()
+        .filter(|item| item.original_path().starts_with(&root))
+        .collect::<Vec<_>>();
+    assert_eq!(evicted.len(), 3);
+    trash::os_limited::restore_all(evicted).unwrap();
+    for id in [101, 201, 202] {
+        assert_eq!(
+            std::fs::read(root.join(format!("cached-{id}.jpg"))).unwrap(),
+            format!("cached-{id}.jpg").as_bytes()
+        );
+    }
     drop(conn);
     std::fs::remove_dir_all(&root).unwrap();
 }

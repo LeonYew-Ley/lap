@@ -94,6 +94,20 @@ test('new and existing installations confirm by default; only an explicit false 
   }
 });
 
+test('quick undo defaults to five entries, validates limits and persists setting changes', async () => {
+  assert.equal(configFixture().settings.trashUndoLimit, 5);
+  for (const [value, expected] of [[undefined, 5], [null, 5], [0, 5], [-1, 5], ['bad', 5], [2.9, 2], [200, 100]]) {
+    assert.equal(configFixture(storageFixture({ settings: { trashUndoLimit: value } })).settings.trashUndoLimit, expected);
+  }
+  const storage = storageFixture();
+  const config = configFixture(storage);
+  config.setTrashUndoLimit(12);
+  await nextTick();
+  assert.equal(configFixture(storage).settings.trashUndoLimit, 12);
+  config.setTrashUndoLimit(0);
+  assert.equal(config.settings.trashUndoLimit, 5);
+});
+
 test('checking Do not ask again then canceling neither deletes nor persists the opt-out', () => {
   const fixture = contentFixture();
   fixture.openTrashMsgbox();
@@ -293,5 +307,31 @@ test('an already-open Settings window receives the opt-out and re-enables it in 
     assert.equal(mainConfig.settings.confirmBeforeTrash, true);
   } finally {
     stops.forEach(stop => stop());
+  }
+});
+
+test('undo cache limits synchronize in both directions between main and Settings windows', async () => {
+  const mainConfig = configFixture();
+  const settingsConfig = configFixture();
+  const listeners = new Map();
+  const listen = (name, callback) => listeners.set(name, callback);
+  const emit = async (name, payload) => listeners.get(name)?.({ payload });
+  const sync = section(main, 'if (isMainWindow) {', '// Load only');
+  for (const [isMainWindow, config] of [[true, mainConfig], [false, settingsConfig]]) {
+    new Function('isMainWindow', 'isSettingsWindow', 'config', 'listen', 'emit', 'let settingsSyncRequest = 0;' + sync)(isMainWindow, !isMainWindow, config, listen, emit);
+  }
+  const mainListener = section(main, "  listen('settings-trashUndoLimit-changed'", "  listen('settings-autoCheckUpdates-changed'");
+  new Function('config', 'listen', mainListener)(mainConfig, listen);
+  const watcher = section(settings, 'watch(() => config.settings.trashUndoLimit,', 'watch(() => config.settings.autoCheckUpdates,');
+  const stop = vm.runInNewContext(watcher, { config: settingsConfig, watch, emit });
+  try {
+    mainConfig.setTrashUndoLimit(9);
+    await nextTick();
+    assert.equal(settingsConfig.settings.trashUndoLimit, 9);
+    settingsConfig.setTrashUndoLimit(3);
+    await nextTick();
+    assert.equal(mainConfig.settings.trashUndoLimit, 3);
+  } finally {
+    stop();
   }
 });

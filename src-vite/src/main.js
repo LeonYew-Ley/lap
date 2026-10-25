@@ -54,6 +54,7 @@ if (isMainWindow) {
     const request = ++settingsSyncRequest
     if (isSettingsWindow) {
       config.setConfirmBeforeTrash(event.payload.confirmBeforeTrash)
+      config.setTrashUndoLimit(event.payload.trashUndoLimit)
       // Settings receives application language updates without replacing unsaved fields.
       config.setLanguage(event.payload.language)
     } else {
@@ -120,6 +121,9 @@ if (isMainWindow) {
   })
   listen('settings-confirmBeforeTrash-changed', (event) => {
     config.setConfirmBeforeTrash(event.payload)
+  })
+  listen('settings-trashUndoLimit-changed', (event) => {
+    config.setTrashUndoLimit(event.payload)
   })
   listen('settings-autoCheckUpdates-changed', (event) => {
     config.setAutoCheckUpdates(event.payload)

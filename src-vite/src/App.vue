@@ -38,6 +38,10 @@ let trashUndoRefreshSeq = 0;
 const toast = useToast();
 const { t } = useI18n();
 
+watch(() => config.settings.trashUndoLimit, (limit) => {
+  if (isMainWindow) void invoke('set_trash_undo_limit', { limit }).catch(console.error);
+}, { immediate: true });
+
 // Auto-save library state when any config changes
 watch(() => libConfig.$state, () => {
   if (libConfig._initialized) {

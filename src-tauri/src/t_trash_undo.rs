@@ -243,6 +243,7 @@ impl Snapshot {
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 mod supported {
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use trash::TrashItem;
 
     struct RestorePath {
@@ -260,6 +261,17 @@ mod supported {
     }
 
     static HISTORY: Mutex<VecDeque<Batch>> = Mutex::new(VecDeque::new());
+    static HISTORY_LIMIT: AtomicUsize = AtomicUsize::new(5);
+
+    pub(super) fn set_limit(limit: usize) -> Result<usize, String> {
+        let limit = if limit == 0 { 5 } else { limit.min(100) };
+        let mut history = HISTORY.lock().map_err(|error| error.to_string())?;
+        HISTORY_LIMIT.store(limit, Ordering::Relaxed);
+        while history.len() > limit {
+            history.pop_front();
+        }
+        Ok(limit)
+    }
 
     pub(super) fn record<T>(
         library: &str,
@@ -396,7 +408,7 @@ mod supported {
                     paths,
                     files,
                 });
-                while history.len() > 20 {
+                while history.len() > HISTORY_LIMIT.load(Ordering::Relaxed) {
                     history.pop_front();
                 }
             }
@@ -522,5 +534,16 @@ pub(crate) fn undo(library: &str) -> Result<UndoResult, String> {
     {
         let _ = library;
         Err("Trash undo is not supported on this platform yet".into())
+    }
+}
+
+pub(crate) fn set_limit(limit: usize) -> Result<usize, String> {
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        supported::set_limit(limit)
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
+    {
+        Ok(if limit == 0 { 5 } else { limit.min(100) })
     }
 }

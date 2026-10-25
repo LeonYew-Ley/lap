@@ -2344,6 +2344,13 @@ pub async fn undo_trash(library_id: String) -> Result<crate::t_trash_undo::UndoR
         .map_err(|error| error.to_string())?
 }
 
+#[tauri::command]
+pub async fn set_trash_undo_limit(limit: usize) -> Result<usize, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::t_trash_undo::set_limit(limit))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
 /// delete a file permanently
 #[tauri::command]
 pub fn delete_file_permanently(
